@@ -1,0 +1,46 @@
+{
+    "Shader": "shaders/PBR.glsl",
+    "Texture2D": {
+        "AlbedoMap": "textures/Barrel_01_Color.png",
+        "AmbientOcclusionMap": "",
+        "MetallicMap": "",
+        "NormalMap": "textures/Barrel_01_Normal.png",
+        "RoughnessMap": ""
+    },
+    "UniformBuffer": {
+        "ubo_PBR": {
+            "Albedo": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "AmbientOcclusion": [
+                0.635
+            ],
+            "Metallic": [
+                0.839
+            ],
+            "Roughness": [
+                0.516
+            ],
+            "UseAlbedoMap": [
+                true
+            ],
+            "UseAmbientOcclusionMap": [
+                false
+            ],
+            "UseMetallicMap": [
+                false
+            ],
+            "UseNormalMap": [
+                true
+            ],
+            "UseRoughnessMap": [
+                false
+            ],
+            "padding0": [
+                false
+            ]
+        }
+    }
+}

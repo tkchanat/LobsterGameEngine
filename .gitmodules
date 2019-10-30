@@ -1,0 +1,18 @@
+[submodule "LobsterGameEngine/vendor/glfw"]
+	path = LobsterGameEngine/vendor/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "LobsterGameEngine/vendor/glm"]
+	path = LobsterGameEngine/vendor/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "LobsterGameEngine/vendor/imgui"]
+	path = LobsterGameEngine/vendor/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "LobsterGameEngine/vendor/imguizmo"]
+	path = LobsterGameEngine/vendor/imguizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo.git
+[submodule "LobsterGameEngine/vendor/spdlog"]
+	path = LobsterGameEngine/vendor/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "LobsterGameEngine/vendor/json"]
+	path = LobsterGameEngine/vendor/json
+	url = https://github.com/nlohmann/json.git

@@ -1,0 +1,9 @@
+{
+    "window": {
+        "height": 760,
+        "icon": "../lobster.png",
+        "title": "Lobster Engine",
+        "vsync": true,
+        "width": 1280
+    }
+}
