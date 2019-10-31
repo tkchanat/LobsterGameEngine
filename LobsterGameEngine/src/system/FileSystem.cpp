@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "FileSystem.h"
 
+#ifdef LOBSTER_PLATFORM_WIN
+#include <Commdlg.h>
+#endif
+
 namespace Lobster {
 
 	FileSystem* FileSystem::m_instance = nullptr;
@@ -98,5 +102,77 @@ namespace Lobster {
 			WARN("Text file {} does not exist, please check if input is valid.", path);
 		}
 		return output;
+	}
+	std::string FileSystem::OpenFileDialog()
+	{
+		const int FILE_DIALOG_MAX_BUFFER = 1024;
+		char buffer[FILE_DIALOG_MAX_BUFFER];
+
+#ifdef LOBSTER_PLATFORM_MAC
+		// For apple use applescript hack
+		FILE * output = popen(
+			"osascript -e \""
+			"   tell application \\\"System Events\\\"\n"
+			"           activate\n"
+			"           set existing_file to choose file\n"
+			"   end tell\n"
+			"   set existing_file_path to (POSIX path of (existing_file))\n"
+			"\" 2>/dev/null | tr -d '\n' ", "r");
+		while (fgets(buffer, FILE_DIALOG_MAX_BUFFER, output) != NULL)
+		{
+		}
+#elif defined LOBSTER_PLATFORM_WIN
+
+		// Use native windows file dialog box
+		OPENFILENAME ofn;       // common dialog box structure
+		wchar_t lpBuffer[FILE_DIALOG_MAX_BUFFER];
+
+		// Initialize OPENFILENAME
+		ZeroMemory(&ofn, sizeof(ofn));
+		ofn.lStructSize = sizeof(ofn);
+		ofn.hwndOwner = NULL;
+		ofn.lpstrFile = lpBuffer;
+		// Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
+		// use the contents of szFile to initialize itself.
+		ofn.lpstrFile[0] = '\0';
+		ofn.nMaxFile = 260;
+		ofn.lpstrFilter = L"*.*\0";//off\0*.off\0obj\0*.obj\0mp\0*.mp\0";
+		ofn.nFilterIndex = 1;
+		ofn.lpstrFileTitle = NULL;
+		ofn.nMaxFileTitle = 0;
+		ofn.lpstrInitialDir = NULL;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+		// Display the Open dialog box. 
+		int pos = 0;
+		if (GetOpenFileName(&ofn) == TRUE)
+		{
+			while (ofn.lpstrFile[pos] != '\0')
+			{
+				buffer[pos] = (char)ofn.lpstrFile[pos];
+				pos++;
+			}
+		}
+		buffer[pos] = 0;
+
+		// convert to forward slash style
+		wchar_t dirBuffer[FILE_DIALOG_MAX_BUFFER];
+		memset(dirBuffer, 0, sizeof(wchar_t) * FILE_DIALOG_MAX_BUFFER);
+		GetCurrentDirectory(FILE_DIALOG_MAX_BUFFER, dirBuffer);
+		pos = 0;
+#else
+
+		// For linux use zenity
+		FILE * output = popen("/usr/bin/zenity --file-selection", "r");
+		while (fgets(buffer, FILE_DIALOG_MAX_BUFFER, output) != NULL)
+		{
+		}
+
+		if (strlen(buffer) > 0)
+		{
+			buffer[strlen(buffer) - 1] = 0;
+		}
+#endif
+		return std::string(buffer);
 	}
 }

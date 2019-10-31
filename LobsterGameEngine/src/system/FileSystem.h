@@ -27,6 +27,7 @@ namespace Lobster
 		static std::string Join(const std::string& path, const std::string& path2);
 		static std::string Path(std::string path);
 		static std::string ReadText(const char* path);
+		static std::string OpenFileDialog();
 		
 		bool assignWorkingDirectory(std::string dir); // for DEBUG
 		bool createWorkingDirectory(std::string dir); // for RELEASE

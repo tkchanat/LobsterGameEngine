@@ -94,7 +94,7 @@ project "GLFW"
 		files {
 			"LobsterGameEngine/vendor/glfw/src/win32_*",
 			"LobsterGameEngine/vendor/glfw/src/wgl_context.h",
-			"LobsterGameEngine/vendor/glfw/src/wgl_context.c",
+			"LobsterGameEngine/vendor/glfw/src/wgl_context.c"
 		}
 		defines "_GLFW_WIN32"
 
@@ -104,7 +104,7 @@ project "GLFW"
 			"LobsterGameEngine/vendor/glfw/src/posix_thread.h",
 			"LobsterGameEngine/vendor/glfw/src/posix_thread.c",
 			"LobsterGameEngine/vendor/glfw/src/nsgl_context.h",
-			"LobsterGameEngine/vendor/glfw/src/nsgl_context.m",
+			"LobsterGameEngine/vendor/glfw/src/nsgl_context.m"
 		}
 		defines "_GLFW_COCOA"
 
