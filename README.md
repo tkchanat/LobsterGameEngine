@@ -1,5 +1,5 @@
-# StealStepFYP
-StealStepFYP is a cross-platform ~~偷步~~ game engine for our final year project. Nothing to see here! :smiley:
+# Lobster Engine
+Lobster Engine is a cross-platform game engine for our final year project. Nothing to see here right now! :smiley:
 ## Current Progress
 ![](doc/Screenshot.png)
 Join and follow our roadmap at [<img src="https://d2k1ftgv7pobq7.cloudfront.net/meta/u/res/images/brand-assets/Logos/0099ec3754bf473d2bbf317204ab6fea/trello-logo-blue.png" width="80" alt="Trello">](https://trello.com/invite/b/CnX7N13z/665a3ecc44dd00868f37f27c2e5ee895/ssf)
@@ -9,14 +9,14 @@ For details, please refer to our [Wiki Page](https://github.com/tkchanat/StealSt
 
 ## Installation Guide
 ```diff
-- To ensure it builds successfully, run the setup file everytime you perform a git pull
+- To ensure it builds successfully, run the setup file everytime you perform a git pull.
 ```
-### [<img src="https://cdn1.iconfinder.com/data/icons/flat-and-simple-part-1/128/microsoft-512.png" width="30">]() Windows: 
+### [<img src="https://cdn1.iconfinder.com/data/icons/flat-and-simple-part-1/128/microsoft-512.png" width="30">]() Windows:
 1. Make sure you have [Visual Studio 2017+](https://visualstudio.microsoft.com) version to build.
-2. Execute `setup.bat` and open project solution `SSF.sln`.
+2. Execute `setup.bat` and open project solution `LobsterGameEngine.sln`.
 ### [<img src="https://www.freeiconspng.com/uploads/apple-mac-icon-5.png" width="30">]() MacOS:
 1. Make sure you have [Xcode11+](https://developer.apple.com/xcode/) to build, and [MacOS Catalina+](https://www.apple.com/hk/en/macos/catalina/) to run.
-2. Execute `setup.command` and open project workspace `SSF.xcodeproj`.
+2. Execute `setup.command` and open project workspace `LobsterGameEngine.xcodeproj`.
 
 ## Third-party Dependencies
 * [glfw](https://github.com/glfw/glfw) - A multi-platform library for OpenGL, OpenGL ES, Vulkan, window and input
