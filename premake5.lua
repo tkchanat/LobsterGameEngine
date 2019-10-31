@@ -16,7 +16,7 @@ workspace "LobsterGameEngine"
 -- 	cppdialect "C++17"
 
 -- 	targetdir ("LobsterGameEngine/lib")
--- 	objdir("LobsterGameEngine/vendor/assimp/bin/%{prj.name}")
+-- 	objdir("LobsterGameEngine/vendor/bin-int/%{prj.name}")
 
 -- 	defines {
 -- 		"ASSIMP_BUILD_NO_OWN_ZLIB",
@@ -68,9 +68,10 @@ project "GLFW"
 	location "LobsterGameEngine/vendor"
 	kind "StaticLib"
 	language "C"
+	systemversion "latest"
 
 	targetdir ("LobsterGameEngine/lib")
-	objdir("LobsterGameEngine/vendor/glfw/bin/%{prj.name}")
+	objdir("LobsterGameEngine/vendor/bin-int/%{prj.name}")
 	includedirs "LobsterGameEngine/vendor/glfw/include"
 
 	files {
@@ -83,22 +84,28 @@ project "GLFW"
 		"LobsterGameEngine/vendor/glfw/src/init.c",
 		"LobsterGameEngine/vendor/glfw/src/input.c",
 		"LobsterGameEngine/vendor/glfw/src/monitor.c",
-		"LobsterGameEngine/vendor/glfw/src/nsgl_context.h",
-		"LobsterGameEngine/vendor/glfw/src/nsgl_context.m",
 		"LobsterGameEngine/vendor/glfw/src/osmesa_context.h",
 		"LobsterGameEngine/vendor/glfw/src/osmesa_context.c",
-		"LobsterGameEngine/vendor/glfw/src/posix_thread.h",
-		"LobsterGameEngine/vendor/glfw/src/posix_thread.c",
 		"LobsterGameEngine/vendor/glfw/src/vulkan.c",
 		"LobsterGameEngine/vendor/glfw/src/window.c"
 	}
 
 	filter "system:windows"
-		files "LobsterGameEngine/vendor/glfw/src/win32_*"
+		files {
+			"LobsterGameEngine/vendor/glfw/src/win32_*",
+			"LobsterGameEngine/vendor/glfw/src/wgl_context.h",
+			"LobsterGameEngine/vendor/glfw/src/wgl_context.c",
+		}
 		defines "_GLFW_WIN32"
 
 	filter "system:macosx"
-		files "LobsterGameEngine/vendor/glfw/src/cocoa_*"
+		files {
+			"LobsterGameEngine/vendor/glfw/src/cocoa_*",
+			"LobsterGameEngine/vendor/glfw/src/posix_thread.h",
+			"LobsterGameEngine/vendor/glfw/src/posix_thread.c",
+			"LobsterGameEngine/vendor/glfw/src/nsgl_context.h",
+			"LobsterGameEngine/vendor/glfw/src/nsgl_context.m",
+		}
 		defines "_GLFW_COCOA"
 
 project "GLAD"
@@ -108,7 +115,7 @@ project "GLAD"
 	systemversion "latest"
 
 	targetdir ("LobsterGameEngine/lib")
-	objdir ("LobsterGameEngine/vendor/glad/bin/%{prj.name}")
+	objdir ("LobsterGameEngine/vendor/bin-int/%{prj.name}")
 	includedirs "LobsterGameEngine/vendor/glad/include"
 
 	files {
@@ -126,7 +133,7 @@ project "ImGui"
     systemversion "latest"
     
 	targetdir ("LobsterGameEngine/lib")
-    objdir ("LobsterGameEngine/vendor/imgui/bin/%{prj.name}")
+    objdir ("LobsterGameEngine/vendor/bin-int/%{prj.name}")
 
 	files {
         "LobsterGameEngine/vendor/imgui/im**.h",
@@ -141,7 +148,7 @@ project "ImGuizmo"
     systemversion "latest"
     
 	targetdir ("LobsterGameEngine/lib")
-    objdir ("LobsterGameEngine/vendor/imgui/bin/%{prj.name}")
+    objdir ("LobsterGameEngine/vendor/bin-int/%{prj.name}")
 
 	links { "ImGui" }
 	includedirs { "%{prj.location}/imgui" }
@@ -197,12 +204,11 @@ project "LobsterGameEngine"
 			"ImGui",
 			"ImGuizmo",
 			"GLAD",
-			"glew32s",
 			"opengl32"
 		}
 
 		prebuildcommands {
-			"{COPY} vendor/assimp/ ../bin/%{cfg.buildcfg}"
+			"{COPY} vendor/assimp/lib/ ../bin/%{cfg.buildcfg}"
 		}
 
 		defines {

@@ -3,7 +3,7 @@
 bin/
 bin-int/
 log/
-lib/
+LobsterGameEngine/lib/
 
 #Others
 *.user
