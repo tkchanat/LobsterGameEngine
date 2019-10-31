@@ -79,21 +79,22 @@ namespace Lobster
                 ImGui::PushID(pair.first.c_str());
                 if(ImGui::ImageButton(texture ? texture : notFound->Get(), previewSize))
                 {
-                    selectedTexture = pair.first;
-                    m_fileBrowser.Open();
+                    //selectedTexture = pair.first;
+                    //m_fileBrowser.Open();
+					SetTextureUnit(pair.first.c_str(), FileSystem::OpenFileDialog().c_str());
                 }
                 ImGui::PopID();
 			}
             
-            m_fileBrowser.Display();
-            if (m_fileBrowser.HasSelected())
-            {
-                // converting full path in to relative path
-                size_t pos = m_fileBrowser.GetSelected().string().find(FileSystem::GetCurrentWorkingDirectory()) + FileSystem::GetCurrentWorkingDirectory().size() + 1;
-                std::string path = m_fileBrowser.GetSelected().string().substr(pos);
-                SetTextureUnit(selectedTexture.c_str(), path.c_str());
-                m_fileBrowser.ClearSelected();
-            }
+            //m_fileBrowser.Display();
+            //if (m_fileBrowser.HasSelected())
+            //{
+            //    // converting full path in to relative path
+            //    size_t pos = m_fileBrowser.GetSelected().string().find(FileSystem::GetCurrentWorkingDirectory()) + FileSystem::GetCurrentWorkingDirectory().size() + 1;
+            //    std::string path = m_fileBrowser.GetSelected().string().substr(pos);
+            //    SetTextureUnit(selectedTexture.c_str(), path.c_str());
+            //    m_fileBrowser.ClearSelected();
+            //}
 
 			for (auto& uniformBufferData : m_uniformBufferData)
 			{
@@ -109,7 +110,6 @@ namespace Lobster
 			if (textureUnit.first == name)
 			{
                 bool True = true;
-                LOG("{}", ("Use" + std::string(name)).c_str());
                 GetUniformBufferData(0)->SetData(("Use" + std::string(name)).c_str(), (void*)&True);
 				textureUnit.second = TextureLibrary::Use(texturePath);
             }

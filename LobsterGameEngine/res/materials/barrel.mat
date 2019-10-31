@@ -2,8 +2,8 @@
     "Shader": "shaders/PBR.glsl",
     "Texture2D": {
         "AlbedoMap": "textures/Barrel_01_Color.png",
-        "AmbientOcclusionMap": "",
-        "MetallicMap": "",
+        "AmbientOcclusionMap": "textures/Barrel_01_Height.png",
+        "MetallicMap": "textures/Barrel_01_Metallic.png",
         "NormalMap": "textures/Barrel_01_Normal.png",
         "RoughnessMap": ""
     },
@@ -15,7 +15,7 @@
                 1.0
             ],
             "AmbientOcclusion": [
-                0.635
+                0.836
             ],
             "Metallic": [
                 0.839
@@ -27,10 +27,10 @@
                 true
             ],
             "UseAmbientOcclusionMap": [
-                false
+                true
             ],
             "UseMetallicMap": [
-                false
+                true
             ],
             "UseNormalMap": [
                 true

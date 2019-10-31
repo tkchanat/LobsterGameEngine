@@ -7,5 +7,6 @@ namespace Lobster {
 		std::vector<std::string> RegexAllOccurrence(const std::string& str, const char* expr);
 		void Erase(std::string& str, const std::string& delimiters);
 		std::string Trim(const std::string& str);
+		void ReplaceAll(std::string& str, const std::string& from, const std::string& to);
 	}
 }
