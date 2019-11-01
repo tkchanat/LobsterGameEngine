@@ -107,7 +107,7 @@ namespace Lobster {
 	{
 		const int FILE_DIALOG_MAX_BUFFER = 1024;
 		char buffer[FILE_DIALOG_MAX_BUFFER];
-		std::string output;
+		std::string path;
 
 		fs::path executablePath = fs::current_path();
 
@@ -124,7 +124,6 @@ namespace Lobster {
 		while (fgets(buffer, FILE_DIALOG_MAX_BUFFER, output) != NULL)
 		{
 		}
-		output = std::string(buffer);
 #elif defined LOBSTER_PLATFORM_WIN
 
 		// Use native windows file dialog box
@@ -158,11 +157,6 @@ namespace Lobster {
 			}
 		}
 		buffer[pos] = 0;
-
-		output = fs::relative(fs::path(buffer), executablePath).string();
-		output = fs::relative(fs::path(output), fs::path(m_workingDir)).string();
-		StringOps::ReplaceAll(output, "\\", "/");
-		fs::current_path(executablePath);
 #else
 
 		// For linux use zenity
@@ -175,8 +169,14 @@ namespace Lobster {
 		{
 			buffer[strlen(buffer) - 1] = 0;
 		}
-		output = std::string(buffer);
+		
 #endif
-		return output;
+        
+        path = fs::relative(fs::path(buffer), executablePath).string();
+        if(path == ".") return ""; // return empty path since user cancelled dialog
+        path = fs::relative(fs::path(path), fs::path(m_workingDir)).string();
+        StringOps::ReplaceAll(path, "\\", "/");
+        fs::current_path(executablePath);
+		return path;
 	}
 }
