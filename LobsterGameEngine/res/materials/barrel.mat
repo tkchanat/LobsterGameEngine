@@ -15,13 +15,13 @@
                 1.0
             ],
             "AmbientOcclusion": [
-                0.836
+                1.0
             ],
             "Metallic": [
-                0.839
+                0.104
             ],
             "Roughness": [
-                0.516
+                0.337
             ],
             "UseAlbedoMap": [
                 true
