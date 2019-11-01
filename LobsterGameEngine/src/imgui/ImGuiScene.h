@@ -8,6 +8,7 @@
 #include "graphics/meshes/MeshFactory.h"
 #include "system/Input.h"
 #include "system/Profiler.h"
+#include "system/UndoSystem.h"
 #include <ImGuizmo.h>
 
 namespace Lobster
@@ -29,6 +30,10 @@ namespace Lobster
 		VertexArray* m_gridVertexArray;
 		// profiler
 		bool b_showProfiler;
+		// boolean to indicate whether we are moving object in previous frame
+		bool b_isMoving = false;
+		// transform object storing previous state of the game object prior to move
+		Transform m_transform;
 	public:
 		explicit ImGuiScene(Scene* scene, Renderer* renderer) :
 			m_editorCamera(nullptr),
@@ -163,7 +168,28 @@ namespace Lobster
 						if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) m_originalScale = gameObject->transform.LocalScale;
 						else gameObject->transform.LocalScale = m_originalScale + deltaScale - glm::vec3(1); break;
 					}
+
+					// check with IsUsing if we are trying to edit an item.
+					bool isMoving = ImGuizmo::IsUsing();
+
+					// store the item transform details if we plan to move (ie: mouse over) but hadn't move yet.
+					if (!b_isMoving && !isMoving && ImGuizmo::IsOver()) {
+						m_transform = gameObject->transform;
+					}
+					
+					// keep track of whether we are moving, and when we stopped moving, send an undo event.
+					if (!b_isMoving && isMoving) {
+						b_isMoving = true;
+					} else if (b_isMoving && !isMoving) {
+						b_isMoving = false;
+
+						// only send event if transform is updated.
+						if (m_transform.GetMatrix() != gameObject->transform.GetMatrix()) {
+							UndoSystem::GetInstance()->Push(new TransformCommand(gameObject, m_transform, gameObject->transform));
+						}
+					}
 				}
+				
 				ImGui::End();
 				ImGui::PopStyleVar();
 			}

@@ -87,6 +87,19 @@ public:
 		return size;
 	}
 
+	//	Convert this circular buffer to a vector, where the most recently added item has a smaller index.
+	std::vector<T> to_vector() const {
+		if (empty()) return std::vector<T>();
+
+		std::vector<T> result(size());
+		size_t tail_ptr = tail;
+		for (int i = size() - 1; i >= 0; i--) {
+			result[i] = buffer[tail_ptr];
+			tail_ptr = (tail_ptr + 1) % max_size;
+		}
+		return result;
+	}
+
 private:
 	std::mutex mutex;
 	std::unique_ptr<T[]> buffer;

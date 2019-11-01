@@ -14,6 +14,7 @@
 #include "layer/GUILayer.h"
 #include "objects/GameObject.h"
 #include "system/FileSystem.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster
 {
@@ -84,6 +85,9 @@ namespace Lobster
         //  Initialize Renderer
         m_renderer = new Renderer();
         
+		//	Initialize UndoSystem with length = 50
+		m_undoSystem = new UndoSystem(50);
+
         //  Initialize GameObjects
 		Timer loadTimer;
         m_scene = new Scene();
@@ -180,6 +184,7 @@ namespace Lobster
 		{
 			layer->OnImGuiRender();
 		}
+		//  LOG(std::to_string(ImGui::IsAnyItemActive()));
 		m_GUILayer->End();
 		Profiler::SubmitData("ImGui Render Time", imguiRenderTimer.GetElapsedTime());
 		#endif

@@ -21,6 +21,10 @@ namespace Lobster
 		unsigned long long m_id;
         std::string m_name;
         std::vector<Component*> m_components;
+		//	Boolean to indicate whether we are changing object in previous frame.
+		bool b_isChanging = false;
+		//	Transform object to store previous state of game object prior to change.
+		Transform m_transPrev;
 		//	Helper value to quickly check if we already have a MeshComponent added.
 		bool b_hasMesh = false;
     public:

@@ -5,6 +5,7 @@
 #include "events/EventCollection.h"
 #include "imgui/ImGuiAbout.h"
 #include "graphics/meshes/MeshFactory.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster
 {
@@ -49,8 +50,13 @@ namespace Lobster
 				// Edit
 				if (ImGui::BeginMenu("Edit"))
 				{
-					if (ImGui::MenuItem("Undo", "Ctrl+Z")) { LOG("No Undo"); }
-					if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z", false, false)) {}  // Disabled item
+					UndoSystem* undo = UndoSystem::GetInstance();
+					if (ImGui::MenuItem("Undo", "Ctrl+Z", false, undo->UndosRemaining() > 0)) {
+						undo->Undo();
+					}
+					if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z", false, undo->RedosRemaining() > 0)) {
+						undo->Redo();
+					}
 					ImGui::Separator();
 					if (ImGui::MenuItem("Cut", "Ctrl+X")) {}
 					if (ImGui::MenuItem("Copy", "Ctrl+C")) {}

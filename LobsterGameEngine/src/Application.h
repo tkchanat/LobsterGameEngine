@@ -10,6 +10,7 @@ namespace Lobster
 	class GUILayer;
 	class EditorLayer;
 	class FileSystem;
+	class UndoSystem;
     
     class Application
     {
@@ -19,6 +20,7 @@ namespace Lobster
         Renderer* m_renderer;
         Scene* m_scene;
 		FileSystem* m_fileSystem;
+		UndoSystem* m_undoSystem;
 		std::string originalTitle;
 		int m_targetFPS = 60;
 		int m_maxFixedUpdates = 10;
