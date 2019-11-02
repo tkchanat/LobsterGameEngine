@@ -20,6 +20,7 @@ namespace Lobster
         Scene();
         ~Scene();
         void OnUpdate(double deltaTime);
+		void OnPhysicsUpdate(double deltaTime);
         Scene* AddGameObject(GameObject* gameObject);
 		Scene* RemoveGameObject(std::string name);
 		Scene* RemoveGameObject(GameObject* gameObject);

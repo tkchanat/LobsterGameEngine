@@ -6,6 +6,7 @@
 #include "system/filesystem.h"
 
 #include "graphics/Scene.h"
+#include "physics/PhysicsBodyCollection.h"
 
 namespace Lobster
 {
@@ -16,17 +17,24 @@ namespace Lobster
     public:
 		//	The world / model matrix of the game object
         Transform transform;
+
     private:
 		static std::hash<uintptr_t> hashFunc;
 		unsigned long long m_id;
         std::string m_name;
         std::vector<Component*> m_components;
+		//	Shortcut to access to the mesh component.
+		MeshComponent* m_mesh = false;
 		//	Boolean to indicate whether we are changing object in previous frame.
 		bool b_isChanging = false;
 		//	Transform object to store previous state of game object prior to change.
 		Transform m_transPrev;
-		//	Helper value to quickly check if we already have a MeshComponent added.
-		bool b_hasMesh = false;
+
+		//	Index of physics component.
+		int m_physicsIndex = -1;
+		//	Integer defining physics for this game object.
+		int m_physicsType = 0;
+
     public:
         GameObject(const char* name);
         ~GameObject();
@@ -38,6 +46,7 @@ namespace Lobster
         template<typename T> T* GetComponent();
 		inline unsigned long long GetId() { return m_id; }
         inline std::string GetName() const { return m_name; }
+		inline PhysicsBody* GetPhysicsBody() const { return dynamic_cast<PhysicsBody*>(m_components[m_physicsIndex]); }
     };
     
     //=========================================
@@ -49,24 +58,26 @@ namespace Lobster
 		//  TODO:
 		//  One game object can only have one mesh component
 		//	Sunny: Function returns this directly when we add the second one now. Need discussion on deletion tho
+		//	Also discuss about whether we need to keep m_mesh.
 
-		//	Determines if we want to add a mesh component.
-		//	Attach a collider to it if we add our first MeshComponent,
-		//	Return directly if we add more than one.
-		if (b_hasMesh) return this;
+		//	Determines if we want to add a mesh component, return directly if we add more than one.
+		if (typeid(T) == typeid(MeshComponent) && m_mesh) return this;
 
 		T* newComponent = new T(std::forward<Args>(args)...);
 		newComponent->SetOwner(this);
 		newComponent->SetOwnerTransform(&this->transform);
 		m_components.push_back(newComponent);
 
+		//	If it is the mesh, initialize physics body too.
 		if (typeid(T) == typeid(MeshComponent)) {
-			b_hasMesh = true;
-			ColliderComponent* collider = new ColliderComponent(newComponent->ObjectBound()[0], newComponent->ObjectBound()[1]);
-			collider->SetOwner(this);
-			collider->SetOwnerTransform(&this->transform);
-			m_components.push_back(collider);
+			m_mesh = dynamic_cast<MeshComponent*>(newComponent);
+
+			m_physicsIndex = m_components.size();
+
+			//	Default to be a rigid body.
+			return AddComponent<Rigidbody>(m_mesh->GetBound());
 		}
+
 		return this;
 	}
     

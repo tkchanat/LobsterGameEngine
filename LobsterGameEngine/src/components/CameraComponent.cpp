@@ -44,16 +44,6 @@ namespace Lobster
 	{
 	}
 
-	std::vector<glm::vec3> CameraComponent::ObjectBound()
-	{
-		//	TODO: Fix the bound for the camera, I have no idea what I am writing over here. --sunny
-		std::vector<glm::vec3> minMax(2);
-		glm::vec3 pos = -transform->WorldPosition;
-		minMax[0] = pos - glm::vec3(0.1, 0.1, 0.1);
-		minMax[1] = pos + glm::vec3(0.1, 0.1, 0.1);
-		return minMax;
-	}
-
 	glm::mat4 CameraComponent::GetViewMatrix() const
 	{
 		return glm::mat4_cast(glm::conjugate(transform->LocalRotation)) * glm::translate(-transform->WorldPosition);

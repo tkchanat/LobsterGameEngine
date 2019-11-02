@@ -20,20 +20,20 @@ namespace Lobster {
 		m_object->transform = m_original;
 	}
 
-	//	TODO: Print something even more meaningful here.
 	std::string TransformCommand::ToString() const {
-		std::string desc, act;
+		//	act stores the action, vect stores the vector details.
+		std::string act, vect;
 		if (m_original.WorldPosition != m_new.WorldPosition) {
-			desc = "Translation of ";
-			act = glm::to_string(m_original.WorldPosition) + " to " + glm::to_string(m_new.WorldPosition);
+			act = "Translated ";
+			vect = StringOps::ToString(m_new.WorldPosition);
 		} else if (m_original.LocalEulerAngles != m_new.LocalEulerAngles) {
-			desc = "Rotation of ";
-			act = glm::to_string(m_original.LocalEulerAngles) + " to " + glm::to_string(m_new.LocalEulerAngles);
+			act = "Rotated ";
+			vect = StringOps::ToString(m_new.LocalEulerAngles);
 		} else {
-			desc = "Scaling of ";
-			act = glm::to_string(m_original.LocalScale) + " to " + glm::to_string(m_new.LocalScale);
+			act = "Scaled ";
+			vect = StringOps::ToString(m_new.LocalScale);
 		}
 		
-		return desc + m_object->GetName() + " from " + act + ".";
+		return act + m_object->GetName() + " to " + vect;
 	}
 }

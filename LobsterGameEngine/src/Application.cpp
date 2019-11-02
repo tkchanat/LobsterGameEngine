@@ -130,6 +130,7 @@ namespace Lobster
 
 		//=========================================================
 		// Physics update
+		m_scene->OnPhysicsUpdate(deltaTime);
 	}
 
 	// Updates subsystem chronologically as much as possible, i.e. order does matter
@@ -184,7 +185,6 @@ namespace Lobster
 		{
 			layer->OnImGuiRender();
 		}
-		//  LOG(std::to_string(ImGui::IsAnyItemActive()));
 		m_GUILayer->End();
 		Profiler::SubmitData("ImGui Render Time", imguiRenderTimer.GetElapsedTime());
 		#endif

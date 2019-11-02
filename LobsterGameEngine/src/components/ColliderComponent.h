@@ -5,7 +5,6 @@
 
 namespace Lobster
 {
-
 	//	A collider component is an invisible component used for physics calculation
 	class ColliderComponent : public Component
 	{
@@ -23,7 +22,6 @@ namespace Lobster
 		virtual ~ColliderComponent() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-		virtual std::vector<glm::vec3> ObjectBound() override;
 
 		bool Intersects(ColliderComponent* other);
 	};

@@ -61,7 +61,14 @@ namespace Lobster
         m_debugMesh = new VertexArray(layout, vb, ib, PrimitiveType::LINES);
     }
 
-    void AABB::DebugDraw()
+	void AABB::OnUpdate(Transform* t) {
+		// update AABB
+		Center = t->WorldPosition;
+		UpdateRotation(t->LocalRotation, t->LocalScale);
+		Draw();
+	}
+
+    void AABB::Draw()
     {
 #ifdef LOBSTER_BUILD_DEBUG
         // validate data

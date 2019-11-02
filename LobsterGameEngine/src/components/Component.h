@@ -24,9 +24,6 @@ namespace Lobster
 		virtual ~Component() {}
         virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender() = 0;
-		//	TODO: ObjectBound() should be extended to return 3 different type of bounds (AABB / sphere / OBB),
-		//	according to an input through a parameter.
-		virtual std::vector<glm::vec3> ObjectBound() = 0;
         inline void SetOwner(GameObject* owner) { gameObject = owner; }
         inline void SetOwnerTransform(Transform* t) { transform = t; }
         inline void RemoveOwner() { gameObject = nullptr; }

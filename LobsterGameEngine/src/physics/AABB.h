@@ -1,4 +1,5 @@
 #pragma once
+#include "BoundingBox.h"
 
 namespace Lobster
 {
@@ -15,9 +16,8 @@ namespace Lobster
 	//	TODO 2:
 	//	After completion of the function, create a proper draw function.
 	//	We should not create a private draw function and rely on friend class to render the bounding box.
-    class AABB
+    class AABB : public BoundingBox
     {
-		friend class ColliderComponent;
     public:
         glm::vec3 Center;
         glm::vec3 Min;
@@ -31,9 +31,13 @@ namespace Lobster
     public:
 		AABB();
         AABB(glm::vec3 min, glm::vec3 max);
+		void OnUpdate(Transform* t) override;
         bool Intersects(const AABB& other);
+
+	protected:
+		void Draw() override;
+
     private:
-        void DebugDraw();
         void SetVertices(bool setInitial);
         void UpdateRotation(glm::quat rotation, glm::vec3 scale);
     };

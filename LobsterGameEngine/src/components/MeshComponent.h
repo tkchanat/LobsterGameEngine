@@ -26,7 +26,7 @@ namespace Lobster
         virtual ~MeshComponent() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-		virtual std::vector<glm::vec3> ObjectBound() override;
+		inline std::vector<glm::vec3> GetBound() const { return bounds; }
     };
     
 }

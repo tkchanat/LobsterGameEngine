@@ -116,12 +116,32 @@ namespace Lobster
 		} else if (b_isChanging && !isChanging) {
 			b_isChanging = false;
 
-			LOG("123");
-
 			//	Only send undo event if transform changed.
 			if (m_transPrev.GetMatrix() != transform.GetMatrix()) {
 				UndoSystem::GetInstance()->Push(new TransformCommand(this, m_transPrev, transform));
 			}
+		}
+
+		//	General options for Physics.
+		if (ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
+			ImGui::Combo("Body Type", &m_physicsType, PhysicsBody::PhysicsBodyTypes, 2);
+
+
+			PhysicsBody* physics = GetPhysicsBody();
+
+			//	Change Rigid Body type if needed
+			if (ImGui::IsItemActive()) {
+				if (m_physicsType == 0 && dynamic_cast<Rigidbody*>(physics)) {
+					//	Case 1 - user changed from non-rigid to rigid.
+					delete physics;
+					physics = new Rigidbody(m_mesh->GetBound());
+					m_components[m_physicsIndex] = physics;
+				} else {
+					//	TODO: implement else if for changing from rigid to non-rigid.
+				}
+			}
+
+			physics->SetEnabled();
 		}
 
 		//  Show information of all components
@@ -130,5 +150,4 @@ namespace Lobster
 			component->OnImGuiRender();
 		}
 	}
-    
 }

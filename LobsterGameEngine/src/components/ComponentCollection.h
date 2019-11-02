@@ -5,7 +5,6 @@
 //	System components
 #include "MeshComponent.h"
 #include "CameraComponent.h"
-#include "ColliderComponent.h"
 
 //	User components (a.k.a user scripts)
 #include "scripts/FirstPersonController.h"

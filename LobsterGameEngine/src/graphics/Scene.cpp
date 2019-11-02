@@ -40,6 +40,12 @@ namespace Lobster
         }
 		Renderer::EndScene();
     }
+
+	void Scene::OnPhysicsUpdate(double deltaTime) {
+		for (GameObject* gameObject : m_gameObjects) {
+			gameObject->GetPhysicsBody()->OnUpdate(deltaTime);
+		}
+	}
     
     Scene* Scene::AddGameObject(GameObject* gameObject)
     {
@@ -83,5 +89,4 @@ namespace Lobster
 		}
 		return false;
 	}
-
 }

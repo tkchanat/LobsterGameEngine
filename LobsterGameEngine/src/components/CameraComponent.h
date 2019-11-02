@@ -34,7 +34,6 @@ namespace Lobster
 		void ResizeProjection(float aspectRatio);
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-		virtual std::vector<glm::vec3> ObjectBound() override;
 		glm::mat4 GetViewMatrix() const;
         inline glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 		inline glm::vec3 GetPosition() const { return Component::transform->WorldPosition; }

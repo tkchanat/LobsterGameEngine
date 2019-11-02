@@ -72,9 +72,4 @@ namespace Lobster
 			}
 		}
 	}
-    
-	std::vector<glm::vec3> MeshComponent::ObjectBound()
-	{
-		return bounds;
-	}
 }

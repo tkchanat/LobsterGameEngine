@@ -18,12 +18,12 @@ namespace Lobster
 	void ColliderComponent::OnUpdate(double deltaTime)
 	{
 		// update AABB
-		m_AABB.Center = transform->WorldPosition;
-		m_AABB.UpdateRotation(transform->LocalRotation, transform->LocalScale);
-		if (b_enabled)
-		{
-			m_AABB.DebugDraw();
-		}
+		//m_AABB.Center = transform->WorldPosition;
+		//m_AABB.UpdateRotation(transform->LocalRotation, transform->LocalScale);
+		//if (b_enabled)
+		//{
+		//	m_AABB.DebugDraw();
+		//}
 	}
 
 	void ColliderComponent::OnImGuiRender()
@@ -32,11 +32,6 @@ namespace Lobster
 		{
 			ImGui::Checkbox("Enable", &b_enabled);
 		}
-	}
-
-	std::vector<glm::vec3> ColliderComponent::ObjectBound()
-	{
-		return std::vector<glm::vec3>();
 	}
 
 	bool ColliderComponent::Intersects(ColliderComponent * other)
