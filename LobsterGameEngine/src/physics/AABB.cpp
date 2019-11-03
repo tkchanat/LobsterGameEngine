@@ -27,13 +27,14 @@ namespace Lobster
 		memset(m_debugInitialData, 0, sizeof(float) * 24);
     }
 
-    AABB::AABB(glm::vec3 min, glm::vec3 max) :
+    AABB::AABB(glm::vec3 min, glm::vec3 max, bool draw) :
         Center(glm::vec3(0, 0, 0)),
         Min(min),
         Max(max),
         m_debugMaterial(nullptr),
         m_debugMesh(nullptr),
-        m_debugVertexBuffer(nullptr)
+        m_debugVertexBuffer(nullptr),
+		Collider(draw)
     {
         // member variable initialization
         memset(m_debugData, 0, sizeof(float) * 24);
@@ -65,7 +66,7 @@ namespace Lobster
 		// update AABB
 		Center = t->WorldPosition;
 		UpdateRotation(t->LocalRotation, t->LocalScale);
-		Draw();
+		if (m_draw) Draw();
 	}
 
     void AABB::Draw()

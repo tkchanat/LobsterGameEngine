@@ -6,23 +6,35 @@ namespace Lobster {
 
 
 	Rigidbody::Rigidbody(std::vector<glm::vec3> minMax) :
-		PhysicsBody(minMax)
+		PhysicsComponent(minMax)
 	{
-		m_collider = new Collider(minMax);
+		//	TODO: Modify AABB constructor to take a glm::vec3 vector.
+		m_boundingBox = new AABB(minMax[0], minMax[1], false);
+
+		//	TODO 2: Currently only support BoxCollider, so hardcode AABB here.
+		m_collider = new AABB(minMax[0], minMax[1]);
 	}
 
 	void Rigidbody::OnUpdate(double deltaTime) {
-		if (m_collider) m_collider->OnUpdate(deltaTime);
+		//	We should update but not draw the bounding box. Update and draw the collider according to user's option.
+		m_boundingBox->OnUpdate(transform);
+		m_collider->OnUpdate(transform);
 	}
 
 	void Rigidbody::OnImGuiRender() {
-		if (!m_enabled) return;
+		ImGui::PushID(this);
+		if (ImGui::CollapsingHeader("Physics Collider", ImGuiTreeNodeFlags_DefaultOpen)) {
+			ImGui::Checkbox("Enabled?", &m_enabled);
 
-		if (ImGui::CollapsingHeader("Rigid body", ImGuiTreeNodeFlags_DefaultOpen)) {
-			ImGui::Checkbox("Gravity", &m_gravity);
+			ImGui::Combo("Physics Type", &m_physicsType, PhysicsType, 3);
+			ImGui::Combo("Collider Type", &m_colliderType, ColliderType, 2);
+
+			//	TODO: When we add support for SphereCollider, add and implement this code to implement switching between Sphere / Box Collider.
+			//	if (ImGui::IsItemActive());
+
+			m_collider->OnImGuiRender();
 		}
-
-		if (m_collider) m_collider->OnImGuiRender();
+		ImGui::PopID();
 	}
 
 	//	TODO: Guess by taking half of deltaTime until we find a good approximation

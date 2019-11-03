@@ -1,5 +1,5 @@
 #pragma once
-#include "BoundingBox.h"
+#include "physics/Collider.h"
 
 namespace Lobster
 {
@@ -16,7 +16,7 @@ namespace Lobster
 	//	TODO 2:
 	//	After completion of the function, create a proper draw function.
 	//	We should not create a private draw function and rely on friend class to render the bounding box.
-    class AABB : public BoundingBox
+    class AABB : public Collider
     {
     public:
         glm::vec3 Center;
@@ -30,8 +30,9 @@ namespace Lobster
 		float m_debugInitialData[24]; // raw initial vertices position
     public:
 		AABB();
-        AABB(glm::vec3 min, glm::vec3 max);
+        AABB(glm::vec3 min, glm::vec3 max, bool draw = true);
 		void OnUpdate(Transform* t) override;
+		void OnImGuiRender() override { Collider::OnImGuiRender(); }
         bool Intersects(const AABB& other);
 
 	protected:

@@ -1,10 +1,10 @@
 #pragma once
 #include <glm/vec3.hpp>
 #include "objects/Transform.h"
-#include "physics/PhysicsBody.h"
+#include "physics/PhysicsComponent.h"
 
 namespace Lobster {
-	class Rigidbody : public PhysicsBody {
+	class Rigidbody : public PhysicsComponent {
 	public:
 		static const glm::vec3 GRAVITY;
 
@@ -12,7 +12,7 @@ namespace Lobster {
 		void OnUpdate(double deltaTime) override;
 		void OnImGuiRender() override;
 
-		inline ColliderType GetColliderType() const { return m_collider ? m_collider->GetColliderType() : ColliderType::BOUND; }
+		inline int GetColliderType() const { return m_colliderType; }
 		bool WillCollide(double deltaTime);
 
 	private:

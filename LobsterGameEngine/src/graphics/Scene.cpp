@@ -43,7 +43,9 @@ namespace Lobster
 
 	void Scene::OnPhysicsUpdate(double deltaTime) {
 		for (GameObject* gameObject : m_gameObjects) {
-			gameObject->GetPhysicsBody()->OnUpdate(deltaTime);
+			for (PhysicsComponent* phyComp : gameObject->GetPhysicsComponent()) {
+				phyComp->OnUpdate(deltaTime);
+			}
 		}
 	}
     

@@ -6,7 +6,7 @@
 #include "system/filesystem.h"
 
 #include "graphics/Scene.h"
-#include "physics/PhysicsBodyCollection.h"
+#include "physics/PhysicsComponentCollection.h"
 
 namespace Lobster
 {
@@ -23,6 +23,8 @@ namespace Lobster
 		unsigned long long m_id;
         std::string m_name;
         std::vector<Component*> m_components;
+		//	Shortcut to access the vector of physics components.
+		std::vector<PhysicsComponent*> m_physicsComp;
 		//	Shortcut to access to the mesh component.
 		MeshComponent* m_mesh = false;
 		//	Boolean to indicate whether we are changing object in previous frame.
@@ -35,18 +37,24 @@ namespace Lobster
 		//	Integer defining physics for this game object.
 		int m_physicsType = 0;
 
+		//	Helper function to get the bounding box for an object.
+		inline std::vector<glm::vec3> GetBound() const {
+			return (m_mesh ? m_mesh->GetBound() : std::vector<glm::vec3>({glm::vec3(-0.5, -0.5, -0.5), glm::vec3(0.5, 0.5, 0.5)}));
+		}
+
     public:
         GameObject(const char* name);
         ~GameObject();
         void OnUpdate(double deltaTime);
-		// To update ImGui components that describes this game object's attributes
-
+		//	To update ImGui components that describes this game object's attributes
 		virtual void OnImGuiRender(Scene* scene);
         template<typename T, typename ...Args> GameObject* AddComponent(Args&&... args);
         template<typename T> T* GetComponent();
+		inline std::vector<PhysicsComponent*> GetPhysicsComponent() const { return m_physicsComp; }
 		inline unsigned long long GetId() { return m_id; }
         inline std::string GetName() const { return m_name; }
-		inline PhysicsBody* GetPhysicsBody() const { return dynamic_cast<PhysicsBody*>(m_components[m_physicsIndex]); }
+		//	RemoveComponent removes the component in vector and deletes comp afterwards.
+		void RemoveComponent(Component* comp);
     };
     
     //=========================================
@@ -68,14 +76,12 @@ namespace Lobster
 		newComponent->SetOwnerTransform(&this->transform);
 		m_components.push_back(newComponent);
 
-		//	If it is the mesh, initialize physics body too.
+		//	If it is the mesh, set m_mesh.
+		//	Else, if it is physics component, send it to physics component vector too.
 		if (typeid(T) == typeid(MeshComponent)) {
 			m_mesh = dynamic_cast<MeshComponent*>(newComponent);
-
-			m_physicsIndex = m_components.size();
-
-			//	Default to be a rigid body.
-			return AddComponent<Rigidbody>(m_mesh->GetBound());
+		} else if (dynamic_cast<PhysicsComponent*>(newComponent)) {
+			m_physicsComp.push_back(dynamic_cast<PhysicsComponent*>(newComponent));
 		}
 
 		return this;

@@ -8,3 +8,6 @@
 
 //	User components (a.k.a user scripts)
 #include "scripts/FirstPersonController.h"
+
+//	Physics components
+#include "physics/PhysicsComponentCollection.h"
