@@ -8,11 +8,8 @@ namespace Lobster {
 	Rigidbody::Rigidbody(std::vector<glm::vec3> minMax) :
 		PhysicsComponent(minMax)
 	{
-		//	TODO: Modify AABB constructor to take a glm::vec3 vector.
-		m_boundingBox = new AABB(minMax[0], minMax[1], false);
-
-		//	TODO 2: Currently only support BoxCollider, so hardcode AABB here.
-		m_collider = new AABB(minMax[0], minMax[1]);
+		m_boundingBox = new AABB(minMax, false);
+		m_collider = new AABB(minMax);
 	}
 
 	void Rigidbody::OnUpdate(double deltaTime) {
@@ -23,7 +20,7 @@ namespace Lobster {
 
 	void Rigidbody::OnImGuiRender() {
 		ImGui::PushID(this);
-		if (ImGui::CollapsingHeader("Physics Collider", ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader("Physics Collider", &m_show, ImGuiTreeNodeFlags_DefaultOpen)) {
 			ImGui::Checkbox("Enabled?", &m_enabled);
 
 			ImGui::Combo("Physics Type", &m_physicsType, PhysicsType, 3);
@@ -35,6 +32,11 @@ namespace Lobster {
 			m_collider->OnImGuiRender();
 		}
 		ImGui::PopID();
+
+		//	TODO: Confirmation Window.
+		if (!m_show) {
+			RemoveComponent(this);
+		}
 	}
 
 	//	TODO: Guess by taking half of deltaTime until we find a good approximation

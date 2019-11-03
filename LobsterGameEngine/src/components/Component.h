@@ -20,6 +20,7 @@ namespace Lobster
 		//	Therefore, we declare the class Script as a friend for accessing these pointers.
         GameObject* gameObject;
         Transform* transform;
+
     public:
 		virtual ~Component() {}
         virtual void OnUpdate(double deltaTime) = 0;

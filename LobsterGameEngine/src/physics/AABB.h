@@ -30,7 +30,7 @@ namespace Lobster
 		float m_debugInitialData[24]; // raw initial vertices position
     public:
 		AABB();
-        AABB(glm::vec3 min, glm::vec3 max, bool draw = true);
+        AABB(std::vector<glm::vec3> minMax, bool draw = true);
 		void OnUpdate(Transform* t) override;
 		void OnImGuiRender() override { Collider::OnImGuiRender(); }
         bool Intersects(const AABB& other);

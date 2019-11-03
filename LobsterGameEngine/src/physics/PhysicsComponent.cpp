@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "physics/PhysicsComponent.h"
+#include "objects/GameObject.h"
 
 namespace Lobster {
 	//	Thank you C++ for forcing me to create a cpp for these few line.
@@ -9,4 +10,8 @@ namespace Lobster {
 
 	const char* PhysicsComponent::ColliderType[] = { "Box Collider", "Sphere Collider" };
 	const char* PhysicsComponent::PhysicsType[] = { "Bound", "Overlap", "Ignore" };
+
+	void PhysicsComponent::RemoveComponent(Component* comp) {
+		gameObject->RemoveComponent(comp);
+	}
 }

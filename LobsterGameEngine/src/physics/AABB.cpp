@@ -27,10 +27,10 @@ namespace Lobster
 		memset(m_debugInitialData, 0, sizeof(float) * 24);
     }
 
-    AABB::AABB(glm::vec3 min, glm::vec3 max, bool draw) :
+    AABB::AABB(std::vector<glm::vec3> minMax, bool draw) :
         Center(glm::vec3(0, 0, 0)),
-        Min(min),
-        Max(max),
+        Min(minMax[0]),
+        Max(minMax[1]),
         m_debugMaterial(nullptr),
         m_debugMesh(nullptr),
         m_debugVertexBuffer(nullptr),
