@@ -33,7 +33,7 @@ namespace Lobster
         AABB(std::vector<glm::vec3> minMax, bool draw = true);
 		void OnUpdate(Transform* t) override;
 		void OnImGuiRender() override { Collider::OnImGuiRender(); }
-        bool Intersects(const AABB& other);
+        bool Intersects(Collider* other) override;
 
 	protected:
 		void Draw() override;

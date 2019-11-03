@@ -224,6 +224,7 @@ namespace Lobster
 			}
 			//  ===========TO BE REMOVED=============
 
+			accumulateTime += deltaTime;
 			for (int i = 0; i < m_maxFixedUpdates && accumulateTime > intervalTime; ++i)
 			{
 				FixedUpdate(deltaTime);

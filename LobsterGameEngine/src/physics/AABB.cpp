@@ -94,12 +94,14 @@ namespace Lobster
 #endif
     }
 
-    bool AABB::Intersects(const AABB &other)
+    bool AABB::Intersects(Collider* component)
     {
-		// Determine if there's intersection in each dimension
-		bool x = (Min.x - other.Max.x) <= 0.0f && (other.Min.x - Max.x) <= 0.0f;
-		bool y = (Min.y - other.Max.y) <= 0.0f && (other.Min.y - Max.y) <= 0.0f;
-		bool z = (Min.z - other.Max.z) <= 0.0f && (other.Min.z - Max.z) <= 0.0f;
+		//	We can assume the given component is also AABB for now.
+		AABB* other = dynamic_cast<AABB*>(component);
+		//	Determine if there's intersection in each dimension
+		bool x = (Min.x + Center.x - other->Max.x - other->Center.x) <= 0.0f && (other->Min.x + other->Center.x - Max.x - Center.x) <= 0.0f;
+		bool y = (Min.y + Center.y - other->Max.y - other->Center.y) <= 0.0f && (other->Min.y + other->Center.y - Max.y - Center.y) <= 0.0f;
+		bool z = (Min.z + Center.z - other->Max.z - other->Center.z) <= 0.0f && (other->Min.z + other->Center.z - Max.z - Center.z) <= 0.0f;
 
         return x && y && z;
     }

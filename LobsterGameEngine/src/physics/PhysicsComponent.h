@@ -11,8 +11,10 @@ namespace Lobster {
 		const static char* PhysicsType[];
 
 		PhysicsComponent(std::vector<glm::vec3> minMax) : m_minMax(minMax) {}
+		//	Block / Overlap / Ignore
 		inline int GetPhysicsType() const { return m_physicsType; }
 		inline Collider* GetCollider() const { return m_collider; }
+		inline bool Intersects(PhysicsComponent* phyComp) const { return m_collider->Intersects(phyComp->m_collider); }
 
 	protected:
 		//	Bounding box is not visible to user, and is used by quick collision estimation only.

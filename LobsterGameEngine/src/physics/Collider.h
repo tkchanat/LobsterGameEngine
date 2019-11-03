@@ -9,6 +9,7 @@ namespace Lobster {
 		virtual void OnImGuiRender() {
 			ImGui::Checkbox("Visualize Collider", &m_draw);
 		}
+		virtual bool Intersects(Collider* collider) = 0;
 
 	protected:
 		virtual void Draw() = 0;

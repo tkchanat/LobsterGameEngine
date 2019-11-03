@@ -7,9 +7,8 @@ namespace Lobster {
 	//	We made const char* static members for ImGui dropdown box.
 	//	If we found other workarounds, feel free to delete this line (and file).
 	const char* PhysicsComponent::PhysicsBodyTypes[] = { "Rigid body", "Non-rigid body" };
-
 	const char* PhysicsComponent::ColliderType[] = { "Box Collider", "Sphere Collider" };
-	const char* PhysicsComponent::PhysicsType[] = { "Bound", "Overlap", "Ignore" };
+	const char* PhysicsComponent::PhysicsType[] = { "Block", "Overlap", "Ignore" };
 
 	void PhysicsComponent::RemoveComponent(Component* comp) {
 		gameObject->RemoveComponent(comp);
