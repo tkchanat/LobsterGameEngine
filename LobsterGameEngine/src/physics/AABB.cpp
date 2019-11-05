@@ -6,6 +6,7 @@
 #include "graphics/VertexLayout.h"
 #include "graphics/IndexBuffer.h"
 #include "graphics/Renderer.h"
+#include "objects/GameObject.h"
 
 namespace Lobster
 {
@@ -15,26 +16,15 @@ namespace Lobster
     // take ALL 8 points of the box, rotate them, and then find the min/max
     // in each axis from those 8 points to find the two points(min & max)
     // points of your new AABB.
-    AABB::AABB() :
-        Center(glm::vec3(0, 0, 0)),
-        Min(glm::vec3(0, 0, 0)),
-        Max(glm::vec3(0, 0, 0)),
-        m_debugMaterial(nullptr),
-        m_debugMesh(nullptr),
-        m_debugVertexBuffer(nullptr)
-    {
-        memset(m_debugData, 0, sizeof(float) * 24);
-		memset(m_debugInitialData, 0, sizeof(float) * 24);
-    }
 
-    AABB::AABB(std::vector<glm::vec3> minMax, bool draw) :
-        Center(glm::vec3(0, 0, 0)),
-        Min(minMax[0]),
-        Max(minMax[1]),
+    AABB::AABB(Transform transform, bool draw) :
+		Center(glm::vec3(0, 0, 0)),
+		Min(glm::vec3(0, 0, 0)),
+		Max(glm::vec3(0, 0, 0)),
         m_debugMaterial(nullptr),
         m_debugMesh(nullptr),
         m_debugVertexBuffer(nullptr),
-		Collider(draw)
+		ColliderComponent(transform, draw)
     {
         // member variable initialization
         memset(m_debugData, 0, sizeof(float) * 24);
@@ -49,7 +39,6 @@ namespace Lobster
         std::vector<IndexBuffer*> ib;
         
         // construct vertex buffer data
-        SetVertices(true);
         vb.push_back(m_debugVertexBuffer);
         
         // construct index buffer data
@@ -62,17 +51,26 @@ namespace Lobster
         m_debugMesh = new VertexArray(layout, vb, ib, PrimitiveType::LINES);
     }
 
-	void AABB::OnUpdate(Transform* t) {
+	void AABB::SetOwner(GameObject* owner) {
+		gameObject = owner;
+		std::pair<glm::vec3, glm::vec3> pair = owner->GetComponent<MeshComponent>()->GetBound();
+		Min = pair.first;
+		Max = pair.second;
+		SetVertices(true);
+	}
+
+	void AABB::OnUpdate(double deltaTime) {
 		// update AABB
-		Center = t->WorldPosition;
-		UpdateRotation(t->LocalRotation, t->LocalScale);
+		Center = transform->WorldPosition;
+		UpdateRotation(transform->LocalRotation, transform->LocalScale);
 		if (m_draw) Draw();
 	}
 
     void AABB::Draw()
     {
 #ifdef LOBSTER_BUILD_DEBUG
-        // validate data
+        // validate data, and return if we haven't define game object yet
+		if (!gameObject) return;
         if(!m_debugMaterial || !m_debugMesh || Min == Max)
         {
             throw std::runtime_error("Oops... This AABB is not ready to be drawn!");
@@ -94,7 +92,7 @@ namespace Lobster
 #endif
     }
 
-    bool AABB::Intersects(Collider* component)
+    bool AABB::Intersects(ColliderComponent* component)
     {
 		//	We can assume the given component is also AABB for now.
 		AABB* other = dynamic_cast<AABB*>(component);

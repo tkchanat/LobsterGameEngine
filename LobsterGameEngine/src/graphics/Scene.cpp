@@ -45,24 +45,24 @@ namespace Lobster
 		//	First perform physics update.
 		//	TODO: Some type of structure to record which pair of game objects / colliders intersected.
 
-		std::vector<PhysicsComponent*> phyComps;
+		std::vector<ColliderComponent*> colliders;
 		for (GameObject* gameObject : m_gameObjects) {
-			for (PhysicsComponent* phyComp : gameObject->GetPhysicsComponent()) {
-				phyComp->OnUpdate(deltaTime);
-				if (phyComp->GetPhysicsType() != 2) phyComps.push_back(phyComp);
+			//	TODO: Physics Update
+			for (ColliderComponent* collider : gameObject->GetColliders()) {
+				if (collider->GetOwner()->GetPhysicsComponent()->GetPhysicsType() != 2) colliders.push_back(collider);
 			}
 		}
 
 		//	Next, do collision check on all physics components we extracted.
 		//	Currently, we adapted a naive approach of comparing all pairs of AABB.
 		int i = 0;
-		for (PhysicsComponent* p1 : phyComps) {
+		for (ColliderComponent* c1 : colliders) {
 			int j = 0;
-			for (PhysicsComponent* p2 : phyComps) {
+			for (ColliderComponent* c2 : colliders) {
 				if (i <= j) break;
 				//	TODO: Actually use the computed result here instead of printing.
-				bool intersect = p1->Intersects(p2);
-				if (intersect) LOG("{} intersects with {} (Type: {})", p1->GetOwner()->GetName(), p2->GetOwner()->GetName(), PhysicsComponent::PhysicsType[std::max(p1->GetPhysicsType(), p2->GetPhysicsType())]);
+				bool intersect = c1->Intersects(c2);
+				if (intersect) LOG("{} intersects with {} (Type: {})", c1->GetOwner()->GetName(), c2->GetOwner()->GetName(), PhysicsComponent::PhysicsType[std::max(c1->GetOwner()->GetPhysicsComponent()->GetPhysicsType(), c2->GetOwner()->GetPhysicsComponent()->GetPhysicsType())]);
 				j++;
 			}
 			i++;

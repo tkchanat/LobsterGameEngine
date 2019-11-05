@@ -8,11 +8,14 @@ namespace Lobster {
 	public:
 		static const glm::vec3 GRAVITY;
 
-		Rigidbody(std::vector<glm::vec3> minMax);
+		Rigidbody() :
+			m_velocity(glm::vec3(0, 0, 0)),
+			m_acceleration(glm::vec3(0, 0, 0))
+		{}
+
 		void OnUpdate(double deltaTime) override;
 		void OnImGuiRender() override;
 
-		inline int GetColliderType() const { return m_colliderType; }
 		bool WillCollide(double deltaTime);
 
 	private:

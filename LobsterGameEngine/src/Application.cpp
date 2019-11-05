@@ -98,7 +98,7 @@ namespace Lobster
 			LOG("ThreadPool is working! :D");
 		});
 
-        GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat");
+        GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
 		barrel->transform.Translate(0, 2, 0);
 		m_scene->AddGameObject(barrel);
 
