@@ -29,6 +29,7 @@ namespace Lobster
         // member variable initialization
         memset(m_debugData, 0, sizeof(float) * 24);
 		memset(m_debugInitialData, 0, sizeof(float) * 24);
+		memset(m_debugTranslatedData, 0, sizeof(float) * 24);
         m_debugMaterial = new Material("materials/SolidColor.mat");
         m_debugMaterial->GetUniformBufferData(0)->SetData("color", (void*)glm::value_ptr(glm::vec4(0, 1, 0, 1)));
         m_debugVertexBuffer = new VertexBuffer(DrawMode::DYNAMIC_DRAW);
@@ -56,13 +57,17 @@ namespace Lobster
 		std::pair<glm::vec3, glm::vec3> pair = owner->GetComponent<MeshComponent>()->GetBound();
 		Min = pair.first;
 		Max = pair.second;
-		SetVertices(true);
+		SetVertices(1);
 	}
 
 	void AABB::OnUpdate(double deltaTime) {
 		// update AABB
+		m_transform.UpdateMatrix();
 		Center = transform->WorldPosition;
 		UpdateRotation(transform->LocalRotation, transform->LocalScale);
+		SetVertices(2);
+		Center = transform->WorldPosition + m_transform.WorldPosition;
+		UpdateRotation(m_transform.LocalRotation, m_transform.LocalScale, true);
 		if (m_draw) Draw();
 	}
 
@@ -104,7 +109,10 @@ namespace Lobster
         return x && y && z;
     }
 
-    void AABB::SetVertices(bool setInitial = false)
+	//	Set extra = 0: Only set debug data.
+	//	Set extra = 1: Set initial.
+	//	Set extra = 2: Set translated.
+    void AABB::SetVertices(int setExtra)
     {
         m_debugData[0] = m_debugData[3] = m_debugData[12] = m_debugData[15] = Min.x;
         m_debugData[1] = m_debugData[10] = m_debugData[13] = m_debugData[22] = Min.y;
@@ -112,20 +120,31 @@ namespace Lobster
         m_debugData[6] = m_debugData[9] = m_debugData[18] = m_debugData[21] = Max.x;
         m_debugData[4] = m_debugData[7] = m_debugData[16] = m_debugData[19] = Max.y;
         m_debugData[14] = m_debugData[17] = m_debugData[20] = m_debugData[23] = Max.z;
-		if (setInitial) {
+		if (setExtra == 1) {
 			memcpy(m_debugInitialData, m_debugData, sizeof(m_debugData));
+		} else if (setExtra == 2) {
+			memcpy(m_debugTranslatedData, m_debugData, sizeof(m_debugData));
 		}
         m_debugVertexBuffer->SetData(m_debugData, sizeof(float) * 24);
     }
-
-    void AABB::UpdateRotation(glm::quat rotation, glm::vec3 scale)
+	
+	//	translated indicates whether we translated for once before - if yes, we should use m_debugTranslatedData instead of m_debugInitialData.
+    void AABB::UpdateRotation(glm::quat rotation, glm::vec3 scale, bool translated)
     {
-		Min.x = Max.x = (m_debugInitialData[0] + m_debugInitialData[18]) / 2.0f;
-		Min.y = Max.y = (m_debugInitialData[1] + m_debugInitialData[19]) / 2.0f;
-		Min.z = Max.z = (m_debugInitialData[2] + m_debugInitialData[20]) / 2.0f;
+		if (translated) {
+			Min.x = Max.x = (m_debugTranslatedData[0] + m_debugTranslatedData[18]) / 2.0f;
+			Min.y = Max.y = (m_debugTranslatedData[1] + m_debugTranslatedData[19]) / 2.0f;
+			Min.z = Max.z = (m_debugTranslatedData[2] + m_debugTranslatedData[20]) / 2.0f;
+		} else {
+			Min.x = Max.x = (m_debugInitialData[0] + m_debugInitialData[18]) / 2.0f;
+			Min.y = Max.y = (m_debugInitialData[1] + m_debugInitialData[19]) / 2.0f;
+			Min.z = Max.z = (m_debugInitialData[2] + m_debugInitialData[20]) / 2.0f;
+		}
+		
 		for(int i = 0; i < 24; i += 3)
         {
-            glm::vec3 rotatedCorner = glm::mat3(glm::scale(scale)) * glm::vec3(m_debugInitialData[i], m_debugInitialData[i+1], m_debugInitialData[i+2]) * glm::conjugate(rotation);
+			glm::vec3 vertices = (translated ? glm::vec3(m_debugTranslatedData[i], m_debugTranslatedData[i + 1], m_debugTranslatedData[i + 2]) : glm::vec3(m_debugInitialData[i], m_debugInitialData[i + 1], m_debugInitialData[i + 2]));
+            glm::vec3 rotatedCorner = glm::mat3(glm::scale(scale)) * vertices * glm::conjugate(rotation);
             Min.x = rotatedCorner.x < Min.x ? rotatedCorner.x : Min.x;
             Min.y = rotatedCorner.y < Min.y ? rotatedCorner.y : Min.y;
             Min.z = rotatedCorner.z < Min.z ? rotatedCorner.z : Min.z;
@@ -133,7 +152,7 @@ namespace Lobster
             Max.y = rotatedCorner.y > Max.y ? rotatedCorner.y : Max.y;
             Max.z = rotatedCorner.z > Max.z ? rotatedCorner.z : Max.z;
         }
-        SetVertices();
+        SetVertices(0);
     }
 
 }

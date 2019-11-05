@@ -49,7 +49,7 @@ namespace Lobster
 		for (GameObject* gameObject : m_gameObjects) {
 			//	TODO: Physics Update
 			for (ColliderComponent* collider : gameObject->GetColliders()) {
-				if (collider->GetOwner()->GetPhysicsComponent()->GetPhysicsType() != 2) colliders.push_back(collider);
+				if (collider->IsEnabled() && collider->GetOwner()->GetPhysicsComponent()->GetPhysicsType() != 2) colliders.push_back(collider);
 			}
 		}
 
@@ -61,7 +61,7 @@ namespace Lobster
 			for (ColliderComponent* c2 : colliders) {
 				if (i <= j) break;
 				//	TODO: Actually use the computed result here instead of printing.
-				bool intersect = c1->Intersects(c2);
+				bool intersect = c1->Intersects(c2) && (c1->GetOwner() != c2->GetOwner());
 				if (intersect) LOG("{} intersects with {} (Type: {})", c1->GetOwner()->GetName(), c2->GetOwner()->GetName(), PhysicsComponent::PhysicsType[std::max(c1->GetOwner()->GetPhysicsComponent()->GetPhysicsType(), c2->GetOwner()->GetPhysicsComponent()->GetPhysicsType())]);
 				j++;
 			}

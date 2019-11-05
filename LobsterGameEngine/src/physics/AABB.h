@@ -28,6 +28,7 @@ namespace Lobster
         VertexBuffer* m_debugVertexBuffer;
         float m_debugData[24]; // raw vertices position
 		float m_debugInitialData[24]; // raw initial vertices position
+		float m_debugTranslatedData[24]; // raw translated (for once) vertices position
     public:
         AABB(Transform transform = Transform(), bool draw = true);
 
@@ -40,8 +41,8 @@ namespace Lobster
 		void Draw() override;
 
     private:
-        void SetVertices(bool setInitial);
-        void UpdateRotation(glm::quat rotation, glm::vec3 scale);
+        void SetVertices(int setExtra = 0);
+        void UpdateRotation(glm::quat rotation, glm::vec3 scale, bool translated = false);
     };
 
 }
