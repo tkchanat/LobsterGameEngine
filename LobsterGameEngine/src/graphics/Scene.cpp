@@ -68,6 +68,36 @@ namespace Lobster
 			i++;
 		}
 	}
+
+	//	TODO: @Yuki the starting point of the serialize function is here.
+	//	You might need to create Serialize() and Deserialize() function for each member in Scene.
+	//	You may want to debug by testing Serialize upon adding a game object.
+	//	Simply copy this line and paste in AddGameObject function below:
+	//	LOG("Serialization test result: {}", Serialize());
+	//	
+	//	TODO 2: Delete the TODO for this and the next function after completion :3
+
+	//	Binary serialization of scene to prepare for saving.
+	char* Scene::Serialize() const {
+		//	1. Serialize header for scene
+
+		//	2. Serialize content for scene, might involve recursive calls inside each member.
+
+		//	3. Join each serialization result.
+		//	A starting point could be creating a long-enough char *,
+		//	then copy / concat using strcpy() and strcat() one-by-one.
+
+		//	4. Return the result (and replace this dummy statement)
+		return "Hello World!";
+	}
+
+	//	TODO: Deserialization testing a bit more difficult.
+	//	Suggest to try after completing scene saving through serialization.
+	void Scene::Deserialize(const char* serial) {
+		//	1. Deserialize and assignment in Scene.
+
+		//	2. Recurive call to assignment members
+	}
     
     Scene* Scene::AddGameObject(GameObject* gameObject)
     {
@@ -85,7 +115,7 @@ namespace Lobster
         }
         
         m_gameObjects.push_back(gameObject);
-        
+
         return this;
     }
 

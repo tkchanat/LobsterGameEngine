@@ -21,6 +21,8 @@ namespace Lobster
         ~Scene();
         void OnUpdate(double deltaTime);
 		void OnPhysicsUpdate(double deltaTime);
+		char* Serialize() const;
+		void Deserialize(const char* serial);
         Scene* AddGameObject(GameObject* gameObject);
 		Scene* RemoveGameObject(std::string name);
 		Scene* RemoveGameObject(GameObject* gameObject);
