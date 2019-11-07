@@ -49,7 +49,7 @@ namespace Lobster
 		for (GameObject* gameObject : m_gameObjects) {
 			//	TODO: Physics Update
 			for (ColliderComponent* collider : gameObject->GetColliders()) {
-				if (collider->IsEnabled() && collider->GetOwner()->GetPhysicsComponent()->GetPhysicsType() != 2) colliders.push_back(collider);
+				if (collider->IsEnabled() && collider->GetOwner()->GetComponent<PhysicsComponent>()->GetPhysicsType() != 2) colliders.push_back(collider);
 			}
 		}
 
@@ -62,7 +62,7 @@ namespace Lobster
 				if (i <= j) break;
 				//	TODO: Actually use the computed result here instead of printing.
 				bool intersect = c1->Intersects(c2) && (c1->GetOwner() != c2->GetOwner());
-				if (intersect) LOG("{} intersects with {} (Type: {})", c1->GetOwner()->GetName(), c2->GetOwner()->GetName(), PhysicsComponent::PhysicsType[std::max(c1->GetOwner()->GetPhysicsComponent()->GetPhysicsType(), c2->GetOwner()->GetPhysicsComponent()->GetPhysicsType())]);
+				if (intersect) LOG("{} intersects with {} (Type: {})", c1->GetOwner()->GetName(), c2->GetOwner()->GetName(), PhysicsComponent::PhysicsType[std::max(c1->GetOwner()->GetComponent<PhysicsComponent>()->GetPhysicsType(), c2->GetOwner()->GetComponent<PhysicsComponent>()->GetPhysicsType())]);
 				j++;
 			}
 			i++;

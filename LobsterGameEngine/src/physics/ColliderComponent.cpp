@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "physics/ColliderComponent.h"
+#include "objects/GameObject.h"
 
 namespace Lobster {
 	const char* ColliderComponent::ColliderType[] = { "Box Collider", "Sphere Collider" };
@@ -18,10 +19,10 @@ namespace Lobster {
 			{
 				ImGui::DragFloat3("Position", glm::value_ptr(m_transform.WorldPosition), 0.05f, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 				isChanging = isChanging || ImGui::IsItemActive();
-				ImGui::DragFloat3("Rotation", glm::value_ptr(m_transform.LocalEulerAngles), 1.0f, -360.0f, 360.0f);
-				isChanging = isChanging || ImGui::IsItemActive();
-				ImGui::DragFloat3("Scale", glm::value_ptr(m_transform.LocalScale), 0.05f, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-				isChanging = isChanging || ImGui::IsItemActive();
+				//ImGui::DragFloat3("Rotation", glm::value_ptr(m_transform.LocalEulerAngles), 1.0f, -360.0f, 360.0f);
+				//isChanging = isChanging || ImGui::IsItemActive();
+				//ImGui::DragFloat3("Scale", glm::value_ptr(m_transform.LocalScale), 0.05f, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+				//isChanging = isChanging || ImGui::IsItemActive();
 			}
 			ImGui::Unindent();
 
@@ -32,7 +33,7 @@ namespace Lobster {
 
 		//	TODO: Confirmation Window.
 		if (!m_show) {
-			RemoveComponent(this);
+			gameObject->GetComponent<PhysicsComponent>()->RemoveCollider(this);
 		}
 	}
 }

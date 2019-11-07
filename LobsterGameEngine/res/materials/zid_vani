@@ -1,0 +1,37 @@
+{
+    "Shader": "shaders/Phong.glsl",
+    "Texture2D": {
+        "DiffuseMap": "textures/sibenik/kamen.png",
+        "NormalMap": "textures/sibenik/kamen-bump.png"
+    },
+    "UniformBuffer": {
+        "ubo_Phong": {
+            "DiffuseColor": [
+                0.7341,
+                0.7306,
+                0.6741
+            ],
+            "Shininess": [
+                0.0
+            ],
+            "SpecularColor": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "UseDiffuseMap": [
+                true
+            ],
+            "UseNormalMap": [
+                true
+            ],
+            "padding0": [
+                0.0,
+                0.0
+            ],
+            "padding1": [
+                0.0
+            ]
+        }
+    }
+}

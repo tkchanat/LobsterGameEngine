@@ -49,9 +49,8 @@ namespace Lobster
 		virtual void OnImGuiRender(Scene* scene);
         template<typename T, typename ...Args> GameObject* AddComponent(Args&&... args);
         template<typename T> T* GetComponent();
-		inline PhysicsComponent* GetPhysicsComponent() const { return m_physics; }
 		//	Colliders are undefined without a physics component. Return only if we have physics component defined.
-		inline std::vector<ColliderComponent*> GetColliders() const { return (m_physics ? m_colliders : std::vector<ColliderComponent*>()); }
+		inline std::vector<ColliderComponent*> GetColliders() const { return (m_physics ? m_physics->GetColliders() : std::vector<ColliderComponent*>()); }
 		inline unsigned long long GetId() { return m_id; }
         inline std::string GetName() const { return m_name; }
 		//	RemoveComponent removes the component in vector and deletes comp afterwards.
@@ -93,7 +92,9 @@ namespace Lobster
 		} else if (dynamic_cast<PhysicsComponent*>(newComponent)) {
 			m_physics = dynamic_cast<PhysicsComponent*>(newComponent);
 		} else if (dynamic_cast<ColliderComponent*>(newComponent)) {
-			m_colliders.push_back(dynamic_cast<ColliderComponent*>(newComponent));
+			m_physics->AddCollider(dynamic_cast<ColliderComponent*>(newComponent));
+//			m_colliders.push_back(dynamic_cast<ColliderComponent*>(newComponent));
+			return this;
 		}
 
 		m_components.push_back(newComponent);
