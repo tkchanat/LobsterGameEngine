@@ -153,15 +153,6 @@ namespace Lobster
 		//	If it is a PhysicsComponent, so erase it in physics list too.
 		if (dynamic_cast<PhysicsComponent*>(comp)) m_physics = nullptr;
 
-		//	If it is a ColliderComponent, so erase it in colliders list.
-		if (dynamic_cast<ColliderComponent*>(comp)) {
-			int j = 0;
-			for (ColliderComponent* component : m_colliders) {
-				if (comp == component) m_colliders.erase(m_colliders.begin() + j);
-				j++;
-			}
-		}
-
 		delete comp;
 	}
 }

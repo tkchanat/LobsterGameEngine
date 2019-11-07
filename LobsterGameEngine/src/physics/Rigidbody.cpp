@@ -8,6 +8,9 @@ namespace Lobster {
 	void Rigidbody::OnUpdate(double deltaTime) {
 		//	We should update but not draw the bounding box. Update and draw the collider according to user's option.
 		m_boundingBox->OnUpdate(deltaTime);
+		for (ColliderComponent* collider : m_colliders) {
+			collider->OnUpdate(deltaTime);
+		}
 	}
 
 	void Rigidbody::OnImGuiRender() {
@@ -26,6 +29,11 @@ namespace Lobster {
 		//	TODO: Confirmation Window.
 		if (!m_show) {
 			RemoveComponent(this);
+		}
+
+		//	Call colliders OnImGuiRender, by invoking base class OnImGuiRender.
+		for (ColliderComponent* collider : m_colliders) {
+			collider->OnImGuiRender();
 		}
 	}
 
