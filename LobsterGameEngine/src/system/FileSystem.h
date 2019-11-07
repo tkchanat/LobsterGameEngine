@@ -31,6 +31,7 @@ namespace Lobster
 		
 		bool assignWorkingDirectory(std::string dir); // for DEBUG
 		bool createWorkingDirectory(std::string dir); // for RELEASE
+		std::string addResourceIfNecessary(std::string path);
 		std::string addResource(std::string path, std::string type = "meshes");
 		bool removeResource(std::string path, std::string type = "meshes", bool del = true);		
 		void update();

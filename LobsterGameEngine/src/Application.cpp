@@ -98,7 +98,7 @@ namespace Lobster
 			LOG("ThreadPool is working! :D");
 		});
 
-        GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat");
+        GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.json");
 		barrel->transform.Translate(0, 2, 0);
 		m_scene->AddGameObject(barrel);
 
@@ -106,7 +106,7 @@ namespace Lobster
 		camera->transform.Translate(0, 2, 10);
 		m_scene->AddGameObject(camera);
 
-        //GameObject* sibenik = (new GameObject("sibenik"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/sibenik.obj").c_str(), "materials/sibenik.mat");
+        //GameObject* sibenik = (new GameObject("sibenik"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/sibenik.obj").c_str(), "materials/sibenik.json");
 		LOG("Model loading spent {} ms", loadTimer.GetElapsedTime());
 
 #ifdef LOBSTER_BUILD_DEBUG

@@ -7,17 +7,17 @@
     "UniformBuffer": {
         "ubo_Phong": {
             "DiffuseColor": [
-                1.0,
-                1.0,
-                1.0
+                0.6,
+                0.6,
+                0.6
             ],
             "Shininess": [
-                1.0
+                0.0
             ],
             "SpecularColor": [
-                1.0,
-                1.0,
-                1.0
+                0.0,
+                0.0,
+                0.0
             ],
             "UseDiffuseMap": [
                 false

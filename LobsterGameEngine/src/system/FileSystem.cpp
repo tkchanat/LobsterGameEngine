@@ -18,6 +18,13 @@ namespace Lobster {
 	}
 
 	std::string FileSystem::Path(std::string path) {
+		// if path is absolute, add it into res/ and use the relative one		
+		fs::path p(path);
+		if (p.is_absolute()) {
+			std::string relative = m_instance->addResourceIfNecessary(path);
+			if (!relative.empty())
+				return relative;
+		}
 		// sometimes it yields a/b\c/d, nevermind it is just fine
 		// remove the two slashes suffix
 		path = (path.substr(0, 1).compare("/") == 0 ? path.substr(1, path.size() - 1) : path);
@@ -74,6 +81,30 @@ namespace Lobster {
 		// [Exception Unhandled] push into the vector of resources of the corresponding type
 		m_directory[type].push_back(target.string());
 		return target.string();
+	}
+
+	// Same as addResource(std::string path, std::string type),
+// except letting the system determine the type itself
+// If no file is added, empty string will be returned
+	std::string FileSystem::addResourceIfNecessary(std::string path) {
+		// TODO check any object with the same name
+		fs::path p(path);
+		std::string subfolder;
+		if (p.extension() == ".obj" || p.extension() == ".json") {
+			subfolder = "meshes";
+		}
+		else if (p.extension() == ".json") {
+			subfolder = "materials";
+		}
+		else if (p.extension() == ".glsl") {
+			subfolder = "shaders";
+		}
+		else if (p.extension() == ".png") {
+			subfolder = "textures";
+		}
+		else return "";
+		addResource(p.string(), subfolder);
+		return Path(Join(subfolder, p.filename().string()));
 	}
 
 	// Untrack the given file [not implemented] and delete from disk if required

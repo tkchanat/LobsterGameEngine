@@ -13,7 +13,6 @@ namespace Lobster
 		std::string subdirSelected = "meshes"; // by default
 		std::string pathSelected;
 		ImGui::FileBrowser fileDialog;
-		ImGui::FileBrowser matDialog;
 		Scene* scene;
 	public:
 		ImGuiAssets(Scene* scene) : ImGuiComponent(), scene(scene) {}
@@ -54,26 +53,6 @@ namespace Lobster
 					strcpy(rename, data->Buf);
 					return 0;
 				}, this);
-
-				// To broswer its material
-				static char material[128] = "\0";
-				if (ImGui::Button("Material")) {
-					matDialog.SetPwd(FileSystem::Path("materials"));
-					matDialog.Open();
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Clear")) {
-					strcpy(material, "\0");
-				}
-				matDialog.Display();
-				if (matDialog.HasSelected())
-				{
-					LOG(matDialog.GetSelected().string());
-					strcpy(material, matDialog.GetSelected().string().c_str());
-					matDialog.ClearSelected();
-				}
-				ImGui::SameLine();
-				ImGui::InputText(" ", material, IM_ARRAYSIZE(material), ImGuiInputTextFlags_ReadOnly);
 				// Prompt error message (if any)
 				if (nothing) {
 					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(255, 0, 0, 255));
@@ -87,10 +66,7 @@ namespace Lobster
 						nothing = true;
 					}
 					else {
-						if (strlen(material) > 0)
-							scene->AddGameObject((new GameObject(rename))->AddComponent<MeshComponent>(path.c_str(), material));
-						else
-							scene->AddGameObject((new GameObject(rename))->AddComponent<MeshComponent>(path.c_str()));
+						scene->AddGameObject((new GameObject(rename))->AddComponent<MeshComponent>(path.c_str()));
 						rename[0] = '\0';
 						nothing = false;
 						ImGui::CloseCurrentPopup();

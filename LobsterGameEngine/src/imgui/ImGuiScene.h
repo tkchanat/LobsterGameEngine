@@ -48,7 +48,7 @@ namespace Lobster
 			m_editorCamera->transform.LookAt(glm::vec3(0, 0, 0));
 			m_scene->SetActiveCamera(m_editorCamera->GetComponent<CameraComponent>());
 
-			m_gridMaterial = new Material("materials/SolidColor.mat");
+			m_gridMaterial = new Material("materials/SolidColor.json");
 			m_gridVertexArray = MeshFactory::Grid(20, 20);
 
 			// listen events
