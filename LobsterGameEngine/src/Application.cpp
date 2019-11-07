@@ -98,7 +98,8 @@ namespace Lobster
 			LOG("ThreadPool is working! :D");
 		});
 
-        GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.json");
+
+        GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
 		barrel->transform.Translate(0, 2, 0);
 		m_scene->AddGameObject(barrel);
 
@@ -106,7 +107,7 @@ namespace Lobster
 		camera->transform.Translate(0, 2, 10);
 		m_scene->AddGameObject(camera);
 
-        //GameObject* sibenik = (new GameObject("sibenik"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/sibenik.obj").c_str(), "materials/sibenik.json");
+        //GameObject* sibenik = (new GameObject("sibenik"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/sibenik.obj").c_str(), "materials/sibenik.mat");
 		LOG("Model loading spent {} ms", loadTimer.GetElapsedTime());
 
 #ifdef LOBSTER_BUILD_DEBUG
@@ -224,6 +225,7 @@ namespace Lobster
 			}
 			//  ===========TO BE REMOVED=============
 
+			accumulateTime += deltaTime;
 			for (int i = 0; i < m_maxFixedUpdates && accumulateTime > intervalTime; ++i)
 			{
 				FixedUpdate(deltaTime);

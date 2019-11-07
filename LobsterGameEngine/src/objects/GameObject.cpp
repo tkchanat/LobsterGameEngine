@@ -93,6 +93,18 @@ namespace Lobster
 			ImGui::EndPopup();
 		}
 
+		//	TODO: Assumed to be rigidbody / collider component for now. Ask about what components to include. (and change button name)
+		//	TODO: Ask for a component name perhaps?
+		if (!m_physics) {
+			if (ImGui::Button("Add Rigidbody")) {
+				AddComponent<Rigidbody>();
+			}
+		} else {
+			if (ImGui::Button("Add Collider")) {
+				AddComponent<AABB>();
+			}
+		}
+
 		//	Check if transform is active, ie: we are trying to change the value of transform.
 		bool isChanging = false;
 		if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
@@ -122,32 +134,34 @@ namespace Lobster
 			}
 		}
 
-		//	General options for Physics.
-		if (ImGui::CollapsingHeader("Physics", ImGuiTreeNodeFlags_DefaultOpen)) {
-			ImGui::Combo("Body Type", &m_physicsType, PhysicsBody::PhysicsBodyTypes, 2);
-
-
-			PhysicsBody* physics = GetPhysicsBody();
-
-			//	Change Rigid Body type if needed
-			if (ImGui::IsItemActive()) {
-				if (m_physicsType == 0 && dynamic_cast<Rigidbody*>(physics)) {
-					//	Case 1 - user changed from non-rigid to rigid.
-					delete physics;
-					physics = new Rigidbody(m_mesh->GetBound());
-					m_components[m_physicsIndex] = physics;
-				} else {
-					//	TODO: implement else if for changing from rigid to non-rigid.
-				}
-			}
-
-			physics->SetEnabled();
-		}
-
-		//  Show information of all components
+		//  Show information of all components, and all physics components should wait
 		for (Component* component : m_components)
 		{
+			ImGui::PushID(component);
 			component->OnImGuiRender();
+			ImGui::PopID();
 		}
+	}
+
+	void GameObject::RemoveComponent(Component* comp) {
+		int i = 0;
+		for (Component* component : m_components) {
+			if (comp == component) m_components.erase(m_components.begin() + i);
+			i++;
+		}
+
+		//	If it is a PhysicsComponent, so erase it in physics list too.
+		if (dynamic_cast<PhysicsComponent*>(comp)) m_physics = nullptr;
+
+		//	If it is a ColliderComponent, so erase it in colliders list.
+		if (dynamic_cast<ColliderComponent*>(comp)) {
+			int j = 0;
+			for (ColliderComponent* component : m_colliders) {
+				if (comp == component) m_colliders.erase(m_colliders.begin() + j);
+				j++;
+			}
+		}
+
+		delete comp;
 	}
 }

@@ -1,28 +1,32 @@
 #include "pch.h"
 #include "physics/Rigidbody.h"
+#include "objects/GameObject.h"
 
 namespace Lobster {
 	const glm::vec3 Rigidbody::GRAVITY = glm::vec3(0, -9.81, 0);
 
-
-	Rigidbody::Rigidbody(std::vector<glm::vec3> minMax) :
-		PhysicsBody(minMax)
-	{
-		m_collider = new Collider(minMax);
-	}
-
 	void Rigidbody::OnUpdate(double deltaTime) {
-		if (m_collider) m_collider->OnUpdate(deltaTime);
+		//	We should update but not draw the bounding box. Update and draw the collider according to user's option.
+		m_boundingBox->OnUpdate(deltaTime);
 	}
 
 	void Rigidbody::OnImGuiRender() {
-		if (!m_enabled) return;
-
-		if (ImGui::CollapsingHeader("Rigid body", ImGuiTreeNodeFlags_DefaultOpen)) {
-			ImGui::Checkbox("Gravity", &m_gravity);
+		bool statement;
+		if (gameObject->GetColliders().size() == 0) {
+			statement = ImGui::CollapsingHeader("Rigidbody", &m_show, ImGuiTreeNodeFlags_DefaultOpen);
+		} else {
+			statement = ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen);
+		}
+		
+		if (statement) {
+			ImGui::Checkbox("Enabled?", &m_enabled);
+			ImGui::Combo("Physics Type", &m_physicsType, PhysicsType, 3);
 		}
 
-		if (m_collider) m_collider->OnImGuiRender();
+		//	TODO: Confirmation Window.
+		if (!m_show) {
+			RemoveComponent(this);
+		}
 	}
 
 	//	TODO: Guess by taking half of deltaTime until we find a good approximation

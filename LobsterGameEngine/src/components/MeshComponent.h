@@ -18,15 +18,15 @@ namespace Lobster
 		std::vector<VertexArray*> m_meshes;
         std::vector<Material*> m_materials;
 		std::string m_meshPath;
-		std::vector<glm::vec3> bounds;
+		std::pair<glm::vec3, glm::vec3> bounds;
     public:
-        MeshComponent(const char* meshPath, const char* materialPath = "materials/default.json");
-        MeshComponent(VertexArray* mesh, const char* materialPath = "materials/default.json");
-		MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char* materialPath = "materials/default.json");
+        MeshComponent(const char* meshPath, const char* materialPath = "materials/default.mat");
+        MeshComponent(VertexArray* mesh, const char* materialPath = "materials/default.mat");
+		MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char* materialPath = "materials/default.mat");
         virtual ~MeshComponent() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-		inline std::vector<glm::vec3> GetBound() const { return bounds; }
+		inline std::pair<glm::vec3, glm::vec3> GetBound() const { return bounds; }
     };
     
 }

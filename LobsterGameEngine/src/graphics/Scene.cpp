@@ -42,8 +42,30 @@ namespace Lobster
     }
 
 	void Scene::OnPhysicsUpdate(double deltaTime) {
+		//	First perform physics update.
+		//	TODO: Some type of structure to record which pair of game objects / colliders intersected.
+
+		std::vector<ColliderComponent*> colliders;
 		for (GameObject* gameObject : m_gameObjects) {
-			gameObject->GetPhysicsBody()->OnUpdate(deltaTime);
+			//	TODO: Physics Update
+			for (ColliderComponent* collider : gameObject->GetColliders()) {
+				if (collider->IsEnabled() && collider->GetOwner()->GetPhysicsComponent()->GetPhysicsType() != 2) colliders.push_back(collider);
+			}
+		}
+
+		//	Next, do collision check on all physics components we extracted.
+		//	Currently, we adapted a naive approach of comparing all pairs of AABB.
+		int i = 0;
+		for (ColliderComponent* c1 : colliders) {
+			int j = 0;
+			for (ColliderComponent* c2 : colliders) {
+				if (i <= j) break;
+				//	TODO: Actually use the computed result here instead of printing.
+				bool intersect = c1->Intersects(c2) && (c1->GetOwner() != c2->GetOwner());
+				if (intersect) LOG("{} intersects with {} (Type: {})", c1->GetOwner()->GetName(), c2->GetOwner()->GetName(), PhysicsComponent::PhysicsType[std::max(c1->GetOwner()->GetPhysicsComponent()->GetPhysicsType(), c2->GetOwner()->GetPhysicsComponent()->GetPhysicsType())]);
+				j++;
+			}
+			i++;
 		}
 	}
     

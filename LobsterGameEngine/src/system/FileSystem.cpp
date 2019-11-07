@@ -19,6 +19,7 @@ namespace Lobster {
 
 	std::string FileSystem::Path(std::string path) {
 		// if path is absolute, add it into res/ and use the relative one		
+		// TODO delete this if not required
 		fs::path p(path);
 		if (p.is_absolute()) {
 			std::string relative = m_instance->addResourceIfNecessary(path);
@@ -90,10 +91,10 @@ namespace Lobster {
 		// TODO check any object with the same name
 		fs::path p(path);
 		std::string subfolder;
-		if (p.extension() == ".obj" || p.extension() == ".json") {
+		if (p.extension() == ".obj" || p.extension() == ".mtl") {
 			subfolder = "meshes";
 		}
-		else if (p.extension() == ".json") {
+		else if (p.extension() == ".mat") {
 			subfolder = "materials";
 		}
 		else if (p.extension() == ".glsl") {

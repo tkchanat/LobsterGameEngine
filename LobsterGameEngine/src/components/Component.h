@@ -20,13 +20,19 @@ namespace Lobster
 		//	Therefore, we declare the class Script as a friend for accessing these pointers.
         GameObject* gameObject;
         Transform* transform;
+
+		//	Used to handle closing.
+		bool m_show = true;
+		void RemoveComponent(Component* comp);
+
     public:
 		virtual ~Component() {}
         virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender() = 0;
-        inline void SetOwner(GameObject* owner) { gameObject = owner; }
+        void SetOwner(GameObject* owner) { gameObject = owner; }
         inline void SetOwnerTransform(Transform* t) { transform = t; }
         inline void RemoveOwner() { gameObject = nullptr; }
+		inline GameObject* GetOwner() { return gameObject; }	//	TODO: Discuss if this class is needed, used for print intersection result only for now.
         inline bool IsEnabled() { return m_enabled; }
     protected:
         Component() : m_enabled(true), gameObject(nullptr), transform(nullptr) {}

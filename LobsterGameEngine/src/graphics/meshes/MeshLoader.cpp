@@ -67,7 +67,7 @@ namespace Lobster
 			// finalize vertex arrays
 			vertexArrays[i] = new VertexArray(layout, vertexBuffers[i], indexBuffers[i], PrimitiveType::TRIANGLES);
 
-			// this will allow our material files (.json) to overwrite what is defined in the 3d object material configurations.
+			// this will allow our material files (.mat) to overwrite what is defined in the 3d object material configurations.
 			if (materialArrays[i] != nullptr) continue;
 			
 			// finalize materials

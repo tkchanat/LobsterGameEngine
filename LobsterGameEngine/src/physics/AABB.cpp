@@ -6,6 +6,7 @@
 #include "graphics/VertexLayout.h"
 #include "graphics/IndexBuffer.h"
 #include "graphics/Renderer.h"
+#include "objects/GameObject.h"
 
 namespace Lobster
 {
@@ -15,30 +16,21 @@ namespace Lobster
     // take ALL 8 points of the box, rotate them, and then find the min/max
     // in each axis from those 8 points to find the two points(min & max)
     // points of your new AABB.
-    AABB::AABB() :
-        Center(glm::vec3(0, 0, 0)),
-        Min(glm::vec3(0, 0, 0)),
-        Max(glm::vec3(0, 0, 0)),
-        m_debugMaterial(nullptr),
-        m_debugMesh(nullptr),
-        m_debugVertexBuffer(nullptr)
-    {
-        memset(m_debugData, 0, sizeof(float) * 24);
-		memset(m_debugInitialData, 0, sizeof(float) * 24);
-    }
 
-    AABB::AABB(glm::vec3 min, glm::vec3 max) :
-        Center(glm::vec3(0, 0, 0)),
-        Min(min),
-        Max(max),
+    AABB::AABB(Transform transform, bool draw) :
+		Center(glm::vec3(0, 0, 0)),
+		Min(glm::vec3(0, 0, 0)),
+		Max(glm::vec3(0, 0, 0)),
         m_debugMaterial(nullptr),
         m_debugMesh(nullptr),
-        m_debugVertexBuffer(nullptr)
+        m_debugVertexBuffer(nullptr),
+		ColliderComponent(transform, draw)
     {
         // member variable initialization
         memset(m_debugData, 0, sizeof(float) * 24);
 		memset(m_debugInitialData, 0, sizeof(float) * 24);
-        m_debugMaterial = new Material("materials/SolidColor.json");
+		memset(m_debugTranslatedData, 0, sizeof(float) * 24);
+        m_debugMaterial = new Material("materials/SolidColor.mat");
         m_debugMaterial->GetUniformBufferData(0)->SetData("color", (void*)glm::value_ptr(glm::vec4(0, 1, 0, 1)));
         m_debugVertexBuffer = new VertexBuffer(DrawMode::DYNAMIC_DRAW);
         IndexBuffer* indexBuffer = new IndexBuffer();
@@ -48,7 +40,6 @@ namespace Lobster
         std::vector<IndexBuffer*> ib;
         
         // construct vertex buffer data
-        SetVertices(true);
         vb.push_back(m_debugVertexBuffer);
         
         // construct index buffer data
@@ -61,17 +52,30 @@ namespace Lobster
         m_debugMesh = new VertexArray(layout, vb, ib, PrimitiveType::LINES);
     }
 
-	void AABB::OnUpdate(Transform* t) {
+	void AABB::SetOwner(GameObject* owner) {
+		gameObject = owner;
+		std::pair<glm::vec3, glm::vec3> pair = owner->GetComponent<MeshComponent>()->GetBound();
+		Min = pair.first;
+		Max = pair.second;
+		SetVertices(1);
+	}
+
+	void AABB::OnUpdate(double deltaTime) {
 		// update AABB
-		Center = t->WorldPosition;
-		UpdateRotation(t->LocalRotation, t->LocalScale);
-		Draw();
+		m_transform.UpdateMatrix();
+		Center = transform->WorldPosition;
+		UpdateRotation(transform->LocalRotation, transform->LocalScale);
+		SetVertices(2);
+		Center = transform->WorldPosition + m_transform.WorldPosition;
+		UpdateRotation(m_transform.LocalRotation, m_transform.LocalScale, true);
+		if (m_draw) Draw();
 	}
 
     void AABB::Draw()
     {
 #ifdef LOBSTER_BUILD_DEBUG
-        // validate data
+        // validate data, and return if we haven't define game object yet
+		if (!gameObject) return;
         if(!m_debugMaterial || !m_debugMesh || Min == Max)
         {
             throw std::runtime_error("Oops... This AABB is not ready to be drawn!");
@@ -93,17 +97,22 @@ namespace Lobster
 #endif
     }
 
-    bool AABB::Intersects(const AABB &other)
+    bool AABB::Intersects(ColliderComponent* component)
     {
-		// Determine if there's intersection in each dimension
-		bool x = (Min.x - other.Max.x) <= 0.0f && (other.Min.x - Max.x) <= 0.0f;
-		bool y = (Min.y - other.Max.y) <= 0.0f && (other.Min.y - Max.y) <= 0.0f;
-		bool z = (Min.z - other.Max.z) <= 0.0f && (other.Min.z - Max.z) <= 0.0f;
+		//	We can assume the given component is also AABB for now.
+		AABB* other = dynamic_cast<AABB*>(component);
+		//	Determine if there's intersection in each dimension
+		bool x = (Min.x + Center.x - other->Max.x - other->Center.x) <= 0.0f && (other->Min.x + other->Center.x - Max.x - Center.x) <= 0.0f;
+		bool y = (Min.y + Center.y - other->Max.y - other->Center.y) <= 0.0f && (other->Min.y + other->Center.y - Max.y - Center.y) <= 0.0f;
+		bool z = (Min.z + Center.z - other->Max.z - other->Center.z) <= 0.0f && (other->Min.z + other->Center.z - Max.z - Center.z) <= 0.0f;
 
         return x && y && z;
     }
 
-    void AABB::SetVertices(bool setInitial = false)
+	//	Set extra = 0: Only set debug data.
+	//	Set extra = 1: Set initial.
+	//	Set extra = 2: Set translated.
+    void AABB::SetVertices(int setExtra)
     {
         m_debugData[0] = m_debugData[3] = m_debugData[12] = m_debugData[15] = Min.x;
         m_debugData[1] = m_debugData[10] = m_debugData[13] = m_debugData[22] = Min.y;
@@ -111,20 +120,31 @@ namespace Lobster
         m_debugData[6] = m_debugData[9] = m_debugData[18] = m_debugData[21] = Max.x;
         m_debugData[4] = m_debugData[7] = m_debugData[16] = m_debugData[19] = Max.y;
         m_debugData[14] = m_debugData[17] = m_debugData[20] = m_debugData[23] = Max.z;
-		if (setInitial) {
+		if (setExtra == 1) {
 			memcpy(m_debugInitialData, m_debugData, sizeof(m_debugData));
+		} else if (setExtra == 2) {
+			memcpy(m_debugTranslatedData, m_debugData, sizeof(m_debugData));
 		}
         m_debugVertexBuffer->SetData(m_debugData, sizeof(float) * 24);
     }
-
-    void AABB::UpdateRotation(glm::quat rotation, glm::vec3 scale)
+	
+	//	translated indicates whether we translated for once before - if yes, we should use m_debugTranslatedData instead of m_debugInitialData.
+    void AABB::UpdateRotation(glm::quat rotation, glm::vec3 scale, bool translated)
     {
-		Min.x = Max.x = (m_debugInitialData[0] + m_debugInitialData[18]) / 2.0f;
-		Min.y = Max.y = (m_debugInitialData[1] + m_debugInitialData[19]) / 2.0f;
-		Min.z = Max.z = (m_debugInitialData[2] + m_debugInitialData[20]) / 2.0f;
+		if (translated) {
+			Min.x = Max.x = (m_debugTranslatedData[0] + m_debugTranslatedData[18]) / 2.0f;
+			Min.y = Max.y = (m_debugTranslatedData[1] + m_debugTranslatedData[19]) / 2.0f;
+			Min.z = Max.z = (m_debugTranslatedData[2] + m_debugTranslatedData[20]) / 2.0f;
+		} else {
+			Min.x = Max.x = (m_debugInitialData[0] + m_debugInitialData[18]) / 2.0f;
+			Min.y = Max.y = (m_debugInitialData[1] + m_debugInitialData[19]) / 2.0f;
+			Min.z = Max.z = (m_debugInitialData[2] + m_debugInitialData[20]) / 2.0f;
+		}
+		
 		for(int i = 0; i < 24; i += 3)
         {
-            glm::vec3 rotatedCorner = glm::mat3(glm::scale(scale)) * glm::vec3(m_debugInitialData[i], m_debugInitialData[i+1], m_debugInitialData[i+2]) * glm::conjugate(rotation);
+			glm::vec3 vertices = (translated ? glm::vec3(m_debugTranslatedData[i], m_debugTranslatedData[i + 1], m_debugTranslatedData[i + 2]) : glm::vec3(m_debugInitialData[i], m_debugInitialData[i + 1], m_debugInitialData[i + 2]));
+            glm::vec3 rotatedCorner = glm::mat3(glm::scale(scale)) * vertices * glm::conjugate(rotation);
             Min.x = rotatedCorner.x < Min.x ? rotatedCorner.x : Min.x;
             Min.y = rotatedCorner.y < Min.y ? rotatedCorner.y : Min.y;
             Min.z = rotatedCorner.z < Min.z ? rotatedCorner.z : Min.z;
@@ -132,7 +152,7 @@ namespace Lobster
             Max.y = rotatedCorner.y > Max.y ? rotatedCorner.y : Max.y;
             Max.z = rotatedCorner.z > Max.z ? rotatedCorner.z : Max.z;
         }
-        SetVertices();
+        SetVertices(0);
     }
 
 }

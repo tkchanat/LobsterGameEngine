@@ -7,9 +7,9 @@
     "UniformBuffer": {
         "ubo_Phong": {
             "DiffuseColor": [
-                0.6264,
-                0.0585,
-                0.0585
+                1.0,
+                1.0,
+                1.0
             ],
             "Shininess": [
                 1.0
