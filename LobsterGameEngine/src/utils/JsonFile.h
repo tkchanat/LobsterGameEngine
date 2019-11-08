@@ -46,7 +46,6 @@ namespace Lobster
 		}
 		catch (std::exception e) {
 			m_json[nlohmann::json::json_pointer(formattedAttribute)] = defaultVal;
-			saveJson();
 			return defaultVal;
 		}
 		return value;

@@ -46,10 +46,6 @@ namespace Lobster
         }
 
 		// group meshes together using same materials
-		assert(scene->mNumMaterials > 0 && "Key: I will fix this bug later, don't import this model");
-		vertexArrays.resize(scene->mNumMaterials);
-		materialArrays.resize(scene->mNumMaterials);
-
 		std::vector<std::vector<VertexBuffer*>> vertexBuffers(scene->mNumMaterials);
 		std::vector<std::vector<IndexBuffer*>> indexBuffers(scene->mNumMaterials);
 		VertexLayout* layout = new VertexLayout();
@@ -64,12 +60,12 @@ namespace Lobster
 
 		for (int i = 0; i < scene->mNumMaterials; ++i)
 		{
-			// finalize vertex arrays
-			vertexArrays[i] = new VertexArray(layout, vertexBuffers[i], indexBuffers[i], PrimitiveType::TRIANGLES);
+			// no vertex and index buffers use this material, skip it!
+			if (vertexBuffers[i].empty() || indexBuffers[i].empty()) continue;
 
-			// this will allow our material files (.mat) to overwrite what is defined in the 3d object material configurations.
-			if (materialArrays[i] != nullptr) continue;
-			
+			// finalize vertex arrays
+			vertexArrays.push_back(new VertexArray(layout, vertexBuffers[i], indexBuffers[i], PrimitiveType::TRIANGLES));
+
 			// finalize materials
 			aiString materialName;
 			aiColor3D diffuseColor, specularColor;
@@ -80,23 +76,31 @@ namespace Lobster
 			scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &diffuseMap);
 			scene->mMaterials[i]->GetTexture(aiTextureType_NORMALS, 0, &normalMap);
 
+			// don't give any material to this mesh, we'll define ours
+			if (materialName == aiString(AI_DEFAULT_MATERIAL_NAME))
+			{
+				continue;
+			}
+
 			std::vector<std::string> nameTokens = StringOps::split(path, '/');
 			std::string meshName = StringOps::substr(nameTokens[nameTokens.size() - 1], nullptr, ".");
-			std::string materialPath = "materials/" + std::string(materialName.C_Str());
+			std::string materialPath = "materials/" + std::string(materialName.C_Str()) + ".mat";
 			std::string diffuseMapPath = "textures/" + meshName + '/' + std::string(diffuseMap.C_Str());
 			std::string normalMapPath  = "textures/" + meshName + '/' + std::string(normalMap.C_Str());
 			Material* newMaterial = new Material(materialPath.c_str());
-			newMaterial->GetUniformBufferData(0)->SetData("DiffuseColor", (void*)&diffuseColor);
-			newMaterial->GetUniformBufferData(0)->SetData("SpecularColor", (void*)&specularColor);
-
-			if (diffuseMap.length) {
-				newMaterial->SetTextureUnit("DiffuseMap", diffuseMapPath.c_str());
-			}
-			if (normalMap.length) {
-				newMaterial->SetTextureUnit("NormalMap", normalMapPath.c_str());
+			if (!newMaterial->Exist())
+			{
+				newMaterial->GetUniformBufferData(0)->SetData("DiffuseColor", (void*)&diffuseColor);
+				newMaterial->GetUniformBufferData(0)->SetData("SpecularColor", (void*)&specularColor);
+				if (diffuseMap.length) {
+					newMaterial->SetTextureUnit("DiffuseMap", diffuseMapPath.c_str());
+				}
+				if (normalMap.length) {
+					newMaterial->SetTextureUnit("NormalMap", normalMapPath.c_str());
+				}
 			}
 			
-			materialArrays[i] = newMaterial;
+			materialArrays.push_back(newMaterial);
 		}
         
         return { min, max };

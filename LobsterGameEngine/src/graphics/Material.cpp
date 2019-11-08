@@ -40,8 +40,6 @@ namespace Lobster
             if (blueprint.first.empty()) continue;
             std::string texturePath = m_json.getValue(std::string("Texture2D." + blueprint.first).c_str(), "");
             Texture2D* texture = texturePath.empty() ? nullptr : TextureLibrary::Use(texturePath.c_str());
-            bool useTexture = texture ? true : false;
-            GetUniformBufferData(0)->SetData(("Use" + blueprint.first).c_str(), (void*)&useTexture);
             std::pair<std::string, Texture2D*> newPair = { blueprint.first, texture };
             m_textureUnits.push_back(newPair);
         }
@@ -51,14 +49,6 @@ namespace Lobster
     
     Material::~Material()
     {
-		// save the material configurations accordingly
-		m_json.setValue("Shader", m_shader->GetName());
-		m_json.setValue("Texture2D", nlohmann::json());
-		m_json.setValue("UniformBuffer", nlohmann::json());
-		for (auto& pair : m_textureUnits)
-			m_json.setValue(("Texture2D." + pair.first).c_str(), (pair.second) ? pair.second->GetName() : "");
-		for (auto& pair : m_uniformBufferData)
-			m_json.setValue(("UniformBuffer." + pair.first).c_str(), pair.second->Serialize());
     }
 
 	void Material::OnImGuiRender()
@@ -76,6 +66,7 @@ namespace Lobster
 				void* texture = pair.second ? pair.second->Get() : nullptr;
 				ImGui::Text(label.c_str(), texture ? pair.second->GetName().c_str() : "Missing");
 				ImGui::SameLine(ImGui::GetWindowWidth() - 60);
+				// texture button
                 ImGui::PushID(pair.first.c_str());
                 if(ImGui::ImageButton(texture ? texture : notFound->Get(), previewSize))
                 {
@@ -85,6 +76,20 @@ namespace Lobster
                         SetTextureUnit(pair.first.c_str(), path.c_str());
                     }
                 }
+				// right-click to remove
+				if (ImGui::BeginPopupContextItem())
+				{
+					ImGui::Text("Remove Texture?");
+					ImGui::Separator();
+					if (ImGui::Button("Remove")) {
+						SetTextureUnit(pair.first.c_str(), nullptr);
+						ImGui::CloseCurrentPopup();
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Cancel"))
+						ImGui::CloseCurrentPopup();
+					ImGui::EndPopup();
+				}
                 ImGui::PopID();
 			}
 
@@ -95,15 +100,27 @@ namespace Lobster
 		}
 	}
 
+	void Material::SaveConfiguration()
+	{
+		// save the material configurations accordingly
+		m_json.setValue("Shader", m_shader->GetName());
+		m_json.setValue("Texture2D", nlohmann::json());
+		m_json.setValue("UniformBuffer", nlohmann::json());
+		for (auto& pair : m_textureUnits)
+			m_json.setValue(("Texture2D." + pair.first).c_str(), (pair.second) ? pair.second->GetName() : "");
+		for (auto& pair : m_uniformBufferData)
+			m_json.setValue(("UniformBuffer." + pair.first).c_str(), pair.second->Serialize());
+	}
+
 	void Material::SetTextureUnit(const char * name, const char * texturePath)
 	{
+		uint32_t useTexture = (texturePath == nullptr) ? 0 : 1;
 		for (auto& textureUnit : m_textureUnits)
 		{
 			if (textureUnit.first == name)
 			{
-                bool True = true;
-                GetUniformBufferData(0)->SetData(("Use" + std::string(name)).c_str(), (void*)&True);
-				textureUnit.second = TextureLibrary::Use(texturePath);
+				GetUniformBufferData(0)->SetData(("Use" + std::string(name)).c_str(), (void*)&useTexture);
+				textureUnit.second = useTexture ? TextureLibrary::Use(texturePath) : nullptr;
             }
 		}
 	}

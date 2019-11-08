@@ -20,17 +20,17 @@
                 1.0
             ],
             "UseDiffuseMap": [
-                false
+                0
             ],
             "UseNormalMap": [
-                false
+                0
             ],
             "padding0": [
-                0.0,
-                0.0
+                0,
+                0
             ],
             "padding1": [
-                0.0
+                0
             ]
         }
     }

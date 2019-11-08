@@ -59,8 +59,8 @@ namespace Lobster
 
 			for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
 			{
-				if (useMaterial->GetTextureUnit(i) == nullptr) continue;
-				useShader->SetTexture2D(i, useMaterial->GetTextureUnit(i)->Get());
+				void* textureID = (useMaterial->GetTextureUnit(i) == nullptr) ? 0 : useMaterial->GetTextureUnit(i)->Get();
+				useShader->SetTexture2D(i, textureID);
 			}
 			for (int i = 0; i < MAX_UNIFORM_BUFFER; ++i)
 			{

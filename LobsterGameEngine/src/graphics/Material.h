@@ -24,7 +24,9 @@ namespace Lobster
         Material(const char* path);
         virtual ~Material();
 		void OnImGuiRender();
+		void SaveConfiguration();
 		void SetTextureUnit(const char* name, const char* texturePath);
+		inline bool Exist() const { return m_json.getFileExist(); }
 		inline std::string GetPath() const { return m_path; }
         inline Shader* GetShader() const { return m_shader; }
 		inline Texture2D* GetTextureUnit(int index) const { return index < m_textureUnits.size() ? m_textureUnits[index].second : nullptr; }

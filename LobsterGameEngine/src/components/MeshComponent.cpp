@@ -14,10 +14,11 @@ namespace Lobster
     {
 		//	Clone the resource by file system before loading
 		FileSystem::GetInstance()->addResource(meshPath);
-		m_materials.push_back(new Material(materialPath));
-
+		// import mesh and load defined materials from model file
 		auto minMax = MeshLoader::Load(meshPath, m_meshes, m_materials);
 		bounds = { minMax.first, minMax.second };
+		// if no materials are defined, use material of our own
+		if(m_materials.empty()) m_materials.push_back(new Material(materialPath));
     }
 
 	MeshComponent::MeshComponent(VertexArray * mesh, const char * materialPath) :
@@ -25,7 +26,7 @@ namespace Lobster
 	{
 		m_meshes.push_back(mesh);
 		m_materials.push_back(new Material(materialPath));
-		//	TODO remove this hardcode part
+		//	TODO remove this hard code part
 		bounds = { glm::vec3(0, 0, 0), glm::vec3(0.01, 0.01, 0.01) };
 	}
 

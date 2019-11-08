@@ -46,7 +46,7 @@ namespace Lobster
 
 	JsonFile::~JsonFile()
 	{
-		saveJson();
+		//saveJson();
 	}
 
 	// Get JSON Value from nested JSON structure.
@@ -62,7 +62,6 @@ namespace Lobster
 		}
 		catch (std::exception e) {
 			m_json[nlohmann::json::json_pointer(formattedAttribute)] = nlohmann::json::parse(defaultVal);
-			saveJson();
 			return JsonFile(nlohmann::json::parse(defaultVal));
 		}
 	}
