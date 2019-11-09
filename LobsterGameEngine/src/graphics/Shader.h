@@ -38,6 +38,7 @@ namespace Lobster
 		inline bool CompileSuccess() const { return b_compileSuccess; }
         //  Shader uniforms
         void SetUniform(const char* name, const glm::vec3& data);
+		void SetUniform(const char* name, const glm::vec4& data);
         void SetUniform(const char* name, const glm::mat4& data);
 		void SetTexture2D(int slot, void* texture2D);
 		void SetTextureCube(int slot, void* textureCube);

@@ -9,12 +9,14 @@
             "DiffuseColor": [
                 1.0,
                 1.0,
+                1.0,
                 1.0
             ],
             "Shininess": [
                 1.0
             ],
             "SpecularColor": [
+                1.0,
                 1.0,
                 1.0,
                 1.0
@@ -26,10 +28,6 @@
                 0
             ],
             "padding0": [
-                0,
-                0
-            ],
-            "padding1": [
                 0
             ]
         }

@@ -95,7 +95,7 @@ namespace Lobster
 		m_buffer->SetData(m_bufferData);
 	}
 
-	void UniformBufferData::OnImGuiRender(const std::string& materialName)
+	void UniformBufferData::OnImGuiRender(const std::string& materialName, bool& dirty)
 	{
 		// display values
 		for (UniformBufferDeclaration& decl : m_declaration)
@@ -123,6 +123,7 @@ namespace Lobster
 			default:
 				break;
 			}
+			dirty |= ImGui::IsItemActive();
 		}
 	}
 

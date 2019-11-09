@@ -7,14 +7,19 @@ namespace Lobster
 {
     
     Material::Material(const char* path) :
+		m_mode(MODE_OPAQUE),
 		m_shader(nullptr),
 		m_path(FileSystem::Path(path)),
 		m_name(path),
-		m_json(path)
+		m_json(path),
+		b_dirty(false)
     {
 		// shader
 		std::string shaderPath = m_json.getValue("Shader", "shaders/Phong.glsl");
         m_shader = !shaderPath.empty() ? ShaderLibrary::Use(shaderPath.c_str()) : nullptr;
+		// rendering mode
+		int mode = m_json.getValue("RenderingMode", 0);
+		m_mode = (RenderingMode)mode;
 		// initialize uniform buffer data
 		auto& uniformBlueprints = m_shader->GetUniformBlueprints();
 		for (auto& blueprint : uniformBlueprints)
@@ -43,8 +48,6 @@ namespace Lobster
             std::pair<std::string, Texture2D*> newPair = { blueprint.first, texture };
             m_textureUnits.push_back(newPair);
         }
-        
-        m_fileBrowser.SetPwd(FileSystem::Path("textures"));
     }
     
     Material::~Material()
@@ -53,13 +56,34 @@ namespace Lobster
 
 	void Material::OnImGuiRender()
 	{
-		std::string materialName = "Material: " + m_name;
-		if (ImGui::CollapsingHeader(materialName.c_str()))
+		std::string headerLabel = fmt::format("Material{}: {}", b_dirty ? "*" : "", m_name);
+		if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			// Save material pop up
+			if (ImGui::BeginPopupContextItem())
+			{
+				if (ImGui::MenuItem("Save", "", false))
+					SaveConfiguration();
+				if (ImGui::MenuItem("Cancel", "", false))
+					ImGui::CloseCurrentPopup();
+				ImGui::EndPopup();
+			}
+
 			ImVec2 previewSize(40, 40);
 			Texture2D* notFound = TextureLibrary::Placeholder();
             static std::string selectedTexture;
-
+			// Shader
+			ImGui::Text(("Shader: " + m_shader->GetName()).c_str());
+			ImGui::Spacing();
+			// Rendering Mode
+			const char* modes[] = { "Opaque", "Transparent" };
+			ImGui::PushItemWidth(110);
+			RenderingMode prev_mode = m_mode;
+			ImGui::Combo("Rendering Mode", (int*)&m_mode, modes, IM_ARRAYSIZE(modes));
+			b_dirty |= prev_mode != m_mode;
+			ImGui::PopItemWidth();
+			ImGui::Spacing();
+			// Texture2D
 			for (auto pair : m_textureUnits)
 			{
 				std::string label = pair.first + ": (%s)";
@@ -95,7 +119,7 @@ namespace Lobster
 
 			for (auto& uniformBufferData : m_uniformBufferData)
 			{
-				uniformBufferData.second->OnImGuiRender(m_name);
+				uniformBufferData.second->OnImGuiRender(m_name, b_dirty);
 			}
 		}
 	}
@@ -105,11 +129,13 @@ namespace Lobster
 		// save the material configurations accordingly
 		m_json.setValue("Shader", m_shader->GetName());
 		m_json.setValue("Texture2D", nlohmann::json());
+		m_json.setValue("RenderingMode", (int)m_mode);
 		m_json.setValue("UniformBuffer", nlohmann::json());
 		for (auto& pair : m_textureUnits)
 			m_json.setValue(("Texture2D." + pair.first).c_str(), (pair.second) ? pair.second->GetName() : "");
 		for (auto& pair : m_uniformBufferData)
 			m_json.setValue(("UniformBuffer." + pair.first).c_str(), pair.second->Serialize());
+		b_dirty = false;
 	}
 
 	void Material::SetTextureUnit(const char * name, const char * texturePath)
@@ -123,6 +149,35 @@ namespace Lobster
 				textureUnit.second = useTexture ? TextureLibrary::Use(texturePath) : nullptr;
             }
 		}
+		b_dirty = true;
 	}
-    
+
+	// =======================================================
+	// MaterialLibrary
+	// =======================================================
+	MaterialLibrary* MaterialLibrary::s_instance = nullptr;
+
+	void MaterialLibrary::Initialize()
+	{
+		if (s_instance != nullptr)
+		{
+			throw std::runtime_error("MaterialLibrary already existed!");
+		}
+		s_instance = new MaterialLibrary();
+	}
+
+	Material * MaterialLibrary::Use(const char * path)
+	{
+		for (Material* material : s_instance->m_materials)
+		{
+			if (material->GetName() == path)
+			{
+				return material;
+			}
+		}
+		Material* newMaterial = new Material(path);
+		s_instance->m_materials.push_back(newMaterial);
+		return newMaterial;
+	}
+
 }

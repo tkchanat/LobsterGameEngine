@@ -106,7 +106,7 @@ namespace Lobster
 		UniformBufferData() : m_buffer(nullptr), m_bufferData(nullptr) {}
 		UniformBufferData(const std::string& blueprintName, const std::vector<std::string>& blueprintElements);
 		void BindData();
-		void OnImGuiRender(const std::string& materialName);
+		void OnImGuiRender(const std::string& materialName, bool& dirty);
 		void SetData(const char* name, void* data);
 		nlohmann::json Serialize() const;
 		inline std::string GetBufferName() const { return m_buffer->GetName(); }

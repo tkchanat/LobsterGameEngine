@@ -16,6 +16,9 @@ namespace Lobster
 	class ImGuiScene : public ImGuiComponent
 	{
 	private:
+		// window-related variable
+		ImVec2 window_pos;
+		ImVec2 window_size;
 		// editor camera
 		GameObject* m_editorCamera;
 		// ImGuizmo
@@ -48,7 +51,7 @@ namespace Lobster
 			m_editorCamera->transform.LookAt(glm::vec3(0, 0, 0));
 			m_scene->SetActiveCamera(m_editorCamera->GetComponent<CameraComponent>());
 
-			m_gridMaterial = new Material("materials/SolidColor.mat");
+			m_gridMaterial = MaterialLibrary::Use("materials/SolidColor.mat");
 			m_gridVertexArray = MeshFactory::Grid(20, 20);
 
 			// listen events
@@ -87,9 +90,8 @@ namespace Lobster
 			// Scene window
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 			ImGui::Begin("Scene", p_open, ImGuiWindowFlags_None);	
-
-			ImVec2 window_pos = ImGui::GetWindowPos();
-			ImVec2 window_size = ImGui::GetWindowSize();
+			window_pos = ImGui::GetWindowPos();
+			window_size = ImGui::GetWindowSize();
 
 			// draw scene
 			m_scene->GetActiveCamera()->ResizeProjection(window_size.x / window_size.y);
@@ -234,8 +236,6 @@ namespace Lobster
 			// draw camera gizmo
 			void DrawCameraComponentGizmo()
 			{
-				ImVec2 window_pos = ImGui::GetWindowPos();
-				ImVec2 window_size = ImGui::GetWindowSize();
 				CameraComponent* editorCamera = m_editorCamera->GetComponent<CameraComponent>();
 				glm::mat4 viewProjectionMatrix = editorCamera->GetProjectionMatrix() * editorCamera->GetViewMatrix();
 				for (GameObject* go : m_scene->GetGameObjects())
@@ -248,6 +248,7 @@ namespace Lobster
 						};
 						void* cameraGizmo = TextureLibrary::Use("textures/ui/camera.png")->Get();
 						glm::vec4 pos = viewProjectionMatrix * glm::vec4(go->transform.WorldPosition, 1);
+						if (pos.w <= 0.0) continue;
 						float screenX = remap(pos.x / pos.w, -1.f, 1.f, window_pos.x, window_pos.x + window_size.x);
 						float screenY = remap(-pos.y / pos.w, -1.f, 1.f, window_pos.y, window_pos.y + window_size.y);
 						ImVec2 startPos = { screenX - 16, screenY - 16 };

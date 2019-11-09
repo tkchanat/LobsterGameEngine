@@ -51,7 +51,7 @@ layout (std140) uniform ubo_PBR
 uniform vec3 cameraPosition;
 uniform vec3 lightPosition;
 uniform vec3 lightDirection;
-uniform vec3 lightColor;
+uniform vec4 lightColor;
 
 uniform sampler2D AlbedoMap;
 uniform sampler2D NormalMap;
@@ -114,7 +114,7 @@ void main()
 		// Radiance
 		float distance = length(lightPosition - frag_position);
 		float attenuation = 1.0 / (distance * distance);
-		vec3 radiance = lightColor;// * attenuation;
+		vec3 radiance = vec3(lightColor);// * attenuation;
 
 		// BRDF
 		vec3 F = Fresnel(clamp(dot(h, v), 0.0, 1.0), f0);

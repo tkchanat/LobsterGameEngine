@@ -1,14 +1,11 @@
 #pragma once
-#include "graphics/Shader.h"
-#include "graphics/Texture.h"
-#include "graphics/UniformBuffer.h"
+#include "graphics/Material.h"
 
 namespace Lobster
 {
 
 	class CameraComponent;
     class FrameBuffer;
-	class Material;
 	class Scene;
 	class VertexArray;
 
@@ -27,6 +24,43 @@ namespace Lobster
 		glm::mat4 ViewMatrix;
 		glm::mat4 ProjectionMatrix;
 		TextureCube* Skybox;
+	};
+
+	enum BlendFactor : uint 
+	{
+		BLEND_ZERO = GL_ZERO,
+		BLEND_ONE = GL_ONE,
+		BLEND_SRC_COLOR = GL_SRC_COLOR,
+		BLEND_ONE_MINUS_SRC_COLOR = GL_ONE_MINUS_SRC_COLOR,
+		BLEND_DST_COLOR = GL_DST_COLOR,
+		BLEND_ONE_MINUS_DST_COLOR = GL_ONE_MINUS_DST_COLOR,
+		BLEND_SRC_ALPHA = GL_SRC_ALPHA,
+		BLEND_ONE_MINUS_SRC_ALPHA = GL_ONE_MINUS_SRC_ALPHA,
+		BLEND_DST_ALPHA = GL_DST_ALPHA,
+		BLEND_ONE_MINUS_DST_ALPHA = GL_ONE_MINUS_DST_ALPHA,
+		BLEND_CONSTANT_COLOR = GL_CONSTANT_COLOR,
+		BLEND_ONE_MINUS_CONSTANT_COLOR = GL_ONE_MINUS_CONSTANT_COLOR,
+		BLEND_CONSTANT_ALPHA = GL_CONSTANT_ALPHA,
+		BLEND_ONE_MINUS_CONSTANT_ALPHA = GL_ONE_MINUS_CONSTANT_ALPHA
+	};
+
+	enum CullMode : uint
+	{
+		CULL_FRONT = GL_FRONT,
+		CULL_BACK = GL_BACK,
+		CULL_FRONT_AND_BACK = GL_FRONT_AND_BACK
+	};
+
+	enum DepthFunc : uint
+	{
+		DEPTH_ALWAYS = GL_ALWAYS,
+		DEPTH_NEVER = GL_NEVER,
+		DEPTH_LESS = GL_LESS,
+		DEPTH_EQUAL = GL_EQUAL,
+		DEPTH_LEQUAL = GL_LEQUAL,
+		DEPTH_GREATER = GL_GREATER,
+		DEPTH_NOTEQUAL = GL_NOTEQUAL,
+		DEPTH_GEQUAL = GL_GEQUAL
 	};
     
 	//	This class is specifically for rendering scene.
@@ -47,15 +81,24 @@ namespace Lobster
 		VertexArray* m_skyboxMesh;
 		Shader* m_skyboxShader;
 
-		static SceneEnvironment s_activeSceneEnvironment;
-		static std::list<RenderCommand> s_renderQueue;
+		// renderer resources
+		static Renderer* s_instance;
+		SceneEnvironment m_activeSceneEnvironment;
+		std::list<RenderCommand> m_opaqueQueue;
+		std::list<RenderCommand> m_transparentQueue;
     public:
         Renderer();
         ~Renderer();
+		// Renderer & Rasterization configurations
+		static void SetDepthTest(bool enabled, DepthFunc func = DEPTH_LESS);
+		static void SetAlphaBlend(bool enabled, BlendFactor factor = BLEND_ONE_MINUS_SRC_ALPHA);
+		static void SetFaceCulling(bool enabled, CullMode mode = CULL_BACK);
+		// RenderCommand & RenderQueue
 		static void BeginScene(CameraComponent* camera, TextureCube* skybox);
 		static void Submit(RenderCommand command);
 		static void EndScene();
 	private:
+		void DrawQueue(std::list<RenderCommand>& queue);
         void Render();
 		void Clear(float r, float g, float b);
     };

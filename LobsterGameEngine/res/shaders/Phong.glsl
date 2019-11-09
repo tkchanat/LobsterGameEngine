@@ -42,45 +42,36 @@ out vec4 FragColor;
 
 layout (std140) uniform ubo_Phong
 {
+    vec4 DiffuseColor;
+    vec4 SpecularColor;
     bool UseDiffuseMap;   bool UseNormalMap;
-    vec2 padding0;
-    vec3 DiffuseColor;    float padding1;
-    vec3 SpecularColor;   float Shininess;
+    float Shininess;      float padding0;
 } Phong;
 
 uniform vec3 cameraPosition;
 uniform vec3 lightDirection;
-uniform vec3 lightColor;
+uniform vec4 lightColor;
 uniform sampler2D DiffuseMap;
 uniform sampler2D NormalMap;
 
 void main()
 {
     // calculate normal in tangent space
-    vec3 normal = normalize(frag_normal);
-    if(Phong.UseNormalMap)
-    {
-        normal = texture(NormalMap, frag_texcoord).rgb;
-        normal = normalize(normal * 2.0 - 1.0);
-        normal = normalize(frag_TBN * normal);
-    }
+    vec3 normal = Phong.UseNormalMap ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
 
     // ambient
-    vec3 ambient = 0.15 * lightColor;
+    vec4 ambient = vec4(vec3(0.15), 1.0);
   	
     // diffuse 
     float intensity = max(dot(normal, -lightDirection), 0.0);
-    vec3 diffuse = intensity * lightColor * Phong.DiffuseColor;
+    vec4 diffuse = Phong.UseDiffuseMap ? texture(DiffuseMap, frag_texcoord) : Phong.DiffuseColor;
 
     // specular
     vec3 viewDirection = normalize(cameraPosition - frag_position);
     vec3 reflectDirection = reflect(lightDirection, normal);
     float multiplier = pow(max(dot(viewDirection, reflectDirection), 0.0), 16);
-    vec3 specular = Phong.Shininess * multiplier * lightColor * Phong.SpecularColor;
+    vec4 specular = Phong.Shininess * multiplier * Phong.SpecularColor;
 
-    vec3 result = ambient + diffuse + specular;
-    if(Phong.UseDiffuseMap)
-        FragColor = texture(DiffuseMap, frag_texcoord) * vec4(result, 1.0);
-    else
-        FragColor = vec4(result, 1.0);
+    vec4 result = (ambient + diffuse * intensity + specular) * lightColor;
+    FragColor = vec4(result.rgb, diffuse.a);
 } 

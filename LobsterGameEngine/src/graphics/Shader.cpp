@@ -182,6 +182,13 @@ namespace Lobster
 		if (location == -1) return;
         glUniform3fv(location, 1, glm::value_ptr(data));
     }
+
+	void Shader::SetUniform(const char* name, const glm::vec4& data)
+	{
+		int location = glGetUniformLocation(m_id, name);
+		if (location == -1) return;
+		glUniform4fv(location, 1, glm::value_ptr(data));
+	}
     
     void Shader::SetUniform(const char* name, const glm::mat4 &data)
     {

@@ -80,6 +80,7 @@ namespace Lobster
 		m_window = new Window(config.getJsonValue("window", windowDefault));
 		TextureLibrary::Initialize();
 		ShaderLibrary::Initialize();
+		MaterialLibrary::Initialize();
 		UniformBufferLibrary::Initialize();
 		
         //  Initialize Renderer
@@ -99,9 +100,16 @@ namespace Lobster
 		});
 
 
-        GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
-		barrel->transform.Translate(0, 2, 0);
-		m_scene->AddGameObject(barrel);
+		//GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
+		//barrel->transform.Translate(0, 2, 0);
+		//m_scene->AddGameObject(barrel);
+
+		for (int i = 0; i < 10; ++i)
+		{
+			GameObject* cube = (new GameObject(std::to_string(i).c_str()))->AddComponent<MeshComponent>(FileSystem::Path("meshes/cube.obj").c_str(), "materials/cube.mat");
+			cube->transform.WorldPosition = glm::vec3(0, 0, (i - 4.5)*1.5);
+			m_scene->AddGameObject(cube);
+		}
 
 		GameObject* camera = (new GameObject("main camera"))->AddComponent<CameraComponent>(ProjectionType::PERSPECTIVE);
 		camera->transform.Translate(0, 2, 10);

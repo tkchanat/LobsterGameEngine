@@ -84,18 +84,19 @@ namespace Lobster
 		VertexBuffer* vertexBuffer = new VertexBuffer;
 		IndexBuffer* indexBuffer = new IndexBuffer;
 		VertexLayout* layout = new VertexLayout;
-		layout->Add<float>("POSITION", 2);		
-		layout->Add<float>("TEXCOORD", 2, sizeof(float) * 2);
+		layout->Add<float>("in_position", 3);
+		layout->Add<float>("in_normal", 3, sizeof(float) * 3);
+		layout->Add<float>("in_texcoord", 2, sizeof(float) * 6);
 
-		float vertices[24] = {
-			// positions   // texCoords
-			-1.0f,  1.0f,  0.0f, 1.0f,
-			-1.0f, -1.0f,  0.0f, 0.0f,
-			 1.0f, -1.0f,  1.0f, 0.0f,
-
-			-1.0f,  1.0f,  0.0f, 1.0f,
-			 1.0f, -1.0f,  1.0f, 0.0f,
-			 1.0f,  1.0f,  1.0f, 1.0f
+		float vertices[48] = {
+			// positions		 // normals			// texCoords
+			-1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 0.0f,
+			 1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f,
+						  
+			-1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,
+			 1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f,
+			 1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f
 		};
 		uint indices[6] = {
 			0, 1, 2,

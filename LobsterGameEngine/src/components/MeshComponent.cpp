@@ -18,14 +18,14 @@ namespace Lobster
 		auto minMax = MeshLoader::Load(meshPath, m_meshes, m_materials);
 		bounds = { minMax.first, minMax.second };
 		// if no materials are defined, use material of our own
-		if(m_materials.empty()) m_materials.push_back(new Material(materialPath));
+		if(m_materials.empty()) m_materials.push_back(MaterialLibrary::Use(materialPath));
     }
 
 	MeshComponent::MeshComponent(VertexArray * mesh, const char * materialPath) :
 		m_meshPath("")
 	{
 		m_meshes.push_back(mesh);
-		m_materials.push_back(new Material(materialPath));
+		m_materials.push_back(MaterialLibrary::Use(materialPath));
 		//	TODO remove this hard code part
 		bounds = { glm::vec3(0, 0, 0), glm::vec3(0.01, 0.01, 0.01) };
 	}
@@ -34,7 +34,7 @@ namespace Lobster
 		m_meshPath("")
 	{
 		m_meshes.push_back(mesh);
-		m_materials.push_back(new Material(materialPath));
+		m_materials.push_back(MaterialLibrary::Use(materialPath));
 		bounds = { min, max };
 	}
     
@@ -42,9 +42,7 @@ namespace Lobster
     {
         //	Release memory
 		for (VertexArray* va : m_meshes) if(va) delete va;
-		for (Material* mat : m_materials) if(mat) delete mat;
 		memset(m_meshes.data(), 0, sizeof(VertexArray*) * m_meshes.size());
-		memset(m_materials.data(), 0, sizeof(Material*) * m_materials.size());
     }
     
 	void MeshComponent::OnUpdate(double deltaTime)
