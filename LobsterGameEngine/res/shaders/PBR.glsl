@@ -9,6 +9,7 @@ layout (location = 4) in vec3 in_bitangent;
 out vec3 frag_position;
 out vec3 frag_normal;
 out vec2 frag_texcoord;
+out mat3 frag_TBN;
 
 uniform mat4 world;
 uniform mat4 view;
@@ -21,6 +22,12 @@ void main()
     frag_normal = mat3(world) * in_normal;
 	frag_texcoord = in_texcoord;
 
+	// calculate tangent space
+    vec3 T = normalize(vec3(world * vec4(in_tangent, 0.0)));
+    vec3 B = normalize(vec3(world * vec4(in_bitangent, 0.0)));
+    vec3 N = normalize(vec3(world * vec4(in_normal, 0.0)));
+    frag_TBN = mat3(T, B, N);
+
     gl_Position = projection * view * world * vec4(in_position, 1.0);
 }
 
@@ -29,6 +36,7 @@ void main()
 in vec3 frag_position;
 in vec3 frag_normal;
 in vec2 frag_texcoord;
+in mat3 frag_TBN;
 out vec4 out_color;
 
 layout (std140) uniform ubo_PBR
@@ -84,9 +92,11 @@ vec3 Fresnel(float cosTheta, vec3 f0)
 void main()
 {
 	// texture maps
-	vec3 albedo = float(PBR.UseAlbedoMap) > 0.5 ? texture(AlbedoMap, frag_texcoord).rgb : PBR.Albedo;
+	vec3 albedo = PBR.UseAlbedoMap ? texture(AlbedoMap, frag_texcoord).rgb : PBR.Albedo;
+	vec3 normal = PBR.UseNormalMap ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
+	float metallic = PBR.UseMetallicMap ? texture(MetallicMap, frag_texcoord).r : PBR.Metallic;
 
-	vec3 n = normalize(frag_normal);
+	vec3 n = normal;
 	vec3 v = normalize(cameraPosition - frag_position);
 	vec3 l = normalize(lightPosition);
 	vec3 h = normalize(v + l);
@@ -95,7 +105,7 @@ void main()
 	float nv = max(dot(n, v), 0.0);
 
 	// choose initial reflectance value at normal incidence
-	vec3 f0 = mix(vec3(0.04), albedo, PBR.Metallic);
+	vec3 f0 = mix(vec3(0.04), albedo, metallic);
 
 	// reflectance equation
 	vec3 Lo = vec3(0.0);
@@ -114,14 +124,11 @@ void main()
 
 		// Energy conservation
 		vec3 kS = F;
-		vec3 kD = (1.0 - F) * (1.0 - PBR.Metallic);
+		vec3 kD = (1.0 - F) * (1.0 - metallic);
 		vec3 diffuse = kD * albedo;
 		
 		Lo += (diffuse + specular) * radiance * cosLi;
 	}
-
-	// vec3 ambient = PBR.Albedo * PBR.AmbientOcclusion * albedo;
-	// vec3 color = ambient + Lo;
 
 	out_color = vec4(Lo, 1.0);
 } 

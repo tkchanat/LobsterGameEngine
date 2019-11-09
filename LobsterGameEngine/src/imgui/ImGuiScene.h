@@ -90,10 +90,13 @@ namespace Lobster
 
 			ImVec2 window_pos = ImGui::GetWindowPos();
 			ImVec2 window_size = ImGui::GetWindowSize();
-					
+
+			// draw scene
 			m_scene->GetActiveCamera()->ResizeProjection(window_size.x / window_size.y);
 			void* image = m_renderer->m_postProcessFrameBuffer->Get();
 			ImGui::GetWindowDrawList()->AddImage(image, ImVec2(window_pos.x, window_pos.y), ImVec2(window_pos.x + window_size.x, window_pos.y + window_size.y), ImVec2(0, 1), ImVec2(1, 0));
+			
+			DrawCameraComponentGizmo();
 
 			// Control the camera ONLY IF window is focused and mouse on the window
 			{
@@ -130,6 +133,7 @@ namespace Lobster
 
 			// ImGuizmo
 			{
+				CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
 				GameObject* gameObject = ImGuiProperties::selectedObj;
 				if (gameObject)
 				{
@@ -137,7 +141,6 @@ namespace Lobster
 					ImGuizmo::SetDrawlist();
 					ImGuiIO& io = ImGui::GetIO();
 					ImGuizmo::SetRect(window_pos.x, window_pos.y, window_size.x, window_size.y);
-					CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
 					if (Input::IsKeyDown(GLFW_KEY_W))
 						m_operation = ImGuizmo::TRANSLATE;
 					else if (Input::IsKeyDown(GLFW_KEY_E))
@@ -226,6 +229,32 @@ namespace Lobster
 			command.UseWorldTransform = glm::mat4(1.0f);
 			Renderer::Submit(command);
 		}
+
+		private:
+			// draw camera gizmo
+			void DrawCameraComponentGizmo()
+			{
+				ImVec2 window_pos = ImGui::GetWindowPos();
+				ImVec2 window_size = ImGui::GetWindowSize();
+				CameraComponent* editorCamera = m_editorCamera->GetComponent<CameraComponent>();
+				glm::mat4 viewProjectionMatrix = editorCamera->GetProjectionMatrix() * editorCamera->GetViewMatrix();
+				for (GameObject* go : m_scene->GetGameObjects())
+				{
+					CameraComponent* camera = go->GetComponent<CameraComponent>();
+					if (camera)
+					{
+						auto remap = [](float value, float start1, float stop1, float start2, float stop2) {
+							return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
+						};
+						void* cameraGizmo = TextureLibrary::Use("textures/ui/camera.png")->Get();
+						glm::vec4 pos = viewProjectionMatrix * glm::vec4(go->transform.WorldPosition, 1);
+						float screenX = remap(pos.x / pos.w, -1.f, 1.f, window_pos.x, window_pos.x + window_size.x);
+						float screenY = remap(-pos.y / pos.w, -1.f, 1.f, window_pos.y, window_pos.y + window_size.y);
+						ImVec2 startPos = { screenX - 16, screenY - 16 };
+						ImGui::GetWindowDrawList()->AddImage(cameraGizmo, startPos, ImVec2(startPos.x + 32, startPos.y + 32));
+					}
+				}
+			}
 
 	};
 

@@ -174,7 +174,7 @@ namespace Lobster
 		//=========================================================
 		// Renderer update
 		Timer renderTimer;
-		m_renderer->Render(m_scene);
+		m_renderer->Render();
 		Profiler::SubmitData("Render Time", renderTimer.GetElapsedTime());
 
 		//=========================================================
@@ -231,7 +231,6 @@ namespace Lobster
 				FixedUpdate(deltaTime);
 				accumulateTime -= intervalTime;
 			}
-
 			VariableUpdate(deltaTime);
 
 			frames++;

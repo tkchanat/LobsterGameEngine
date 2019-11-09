@@ -38,7 +38,7 @@ namespace Lobster
         bool Intersects(ColliderComponent* other) override;
 
 	protected:
-		void Draw() override;
+		virtual void DebugDraw() override;
 
     private:
         void SetVertices(int setExtra = 0);

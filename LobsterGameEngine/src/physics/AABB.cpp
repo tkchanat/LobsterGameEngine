@@ -68,10 +68,9 @@ namespace Lobster
 		SetVertices(2);
 		Center = transform->WorldPosition + m_transform.WorldPosition;
 		UpdateRotation(m_transform.LocalRotation, m_transform.LocalScale, true);
-		if (m_draw) Draw();
 	}
 
-    void AABB::Draw()
+    void AABB::DebugDraw()
     {
 #ifdef LOBSTER_BUILD_DEBUG
         // validate data, and return if we haven't define game object yet

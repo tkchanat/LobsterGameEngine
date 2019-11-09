@@ -11,6 +11,10 @@ namespace Lobster {
 		for (ColliderComponent* collider : m_colliders) {
 			collider->OnUpdate(deltaTime);
 		}
+
+		if (m_enabled) {
+			m_boundingBox->DebugDraw();
+		}
 	}
 
 	void Rigidbody::OnImGuiRender() {

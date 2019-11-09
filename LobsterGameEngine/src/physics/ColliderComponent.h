@@ -16,10 +16,10 @@ namespace Lobster {
 
 		void OnImGuiRender();
 
+		virtual void DebugDraw() = 0;
 		virtual bool Intersects(ColliderComponent* collider) = 0;
 
 	protected:
-		virtual void Draw() = 0;
 		bool m_draw = true;
 
 		//	Custom transform for each collider.

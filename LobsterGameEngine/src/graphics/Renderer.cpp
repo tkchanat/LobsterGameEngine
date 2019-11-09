@@ -32,7 +32,7 @@ namespace Lobster
         
     }
     
-    void Renderer::Render(Scene* scene)
+    void Renderer::Render()
     {
 		// =====================================================
 		// [First Pass] Render the scene to frame buffer
@@ -42,7 +42,7 @@ namespace Lobster
         // Draw all objects with mesh component accordingly
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
-        for(int i = 0; i < s_renderQueue.size(); ++i)
+        while(!s_renderQueue.empty())
         {
 			RenderCommand& command = s_renderQueue.front();
 			Material* useMaterial = command.UseMaterial;

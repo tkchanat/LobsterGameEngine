@@ -56,7 +56,7 @@ namespace Lobster
 		static void Submit(RenderCommand command);
 		static void EndScene();
 	private:
-        void Render(Scene* scene);
+        void Render();
 		void Clear(float r, float g, float b);
     };
     
