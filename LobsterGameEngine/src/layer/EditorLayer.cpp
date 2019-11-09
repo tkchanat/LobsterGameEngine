@@ -40,8 +40,14 @@ namespace Lobster
 	{
 	}
 
+	CameraComponent * EditorLayer::GetSceneCamera()
+	{
+		return m_scene->GetCamera();
+	}
+
 	void EditorLayer::OnUpdate(double deltaTime)
 	{
+		m_scene->OnUpdate(deltaTime);
 	}
 
 	void EditorLayer::OnRender()

@@ -25,7 +25,7 @@ namespace Lobster
 		int m_targetFPS = 60;
 		int m_maxFixedUpdates = 10;
 		// Layers
-		LayerStack m_layerStack;
+		//LayerStack m_layerStack;
 		EditorLayer* m_editorLayer; // depends on GUILayer
 		GUILayer* m_GUILayer;
 		void FixedUpdate(double deltaTime);

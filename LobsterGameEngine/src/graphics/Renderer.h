@@ -20,9 +20,6 @@ namespace Lobster
 
 	struct SceneEnvironment
 	{
-		glm::vec3 CameraPosition;
-		glm::mat4 ViewMatrix;
-		glm::mat4 ProjectionMatrix;
 		TextureCube* Skybox;
 	};
 
@@ -71,10 +68,8 @@ namespace Lobster
     class Renderer
     {
 		friend class Application; // placeholder
-		friend class ImGuiScene;
 	private:
 		// post processing resources
-		FrameBuffer* m_postProcessFrameBuffer;
 		VertexArray* m_postProcessMesh;
 		Shader* m_postProcessShader;
 		// skybox resources
@@ -94,12 +89,13 @@ namespace Lobster
 		static void SetAlphaBlend(bool enabled, BlendFactor factor = BLEND_ONE_MINUS_SRC_ALPHA);
 		static void SetFaceCulling(bool enabled, CullMode mode = CULL_BACK);
 		// RenderCommand & RenderQueue
-		static void BeginScene(CameraComponent* camera, TextureCube* skybox);
+		static void BeginScene(TextureCube* skybox);
 		static void Submit(RenderCommand command);
 		static void EndScene();
+		static void ClearAllQueues();
 	private:
-		void DrawQueue(std::list<RenderCommand>& queue);
-        void Render();
+		void DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue);
+        void Render(CameraComponent* camera);
 		void Clear(float r, float g, float b);
     };
     

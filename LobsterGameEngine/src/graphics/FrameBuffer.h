@@ -17,6 +17,8 @@ namespace Lobster
 		void Unbind();
 		void Resize(int width, int height);
 		inline void* Get() { return (void*)(intptr_t)m_renderTarget; }
+		inline glm::ivec2 GetSize() const { return glm::ivec2(m_width, m_height); }
+		inline float GetAspectRatio() const { return (float)m_width / (float)m_height; }
 	private:
 		void Construct();
 	};

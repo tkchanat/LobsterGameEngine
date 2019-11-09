@@ -33,7 +33,7 @@ namespace Lobster
     
     void Scene::OnUpdate(double deltaTime)
     {
-		Renderer::BeginScene(m_activeCamera, m_skybox);
+		Renderer::BeginScene(m_skybox);
         for(GameObject* gameObject : m_gameObjects)
         {
             gameObject->OnUpdate(deltaTime);

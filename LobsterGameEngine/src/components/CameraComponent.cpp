@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "CameraComponent.h"
-
 #include "Application.h"
+#include "CameraComponent.h"
+#include "graphics/FrameBuffer.h"
 
 namespace Lobster
 {
@@ -16,11 +16,15 @@ namespace Lobster
     {
 		float aspectRatio = Application::GetInstance()->GetWindowAspectRatio();
         ResizeProjection(aspectRatio);
+
+		glm::ivec2 size = Application::GetInstance()->GetWindowSize();
+		m_frameBuffer = new FrameBuffer(size.x, size.y);
     }
     
     CameraComponent::~CameraComponent()
     {
-        
+		if (m_frameBuffer) delete m_frameBuffer;
+		m_frameBuffer = nullptr;
     }
 
 	void CameraComponent::ResizeProjection(float aspectRatio)
@@ -37,11 +41,22 @@ namespace Lobster
     
     void CameraComponent::OnUpdate(double deltaTime)
     {
-        
     }
 
 	void CameraComponent::OnImGuiRender()
 	{
+		if (ImGui::CollapsingHeader("CameraComponent", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::BeginChild("Camera Preview", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+			{
+				// draw camera preview
+				ImGui::Text("Camera Preview");
+				ImVec2 window_size = ImGui::GetWindowSize();
+				void* image = m_frameBuffer->Get();
+				ImGui::Image(image, ImVec2(window_size.x, window_size.x / m_frameBuffer->GetAspectRatio()), ImVec2(0, 1), ImVec2(1, 0));
+			}
+			ImGui::EndChild();
+		}
 	}
 
 	glm::mat4 CameraComponent::GetViewMatrix() const

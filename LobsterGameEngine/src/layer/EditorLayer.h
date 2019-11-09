@@ -6,6 +6,7 @@ namespace Lobster
 
 	class Scene;
 	class Renderer;
+	class CameraComponent;
 	class ImGuiMenuBar;
 	class ImGuiScene;
 	class ImGuiDemoWindow;
@@ -25,6 +26,7 @@ namespace Lobster
 	public:
 		EditorLayer(Scene* scene, Renderer* renderer);
 		~EditorLayer();
+		CameraComponent* GetSceneCamera();
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnRender() override;
 		virtual void OnImGuiRender() override;

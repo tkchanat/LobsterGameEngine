@@ -100,9 +100,9 @@ namespace Lobster
 		});
 
 
-		//GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
-		//barrel->transform.Translate(0, 2, 0);
-		//m_scene->AddGameObject(barrel);
+		GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
+		barrel->transform.Translate(0, 2, 0);
+		m_scene->AddGameObject(barrel);
 
 		for (int i = 0; i < 10; ++i)
 		{
@@ -120,8 +120,8 @@ namespace Lobster
 
 #ifdef LOBSTER_BUILD_DEBUG
 		// Push layers to layer stack
-		m_layerStack.Push(new GUILayer());
-		m_layerStack.Push(new EditorLayer(m_scene, m_renderer));
+		m_GUILayer = new GUILayer();
+		m_editorLayer = new EditorLayer(m_scene, m_renderer);
 #endif
     }
 
@@ -170,7 +170,7 @@ namespace Lobster
 		// Scene update
 		Timer sceneUpdateTimer;
 		m_scene->OnUpdate(deltaTime);	// update game scene
-		m_layerStack.OnUpdate(deltaTime);
+		//m_layerStack.OnUpdate(deltaTime);
 		Profiler::SubmitData("Scene Update Time", sceneUpdateTimer.GetElapsedTime());
 
 		//=========================================================
@@ -182,21 +182,22 @@ namespace Lobster
 		//=========================================================
 		// Renderer update
 		Timer renderTimer;
-		m_renderer->Render();
+		m_renderer->Render(m_scene->GetActiveCamera());
 		Profiler::SubmitData("Render Time", renderTimer.GetElapsedTime());
 
 		//=========================================================
 		// GUI Renderer update
 		#ifdef LOBSTER_BUILD_DEBUG
 		Timer imguiRenderTimer;
+		ImGui::GetIO().DeltaTime = deltaTime;
+		m_editorLayer->OnUpdate(deltaTime);
+		m_renderer->Render(m_editorLayer->GetSceneCamera());
 		m_GUILayer->Begin();
-		for (Layer* layer : m_layerStack)
-		{
-			layer->OnImGuiRender();
-		}
+		m_editorLayer->OnImGuiRender();
 		m_GUILayer->End();
 		Profiler::SubmitData("ImGui Render Time", imguiRenderTimer.GetElapsedTime());
 		#endif
+		m_renderer->ClearAllQueues();
 
 		//=========================================================
 		// Window update

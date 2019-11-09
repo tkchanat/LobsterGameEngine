@@ -14,10 +14,12 @@ namespace Lobster
 	GUILayer::GUILayer() :
 		Layer("imGUI")
 	{
+		OnAttach();
 	}
 
 	GUILayer::~GUILayer()
 	{
+		OnDetach();
 	}
 
 	void GUILayer::Begin()

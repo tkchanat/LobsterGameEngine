@@ -24,7 +24,6 @@ namespace Lobster
 		// Create frame buffer for second pass
         glm::ivec2 size = Application::GetInstance()->GetWindow()->GetSize();
 
-		m_postProcessFrameBuffer = new FrameBuffer(size.x, size.y);
 		m_postProcessShader = ShaderLibrary::Use("shaders/PostProcessing.glsl");
 		m_postProcessMesh = MeshFactory::Plane();
 
@@ -72,19 +71,19 @@ namespace Lobster
 		}
 	}
     
-	void Renderer::DrawQueue(std::list<RenderCommand>& queue)
+	void Renderer::DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue)
 	{
-		while (!queue.empty())
+		for (std::list<RenderCommand>::iterator it = queue.begin(); it != queue.end(); ++it)
 		{
-			RenderCommand& command = queue.front();
+			RenderCommand& command = *it;
 			Material* useMaterial = command.UseMaterial;
 			Shader* useShader = command.UseMaterial->GetShader();
 			useShader = (useShader && useShader->CompileSuccess()) ? useShader : ShaderLibrary::Use("shaders/SolidColor.glsl");
 			useShader->Bind();
 			useShader->SetUniform("world", command.UseWorldTransform);
-			useShader->SetUniform("view", m_activeSceneEnvironment.ViewMatrix);
-			useShader->SetUniform("projection", m_activeSceneEnvironment.ProjectionMatrix);
-			useShader->SetUniform("cameraPosition", m_activeSceneEnvironment.CameraPosition);
+			useShader->SetUniform("view", camera->GetViewMatrix());
+			useShader->SetUniform("projection", camera->GetProjectionMatrix());
+			useShader->SetUniform("cameraPosition", camera->GetPosition());
 			useShader->SetUniform("lightPosition", glm::vec3(0.0, 2.0, 3.0));
 			useShader->SetUniform("lightDirection", glm::normalize(glm::vec3(0.0, -2.0, -3.0)));
 			useShader->SetUniform("lightColor", glm::vec4(1.0, 1.0, 1.0, 1.0));
@@ -102,18 +101,19 @@ namespace Lobster
 
 			command.UseVertexArray->Draw();
 
-			queue.pop_front();
+			//queue.pop_front();
 		}
 	}
 
-	void Renderer::Render()
+	void Renderer::Render(CameraComponent* camera)
 	{
 		// =====================================================
 		// [First Pass] Render the scene to frame buffer
 		// Render order: Background -> Opaque -> Transparent(sorted) -> Overlay
 
 		// Set renderer configurations
-		m_postProcessFrameBuffer->Bind();
+		FrameBuffer* renderTarget = camera->GetFrameBuffer();
+		renderTarget->Bind();
 		Renderer::Clear(0.2f, 0.3f, 0.3f);
 		Renderer::SetFaceCulling(true);
 
@@ -123,9 +123,9 @@ namespace Lobster
 			Renderer::SetFaceCulling(true, CULL_FRONT);
 			Renderer::SetDepthTest(true, DEPTH_LEQUAL);
 			m_skyboxShader->Bind();
-			m_skyboxShader->SetUniform("world", glm::translate(m_activeSceneEnvironment.CameraPosition)); // camera position
-			m_skyboxShader->SetUniform("view", m_activeSceneEnvironment.ViewMatrix);
-			m_skyboxShader->SetUniform("projection", m_activeSceneEnvironment.ProjectionMatrix);
+			m_skyboxShader->SetUniform("world", glm::translate(camera->GetPosition())); // camera position
+			m_skyboxShader->SetUniform("view", camera->GetViewMatrix());
+			m_skyboxShader->SetUniform("projection", camera->GetProjectionMatrix());
 			m_skyboxShader->SetTextureCube(0, m_activeSceneEnvironment.Skybox->Get());
 			m_skyboxMesh->Draw();
 			Renderer::SetDepthTest(true, DEPTH_LESS);
@@ -133,24 +133,24 @@ namespace Lobster
 		}
 
 		// Opaque
-		Renderer::DrawQueue(m_opaqueQueue);
+		Renderer::DrawQueue(camera, m_opaqueQueue);
 		// Transparent(sorted)
 		Renderer::SetAlphaBlend(true);
-		Renderer::DrawQueue(m_transparentQueue);
+		Renderer::DrawQueue(camera, m_transparentQueue);
 		Renderer::SetAlphaBlend(false);
 		// Overlay
 
 		// Unset renderer configurations
 		Renderer::SetFaceCulling(false);
 
-		m_postProcessFrameBuffer->Unbind();
+		renderTarget->Unbind();
 
 		// =====================================================
 		// [Second Pass] Render the stored frame buffer in rect
 		Renderer::Clear(0.1f, 0.2f, 0.3f);
 		Renderer::SetDepthTest(false);
 		m_postProcessShader->Bind();
-		m_postProcessShader->SetTexture2D(0, m_postProcessFrameBuffer->Get());
+		m_postProcessShader->SetTexture2D(0, renderTarget->Get());
 		m_postProcessMesh->Draw();
 		Renderer::SetDepthTest(true);
     }
@@ -161,12 +161,9 @@ namespace Lobster
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
-	void Renderer::BeginScene(CameraComponent * camera, TextureCube * skybox)
+	void Renderer::BeginScene(TextureCube * skybox)
 	{
-		if (!camera) return;
-		s_instance->m_activeSceneEnvironment.CameraPosition = camera->GetPosition();
-		s_instance->m_activeSceneEnvironment.ViewMatrix = camera->GetViewMatrix();
-		s_instance->m_activeSceneEnvironment.ProjectionMatrix = camera->GetProjectionMatrix();
+		// set global environment
 		s_instance->m_activeSceneEnvironment.Skybox = skybox;
 	}
 
@@ -188,6 +185,13 @@ namespace Lobster
 	void Renderer::EndScene()
 	{
 		// do all batching and sorting job here
+	}
+
+	void Renderer::ClearAllQueues()
+	{
+		// remove all previous render commands
+		s_instance->m_opaqueQueue.clear();
+		s_instance->m_transparentQueue.clear();
 	}
 
 }

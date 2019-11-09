@@ -5,6 +5,8 @@
 
 namespace Lobster
 {
+
+	class FrameBuffer;
     
 	//	This enum class is for configuring the projection type when constructing a CameraComponent class.
 	//	It is only visible if you include CameraComponent.h or ComponentCollection.h
@@ -28,6 +30,7 @@ namespace Lobster
         ProjectionType m_type;
         glm::mat4 m_viewMatrix;
         glm::mat4 m_projectionMatrix;
+		FrameBuffer* m_frameBuffer;
     public:
         CameraComponent(ProjectionType type);
         ~CameraComponent();
@@ -37,6 +40,7 @@ namespace Lobster
 		glm::mat4 GetViewMatrix() const;
         inline glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 		inline glm::vec3 GetPosition() const { return Component::transform->WorldPosition; }
+		inline FrameBuffer* GetFrameBuffer() { return m_frameBuffer; }
     };
     
 }

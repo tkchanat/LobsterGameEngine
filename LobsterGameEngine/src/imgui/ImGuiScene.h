@@ -49,9 +49,8 @@ namespace Lobster
 			m_editorCamera = (new GameObject("EditorCamera"))->AddComponent<CameraComponent>(ProjectionType::PERSPECTIVE);
 			m_editorCamera->transform.Translate(10, 8, 10);
 			m_editorCamera->transform.LookAt(glm::vec3(0, 0, 0));
-			m_scene->SetActiveCamera(m_editorCamera->GetComponent<CameraComponent>());
 
-			m_gridMaterial = MaterialLibrary::Use("materials/SolidColor.mat");
+			m_gridMaterial = MaterialLibrary::Use("materials/gridline.mat");
 			m_gridVertexArray = MeshFactory::Grid(20, 20);
 
 			// listen events
@@ -62,6 +61,8 @@ namespace Lobster
 				}
 			}));
 		}
+		
+		inline CameraComponent* GetCamera() { return m_editorCamera->GetComponent<CameraComponent>(); }
 
 		// Check if moues is inside the "scene" window 
 		bool insideWindow(const ImVec2& mouse, const ImVec2& pos, const ImVec2& size) {
@@ -84,6 +85,16 @@ namespace Lobster
 			m_gridVertexArray = nullptr;
 		}
 
+		void OnUpdate(double deltaTime)
+		{
+			// grid line rendering
+			RenderCommand command;
+			command.UseMaterial = m_gridMaterial;
+			command.UseVertexArray = m_gridVertexArray;
+			command.UseWorldTransform = glm::mat4(1.0f);
+			Renderer::Submit(command);
+		}
+
 		virtual void Show(bool* p_open) override
 		{			
 			// ====================================================
@@ -94,8 +105,9 @@ namespace Lobster
 			window_size = ImGui::GetWindowSize();
 
 			// draw scene
-			m_scene->GetActiveCamera()->ResizeProjection(window_size.x / window_size.y);
-			void* image = m_renderer->m_postProcessFrameBuffer->Get();
+			CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
+			camera->ResizeProjection(window_size.x / window_size.y);
+			void* image = camera->GetFrameBuffer()->Get();
 			ImGui::GetWindowDrawList()->AddImage(image, ImVec2(window_pos.x, window_pos.y), ImVec2(window_pos.x + window_size.x, window_pos.y + window_size.y), ImVec2(0, 1), ImVec2(1, 0));
 			
 			DrawCameraComponentGizmo();
@@ -135,7 +147,6 @@ namespace Lobster
 
 			// ImGuizmo
 			{
-				CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
 				GameObject* gameObject = ImGuiProperties::selectedObj;
 				if (gameObject)
 				{
@@ -224,12 +235,6 @@ namespace Lobster
 				ImGui::PopStyleVar();
 			}
 
-			// grid line rendering
-			RenderCommand command;
-			command.UseMaterial = m_gridMaterial;
-			command.UseVertexArray = m_gridVertexArray;
-			command.UseWorldTransform = glm::mat4(1.0f);
-			Renderer::Submit(command);
 		}
 
 		private:
