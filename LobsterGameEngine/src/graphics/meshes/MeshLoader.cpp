@@ -88,17 +88,17 @@ namespace Lobster
 			std::string diffuseMapPath = "textures/" + meshName + '/' + std::string(diffuseMap.C_Str());
 			std::string normalMapPath  = "textures/" + meshName + '/' + std::string(normalMap.C_Str());
 			Material* newMaterial = MaterialLibrary::Use(materialPath.c_str());
-			if (!newMaterial->Exist())
-			{
-				newMaterial->GetUniformBufferData(0)->SetData("DiffuseColor", (void*)&diffuseColor);
-				newMaterial->GetUniformBufferData(0)->SetData("SpecularColor", (void*)&specularColor);
-				if (diffuseMap.length) {
-					newMaterial->SetTextureUnit("DiffuseMap", diffuseMapPath.c_str());
-				}
-				if (normalMap.length) {
-					newMaterial->SetTextureUnit("NormalMap", normalMapPath.c_str());
-				}
-			}
+			//if (!newMaterial->Exist())
+			//{
+			//	newMaterial->GetUniformBufferData(0)->SetData("DiffuseColor", (void*)&diffuseColor);
+			//	newMaterial->GetUniformBufferData(0)->SetData("SpecularColor", (void*)&specularColor);
+			//	if (diffuseMap.length) {
+			//		newMaterial->SetTextureUnit("DiffuseMap", diffuseMapPath.c_str());
+			//	}
+			//	if (normalMap.length) {
+			//		newMaterial->SetTextureUnit("NormalMap", normalMapPath.c_str());
+			//	}
+			//}
 			
 			materialArrays.push_back(newMaterial);
 		}

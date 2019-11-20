@@ -73,6 +73,7 @@ namespace Lobster
     
 	void Renderer::DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue)
 	{
+		Material* boundedMaterial = nullptr;
 		for (std::list<RenderCommand>::iterator it = queue.begin(); it != queue.end(); ++it)
 		{
 			RenderCommand& command = *it;
@@ -80,23 +81,17 @@ namespace Lobster
 			Shader* useShader = command.UseMaterial->GetShader();
 			useShader = (useShader && useShader->CompileSuccess()) ? useShader : ShaderLibrary::Use("shaders/SolidColor.glsl");
 			useShader->Bind();
-			useShader->SetUniform("world", command.UseWorldTransform);
-			useShader->SetUniform("view", camera->GetViewMatrix());
-			useShader->SetUniform("projection", camera->GetProjectionMatrix());
-			useShader->SetUniform("cameraPosition", camera->GetPosition());
-			useShader->SetUniform("lightPosition", glm::vec3(0.0, 2.0, 3.0));
-			useShader->SetUniform("lightDirection", glm::normalize(glm::vec3(0.0, -2.0, -3.0)));
-			useShader->SetUniform("lightColor", glm::vec4(1.0, 1.0, 1.0, 1.0));
-
-			for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
-			{
-				void* textureID = (useMaterial->GetTextureUnit(i) == nullptr) ? 0 : useMaterial->GetTextureUnit(i)->Get();
-				useShader->SetTexture2D(i, textureID);
-			}
-			for (int i = 0; i < MAX_UNIFORM_BUFFER; ++i)
-			{
-				if (useMaterial->GetUniformBufferData(i) == nullptr) continue;
-				useMaterial->GetUniformBufferData(i)->BindData();
+			useShader->SetUniform("sys_world", command.UseWorldTransform);
+			useShader->SetUniform("sys_view", camera->GetViewMatrix());
+			useShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
+			useShader->SetUniform("sys_cameraPosition", camera->GetPosition());
+			useShader->SetUniform("sys_lightPosition", glm::vec3(0.0, 2.0, 3.0));
+			useShader->SetUniform("sys_lightDirection", glm::normalize(glm::vec3(0.0, -2.0, -3.0)));
+			useShader->SetUniform("sys_lightColor", glm::vec4(1.0, 1.0, 1.0, 1.0));
+			
+			if (boundedMaterial != useMaterial) {
+				useMaterial->SetUniforms();
+				boundedMaterial = useMaterial;
 			}
 
 			command.UseVertexArray->Draw();

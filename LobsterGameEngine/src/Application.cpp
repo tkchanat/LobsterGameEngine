@@ -60,7 +60,7 @@ namespace Lobster
 		JsonFile config("../config.json");
 
 		// Independent system initialization
-		ThreadPool::Initialize(32);
+		//ThreadPool::Initialize(32);
 		Profiler::Initialize();
 		EventDispatcher::Initialize();
 		EventQueue::Initialize();
@@ -93,20 +93,21 @@ namespace Lobster
 		Timer loadTimer;
         m_scene = new Scene();
 
-		ThreadPool::Enqueue([]() {
-			// This job should be running in a separate thread without blocking the main thread
-//			Sleep(10000); // sleep for 10 seconds
-			LOG("ThreadPool is working! :D");
-		});
+		//ThreadPool::Enqueue([]() {
+		//	// This job should be running in a separate thread without blocking the main thread
+		//	Sleep(10000); // sleep for 10 seconds
+		//	LOG("ThreadPool is working! :D");
+		//});
 
 
-		GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
-		barrel->transform.Translate(0, 2, 0);
-		m_scene->AddGameObject(barrel);
+		//GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
+		//barrel->transform.Translate(0, 2, 0);
+		//m_scene->AddGameObject(barrel);
 
 		for (int i = 0; i < 10; ++i)
 		{
-			GameObject* cube = (new GameObject(std::to_string(i).c_str()))->AddComponent<MeshComponent>(FileSystem::Path("meshes/cube.obj").c_str(), "materials/cube.mat");
+			GameObject* cube = (new GameObject(std::to_string(i).c_str()))
+				->AddComponent<MeshComponent>(FileSystem::Path("meshes/sphere.obj").c_str(), "materials/cube.mat");
 			cube->transform.WorldPosition = glm::vec3(0, 0, (i - 4.5)*1.5);
 			m_scene->AddGameObject(cube);
 		}
@@ -139,7 +140,9 @@ namespace Lobster
 
 		//=========================================================
 		// Physics update
+		Timer physicsTimer;
 		m_scene->OnPhysicsUpdate(deltaTime);
+		Profiler::SubmitData("Physics Update Time", physicsTimer.GetElapsedTime());
 	}
 
 	// Updates subsystem chronologically as much as possible, i.e. order does matter

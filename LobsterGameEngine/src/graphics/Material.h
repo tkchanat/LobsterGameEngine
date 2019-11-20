@@ -23,26 +23,25 @@ namespace Lobster
 	protected:
 		RenderingMode m_mode;
         Shader* m_shader;
-		std::vector<std::pair<std::string, Texture2D*>> m_textureUnits;
-		std::vector<std::pair<std::string, UniformBufferData*>> m_uniformBufferData;
+		byte* m_uniformData;
+		size_t m_uniformDataSize;
+		std::vector<Texture2D*> m_textures;
 		std::string m_name;
-		std::string m_path;
 		JsonFile m_json;
 		bool b_dirty;
     public:
         virtual ~Material();
 		void OnImGuiRender();
+		void SetUniforms();
 		void SaveConfiguration();
-		void SetTextureUnit(const char* name, const char* texturePath);
 		inline bool Exist() const { return m_json.getFileExist(); }
 		inline std::string GetName() const { return m_name; }
-		inline std::string GetPath() const { return m_path; }
+		inline std::string GetPath() const { return FileSystem::Path(m_name); }
         inline Shader* GetShader() const { return m_shader; }
 		inline RenderingMode GetRenderingMode() const { return m_mode; }
-		inline Texture2D* GetTextureUnit(int index) const { return index < m_textureUnits.size() ? m_textureUnits[index].second : nullptr; }
-		inline UniformBufferData* GetUniformBufferData(int index) const { return index < m_uniformBufferData.size() ? m_uniformBufferData[index].second : nullptr; }
 	private:
         Material(const char* path);
+		void InitializeUniformsFromShader();
 	};
 
 	class MaterialLibrary

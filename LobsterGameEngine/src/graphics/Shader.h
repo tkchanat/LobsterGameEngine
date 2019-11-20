@@ -1,10 +1,11 @@
 #pragma once
+#include "Uniform.h"
 
 namespace Lobster 
 {
 
 	class UniformBuffer;
-    
+   
     //  This class is for holding the shader program and playing the role of accessing shader uniforms / constant buffers.
 	//	All shaders are searched in the shader folder under StealStepFYP/res/ directory. Please make sure they are there.
 	//	Note:	To keep things cleaner, this implementation encourage putting all shader stages code into one .glsl file.
@@ -21,10 +22,10 @@ namespace Lobster
         uint m_fsId;
 		std::string m_name;
         std::string m_path;
-		std::vector<std::pair<std::string, std::vector<std::string>>> m_uniformBlueprints;
-		std::vector<std::pair<std::string, std::string>> m_textureBlueprints;
-		std::vector<int> m_texture2DSlots;
-		std::vector<int> m_textureCubeSlots;
+		std::unordered_map<std::string, int> m_uniformLocationMap;
+		std::vector<UniformDeclaration> m_uniformDeclarations;
+		std::vector<uint> m_texture2DSlots;
+		std::vector<uint> m_textureCubeSlots;
 		bool b_compileSuccess;
     public:
 		Shader() = delete;
@@ -37,30 +38,31 @@ namespace Lobster
 		inline std::string GetPath() const { return m_path; }
 		inline bool CompileSuccess() const { return b_compileSuccess; }
         //  Shader uniforms
+		void SetUniform(const char* name, UniformDeclaration::DataType type, byte* data);
+		void SetUniform(const char* name, const bool& data);
+		void SetUniform(const char* name, const glm::vec2& data);
         void SetUniform(const char* name, const glm::vec3& data);
 		void SetUniform(const char* name, const glm::vec4& data);
         void SetUniform(const char* name, const glm::mat4& data);
-		void SetTexture2D(int slot, void* texture2D);
-		void SetTextureCube(int slot, void* textureCube);
-		bool HasUniformBufferName(const char* name) const;
-		inline const std::vector<std::pair<std::string, std::vector<std::string>>>& GetUniformBlueprints() const { return m_uniformBlueprints; }
-		inline const std::vector<std::pair<std::string, std::string>>& GetTextureBlueprints() const { return m_textureBlueprints; }
+		void SetTexture2D(uint slot, void* texture2D);
+		void SetTextureCube(uint slot, void* textureCube);
+		inline const std::vector<UniformDeclaration>& GetUniformDeclarations() const { return m_uniformDeclarations; }
     private:
         Shader(const char* path);
         bool Compile();
 		void ParseUniform();
-		void ParseTexture();
 		void SetBlockBinding(const char* name, int bindingPoint);
     };
 
 	class ShaderLibrary
 	{
-		friend class Renderer;
 	private:
 		std::vector<Shader*> m_shaders;
+		std::vector<std::filesystem::file_time_type> m_shadersLastModified;
 		static ShaderLibrary* s_instance;
 	public:
 		static void Initialize();
+		static void LiveReload();
 		static Shader* Use(const char* path);
 		static void SetBlockBinding(const char* name, int bindingPoint);
 	};

@@ -1,5 +1,5 @@
 {
-    "RenderingMode": 1,
+    "RenderingMode": 0,
     "Shader": "shaders/Phong.glsl",
     "Texture2D": {
         "DiffuseMap": "",

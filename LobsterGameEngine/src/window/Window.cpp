@@ -137,6 +137,9 @@ namespace Lobster
 		glfwSetWindowCloseCallback(m_window, [](GLFWwindow* window) {
 			EventQueue::GetInstance()->AddEvent<WindowClosedEvent>();
 		});
+		glfwSetWindowFocusCallback(m_window, [](GLFWwindow* window, int focused) {
+			EventQueue::GetInstance()->AddEvent<WindowFocusedEvent>((bool)focused);
+		});
 
 		/* Listen for SSF Callback */
 		EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {

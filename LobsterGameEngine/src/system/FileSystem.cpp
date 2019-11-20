@@ -211,4 +211,8 @@ namespace Lobster {
         fs::current_path(executablePath);
 		return path;
 	}
+	std::filesystem::file_time_type FileSystem::LastModified(const char * path)
+	{
+		return fs::last_write_time(fs::path(Path(path)));
+	}
 }

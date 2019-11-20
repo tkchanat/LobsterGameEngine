@@ -9,9 +9,10 @@ namespace Lobster
     Material::Material(const char* path) :
 		m_mode(MODE_OPAQUE),
 		m_shader(nullptr),
-		m_path(FileSystem::Path(path)),
 		m_name(path),
 		m_json(path),
+		m_uniformData(nullptr),
+		m_uniformDataSize(0),
 		b_dirty(false)
     {
 		// shader
@@ -21,34 +22,37 @@ namespace Lobster
 		int mode = m_json.getValue("RenderingMode", 0);
 		m_mode = (RenderingMode)mode;
 		// initialize uniform buffer data
-		auto& uniformBlueprints = m_shader->GetUniformBlueprints();
-		for (auto& blueprint : uniformBlueprints)
-		{
-			UniformBufferData* dataBlock = new UniformBufferData(blueprint.first, blueprint.second);
-			m_uniformBufferData.push_back({ blueprint.first, dataBlock });
-			// read stored uniform buffer data, set to default value if none
-			for (auto& element : blueprint.second)
-			{
-				std::vector<std::string> tokens = StringOps::split(element, ' ');
-				size_t typeCount = UniformBufferDeclaration::ElementMap(UniformBufferDeclaration::EnumMap(tokens[0]));
-				std::string attribute = "UniformBuffer." + blueprint.first + '.' + tokens[1];
-				std::vector<int> intArray = m_json.getValue(attribute.c_str(), std::vector<int>(typeCount, 0));
-				std::vector<float> floatArray = m_json.getValue(attribute.c_str(), std::vector<float>(typeCount, 1.0));
-				void* data = UniformBufferDeclaration::TypeMap(tokens[0]) == UniformBufferDeclaration::INT ? (void*)intArray.data() : (void*)floatArray.data();
-				dataBlock->SetData(tokens[1].c_str(), data);
-			}
-		}
-        // textures
-        auto& textureBlueprints = m_shader->GetTextureBlueprints();
-        for (auto& blueprint : textureBlueprints)
-        {
-            if (blueprint.first.empty()) continue;
-            std::string texturePath = m_json.getValue(std::string("Texture2D." + blueprint.first).c_str(), "");
-            Texture2D* texture = texturePath.empty() ? nullptr : TextureLibrary::Use(texturePath.c_str());
-            std::pair<std::string, Texture2D*> newPair = { blueprint.first, texture };
-            m_textureUnits.push_back(newPair);
-        }
+		InitializeUniformsFromShader();
     }
+
+	void Material::InitializeUniformsFromShader()
+	{
+		// deallocate previous buffer if any
+		if (m_uniformData) {
+			delete[] m_uniformData;
+			m_uniformData = nullptr;
+		}
+
+		// create buffer
+		const std::vector<UniformDeclaration>& declarations = m_shader->GetUniformDeclarations();
+		for (auto decl : declarations) {
+			m_uniformDataSize += decl.Size();
+		}
+		m_uniformData = new byte[m_uniformDataSize];
+		memset(m_uniformData, 0, m_uniformDataSize);
+
+		// allocate each texture into its unique slot
+		size_t offset = 0;
+		for (auto decl : declarations) {
+			if (decl.Type == UniformDeclaration::SAMPLER2D) {
+				uint slot = m_textures.size();
+				memcpy(m_uniformData + offset, &slot, sizeof(uint));
+				Texture2D* texture = nullptr;
+				m_textures.push_back(texture);
+			}
+			offset += decl.Size();
+		}
+	}
     
     Material::~Material()
     {
@@ -69,7 +73,7 @@ namespace Lobster
 				ImGui::EndPopup();
 			}
 
-			ImVec2 previewSize(40, 40);
+			ImVec2 previewSize(32, 32);
 			Texture2D* notFound = TextureLibrary::Placeholder();
             static std::string selectedTexture;
 			// Shader
@@ -83,73 +87,87 @@ namespace Lobster
 			b_dirty |= prev_mode != m_mode;
 			ImGui::PopItemWidth();
 			ImGui::Spacing();
-			// Texture2D
-			for (auto pair : m_textureUnits)
-			{
-				std::string label = pair.first + ": (%s)";
-				void* texture = pair.second ? pair.second->Get() : nullptr;
-				ImGui::Text(label.c_str(), texture ? pair.second->GetName().c_str() : "Missing");
-				ImGui::SameLine(ImGui::GetWindowWidth() - 60);
-				// texture button
-                ImGui::PushID(pair.first.c_str());
-                if(ImGui::ImageButton(texture ? texture : notFound->Get(), previewSize))
-                {
-                    std::string path = FileSystem::OpenFileDialog();
-					if(!path.empty())
-                    {
-                        SetTextureUnit(pair.first.c_str(), path.c_str());
-                    }
-                }
-				// right-click to remove
-				if (ImGui::BeginPopupContextItem())
-				{
-					ImGui::Text("Remove Texture?");
-					ImGui::Separator();
-					if (ImGui::Button("Remove")) {
-						SetTextureUnit(pair.first.c_str(), nullptr);
-						ImGui::CloseCurrentPopup();
+			// Uniforms
+			auto declaration = m_shader->GetUniformDeclarations();
+			size_t offset = 0;
+			for (auto decl : declaration) {
+				const char* label = decl.Name.c_str();
+				void* data = m_uniformData + offset;
+				ImGui::PushID(label);
+				switch (decl.Type) {
+				case UniformDeclaration::BOOL:
+					ImGui::Checkbox(label, (bool*)data); break;
+				case UniformDeclaration::FLOAT:
+					ImGui::SliderFloat(label, (float*)data, 0.f, 1.f); break;
+				case UniformDeclaration::VEC3:
+					ImGui::ColorEdit3(label, (float*)data); break;
+				case UniformDeclaration::VEC4:
+					ImGui::ColorEdit4(label, (float*)data); break;
+				case UniformDeclaration::SAMPLER2D:
+					if (ImGui::ImageButton(m_textures[*(uint*)data] ? m_textures[*(uint*)data]->Get() : notFound->Get(), previewSize)) {
+						std::string path = FileSystem::OpenFileDialog();
+						if (!path.empty()) {
+							m_textures[*(uint*)data] = TextureLibrary::Use(path.c_str());
+							b_dirty = true;
+						}
+					}
+					if (ImGui::BeginPopupContextItem()) {
+						ImGui::Text("Remove Texture?");
+						ImGui::Separator();
+						if (ImGui::Button("Remove")) {
+							m_textures[*(uint*)data] = nullptr;
+							b_dirty = true;
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::SameLine();
+						if (ImGui::Button("Cancel"))
+							ImGui::CloseCurrentPopup();
+						ImGui::EndPopup();
 					}
 					ImGui::SameLine();
-					if (ImGui::Button("Cancel"))
-						ImGui::CloseCurrentPopup();
-					ImGui::EndPopup();
+					ImGui::Text(label);
+					break;
+				default: break;
 				}
-                ImGui::PopID();
+				ImGui::PopID();
+				b_dirty |= ImGui::IsItemActive();
+				offset += decl.Size();
 			}
 
-			for (auto& uniformBufferData : m_uniformBufferData)
-			{
-				uniformBufferData.second->OnImGuiRender(m_name, b_dirty);
+		}
+	}
+
+	void Material::SetUniforms()
+	{
+		auto declaration = m_shader->GetUniformDeclarations();
+		size_t offset = 0;
+		for (auto decl : declaration) {
+			std::string label = decl.Name;
+			byte* data = m_uniformData + offset;
+			if (decl.Type == UniformDeclaration::SAMPLER2D) {
+				Texture2D* texture = m_textures[*(uint*)data];
+				m_shader->SetTexture2D(*(uint*)data, texture ? texture->Get() : nullptr);
 			}
+			m_shader->SetUniform(decl.Name.c_str(), decl.Type, data);
+			offset += decl.Size();
 		}
 	}
 
 	void Material::SaveConfiguration()
 	{
 		// save the material configurations accordingly
-		m_json.setValue("Shader", m_shader->GetName());
-		m_json.setValue("Texture2D", nlohmann::json());
-		m_json.setValue("RenderingMode", (int)m_mode);
-		m_json.setValue("UniformBuffer", nlohmann::json());
-		for (auto& pair : m_textureUnits)
-			m_json.setValue(("Texture2D." + pair.first).c_str(), (pair.second) ? pair.second->GetName() : "");
-		for (auto& pair : m_uniformBufferData)
-			m_json.setValue(("UniformBuffer." + pair.first).c_str(), pair.second->Serialize());
-		b_dirty = false;
-	}
+		//m_json.setValue("Shader", m_shader->GetName());
+		//m_json.setValue("RenderingMode", (int)m_mode);
 
-	void Material::SetTextureUnit(const char * name, const char * texturePath)
-	{
-		uint32_t useTexture = (texturePath == nullptr) ? 0 : 1;
-		for (auto& textureUnit : m_textureUnits)
-		{
-			if (textureUnit.first == name)
-			{
-				GetUniformBufferData(0)->SetData(("Use" + std::string(name)).c_str(), (void*)&useTexture);
-				textureUnit.second = useTexture ? TextureLibrary::Use(texturePath) : nullptr;
-            }
-		}
-		b_dirty = true;
+		//std::vector<std::string> paths;
+		//for (Texture2D* texture : m_textures) paths.push_back(texture ? texture->GetName() : "");
+		//m_json.setValue("Texture2D", paths);
+
+		//std::string binary;
+		//for (int i = 0; i < m_uniformDataSize; ++i) binary += m_uniformData[i];
+		//m_json.setValue("Uniforms", binary);
+
+		b_dirty = false;
 	}
 
 	// =======================================================

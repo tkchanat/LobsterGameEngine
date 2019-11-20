@@ -8,8 +8,15 @@ namespace Lobster
     {
     public:
         WindowClosedEvent() : Event(EVENT_WINDOW_CLOSED) {}
-        ~WindowClosedEvent() = default;
     };
+
+	class WindowFocusedEvent : public Event
+	{
+	public:
+		bool Focused;
+	public:
+		WindowFocusedEvent(bool focused) : Event(EVENT_WINDOW_FOCUSED), Focused(focused) {}
+	};
     
     class WindowResizedEvent : public Event
     {
@@ -17,7 +24,6 @@ namespace Lobster
         uint Width, Height;
     public:
         WindowResizedEvent(uint width, uint height) : Event(EVENT_WINDOW_RESIZED), Width(width), Height(height) {}
-        ~WindowResizedEvent() = default;
     };
     
     class WindowMovedEvent : public Event
@@ -26,7 +32,6 @@ namespace Lobster
         uint X, Y;
     public:
         WindowMovedEvent(uint x, uint y) : Event(EVENT_WINDOW_MOVED), X(x), Y(y) {}
-        ~WindowMovedEvent() = default;
     };
 
 	class WindowMinimizedEvent : public Event

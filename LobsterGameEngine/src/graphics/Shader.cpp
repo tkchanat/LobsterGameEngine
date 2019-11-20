@@ -1,27 +1,27 @@
 #include "pch.h"
 #include "Shader.h"
 #include "system/FileSystem.h"
+#include "graphics/Texture.h"
 #include "graphics/UniformBuffer.h"
 
 namespace Lobster
 {
     
-    Shader::Shader(const char* path):
+    Shader::Shader(const char* path) :
+		m_id(glCreateProgram()),
+		m_vsId(glCreateShader(GL_VERTEX_SHADER)),
+		m_fsId(glCreateShader(GL_FRAGMENT_SHADER)),
 		m_name(path),
         m_path(FileSystem::Path(path)),
 		b_compileSuccess(false)
     {
-		b_compileSuccess = Compile();
-        if(!b_compileSuccess)
-        {
-            LOG("Couldn't compile shader {}", m_path);
-        }
-		ParseUniform();
-		ParseTexture();
+		Reload();
     }
     
     Shader::~Shader()
     {
+		glDeleteShader(m_vsId);
+		glDeleteShader(m_fsId);
         glDeleteProgram(m_id);
     }
     
@@ -32,12 +32,17 @@ namespace Lobster
     
     void Shader::Unbind() const
     {
-        
+		glUseProgram(0);
     }
     
     void Shader::Reload()
     {
-        
+		b_compileSuccess = Compile();
+		if (!b_compileSuccess) {
+			LOG("Couldn't compile shader {}", m_path);
+			return;
+		}
+		ParseUniform();
     }
     
     //  TODO:
@@ -56,51 +61,36 @@ namespace Lobster
         const char* vertexShaderSource = vs.c_str();
         const char* fragmentShaderSource = fs.c_str();
         
-        // build and compile our shader program
-        // ------------------------------------
-        // vertex shader
-        m_vsId = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(m_vsId, 1, &vertexShaderSource, NULL);
-        glCompileShader(m_vsId);
-        // check for shader compile errors
-        int successVS;
         char infoLog[512];
+        int successVS, successFS, successLink;
+        // vertex shader
+		glShaderSource(m_vsId, 1, &vertexShaderSource, NULL);
+        glCompileShader(m_vsId);
         glGetShaderiv(m_vsId, GL_COMPILE_STATUS, &successVS);
-        if (!successVS)
-        {
+        if (!successVS) {
             glGetShaderInfoLog(m_vsId, 512, NULL, infoLog);
-            LOG("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n{}", infoLog);
+            INFO("Vertex Shader compilation failed: {}", infoLog);
         }
         // fragment shader
-        m_fsId = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(m_fsId, 1, &fragmentShaderSource, NULL);
         glCompileShader(m_fsId);
-        // check for shader compile errors
-		int successFS;
         glGetShaderiv(m_fsId, GL_COMPILE_STATUS, &successFS);
-        if (!successFS)
-        {
+        if (!successFS) {
             glGetShaderInfoLog(m_fsId, 512, NULL, infoLog);
-            LOG("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n{}", infoLog);
+			INFO("Fragment Shader compilation failed: {}", infoLog);
         }
         // link shaders
-        m_id = glCreateProgram();
         glAttachShader(m_id, m_vsId);
         glAttachShader(m_id, m_fsId);
         glLinkProgram(m_id);
         // check for linking errors
-		int successLink;
         glGetProgramiv(m_id, GL_LINK_STATUS, &successLink);
         if (!successLink) {
             glGetProgramInfoLog(m_id, 512, NULL, infoLog);
-            LOG("ERROR::SHADER::PROGRAM::LINKING_FAILED\n{}", infoLog);
+			INFO("Shader Linking failed: {}", infoLog);
         }
 
-        glDeleteShader(m_vsId);
-        glDeleteShader(m_fsId);
-
-		if (!successVS || !successFS || !successLink)
-		{
+		if (!successVS || !successFS || !successLink) {
 			return false;
 		}
         
@@ -109,59 +99,21 @@ namespace Lobster
 
 	void Shader::ParseUniform()
 	{
+		// clear first
+		m_uniformDeclarations.clear();
+		// parse
 		std::string source = FileSystem::ReadText(m_path.c_str());
 		std::string block;
 		size_t readLocation = 0;
-		while ((readLocation = source.find("ubo_", readLocation)) != std::string::npos)
-		{
-			// get uniform block extract
-			block = source.substr(readLocation);
-			readLocation = source.find('}', readLocation);
-			block = StringOps::substr(block, nullptr, "}");
-			// parse uniform name
-			std::string uniformBufferName = StringOps::substr(block, nullptr, "{");
-			StringOps::Erase(uniformBufferName, " \t\n");
-			block = block.substr(block.find('{') + 1);
-			// parse individual elements
-			StringOps::Erase(block, "{}\n\t");
-			std::vector<std::string> elements = StringOps::split(block, ';');
-			for (std::string& element : elements)
-			{
-				element = StringOps::Trim(element);
-			}
-			// store the raw info
-			m_uniformBlueprints.push_back({ uniformBufferName, elements });
-		}
-	}
-
-	void Shader::ParseTexture()
-	{
-		std::string source = FileSystem::ReadText(m_path.c_str());
-		std::string block;
-
-		// read texture 2d first
-		size_t readLocation = 0;
-		while ((readLocation = source.find("sampler2D", readLocation)) != std::string::npos)
-		{
-			// get uniform block extract
-			block = source.substr(readLocation);
-			readLocation = source.find(';', readLocation);
-			block = StringOps::substr(block, nullptr, ";");
-			std::string textureName = StringOps::split(StringOps::Trim(block), ' ')[1];
-			m_texture2DSlots.push_back(glGetUniformLocation(m_id, textureName.c_str()));
-			m_textureBlueprints.push_back({ textureName, "" });
-		}
-
-		// reset readLocation and read texture cube
-		readLocation = 0;
-		while ((readLocation = source.find("samplerCube", readLocation)) != std::string::npos)
-		{
-			// get uniform block extract
-			block = source.substr(readLocation);
-			readLocation = source.find(';', readLocation);
-			block = StringOps::substr(block, nullptr, ";");
-			std::string textureName = StringOps::split(StringOps::Trim(block), ' ')[1];
-			m_texture2DSlots.push_back(glGetUniformLocation(m_id, textureName.c_str()));
+		while ((readLocation = source.find("uniform ", readLocation)) != std::string::npos) {
+			size_t blockEnd = source.find(";", readLocation);
+			block = source.substr(readLocation, blockEnd - readLocation);
+			readLocation = blockEnd;
+			std::string uniformType = block.substr(8, block.find_first_of(" ", 8) - 8);
+			std::string uniformName = block.substr(block.find_last_of(" ") + 1);
+			if (uniformName.find("sys_") != std::string::npos) continue; // this is a system uniform, no need to process
+			m_uniformLocationMap[uniformName] = glGetUniformLocation(m_id, uniformName.c_str());
+			m_uniformDeclarations.push_back(UniformDeclaration(uniformName, uniformType));
 		}
 	}
 
@@ -176,7 +128,49 @@ namespace Lobster
     //  Function Overload
     //------------------------------------------
     
-    void Shader::SetUniform(const char* name, const glm::vec3& data)
+	void Shader::SetUniform(const char * name, UniformDeclaration::DataType type, byte * data)
+	{
+		if (m_uniformLocationMap.find(name) == m_uniformLocationMap.end()) return;
+		int location = m_uniformLocationMap[name];
+		switch (type)
+		{
+		case UniformDeclaration::INT:
+		case UniformDeclaration::BOOL:
+		case UniformDeclaration::SAMPLER2D:
+		case UniformDeclaration::SAMPLER3D:
+		case UniformDeclaration::SAMPLERCUBE:
+			glUniform1iv(location, 1, (int*)data); break;
+		case UniformDeclaration::FLOAT:
+			glUniform1fv(location, 1, (float*)data); break;
+		case UniformDeclaration::VEC2:
+			glUniform2fv(location, 1, (float*)data); break;
+		case UniformDeclaration::VEC3:
+			glUniform3fv(location, 1, (float*)data); break;
+		case UniformDeclaration::VEC4:
+			glUniform4fv(location, 1, (float*)data); break;
+		case UniformDeclaration::MAT3:
+			glUniformMatrix3fv(location, 1, GL_FALSE, (float*)data); break;
+		case UniformDeclaration::MAT4:
+			glUniformMatrix4fv(location, 1, GL_FALSE, (float*)data); break;
+		default: break;
+		}
+	}
+
+	void Shader::SetUniform(const char * name, const bool & data)
+	{
+		int location = glGetUniformLocation(m_id, name);
+		if (location == -1) return;
+		//glUniform3fv(location, 1, glm::value_ptr(data));
+	}
+
+	void Shader::SetUniform(const char * name, const glm::vec2 & data)
+	{
+		int location = glGetUniformLocation(m_id, name);
+		if (location == -1) return;
+		glUniform2fv(location, 1, glm::value_ptr(data));
+	}
+
+	void Shader::SetUniform(const char* name, const glm::vec3& data)
     {
         int location = glGetUniformLocation(m_id, name);
 		if (location == -1) return;
@@ -196,39 +190,19 @@ namespace Lobster
 		if (location == -1) return;
         glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(data));
     }
-    
-	void Shader::SetTexture2D(int slot, void* texture2D)
+
+	void Shader::SetTexture2D(uint slot, void * texture2D)
 	{
-		if (slot < 0) return;
-		int location = slot < m_texture2DSlots.size() ? m_texture2DSlots[slot] : -1;
-		if (location == -1) return;
 		glUseProgram(m_id);
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_2D, (intptr_t)texture2D);
-		glUniform1i(location, slot);
 	}
-
-	void Shader::SetTextureCube(int slot, void * textureCube)
+    
+	void Shader::SetTextureCube(uint slot, void * textureCube)
 	{
-		if (slot < 0) return;
-		int location = slot < m_textureCubeSlots.size() ? m_textureCubeSlots[slot] : -1;
-		if (location == -1) return;
 		glUseProgram(m_id);
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, (intptr_t)textureCube);
-		glUniform1i(location, slot);
-	}
-
-	bool Shader::HasUniformBufferName(const char * name) const
-	{
-		for (auto& uniformBlueprint : m_uniformBlueprints)
-		{
-			if (uniformBlueprint.first == name)
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 
 	// =======================================================
@@ -243,6 +217,26 @@ namespace Lobster
 			throw std::runtime_error("ShaderLibrary already existed!");
 		}
 		s_instance = new ShaderLibrary();
+		EventDispatcher::AddCallback(EVENT_WINDOW_FOCUSED, new EventCallback<WindowFocusedEvent>([](WindowFocusedEvent* e) {
+			if (e->Focused == true) {
+				ShaderLibrary::LiveReload();
+			}
+		}));
+	}
+
+	void ShaderLibrary::LiveReload()
+	{
+		for (int i = 0; i < s_instance->m_shaders.size(); ++i)
+		{
+			Shader* shader = s_instance->m_shaders[i];
+			std::filesystem::file_time_type newTimestamp = FileSystem::LastModified(shader->GetPath().c_str());
+			if (newTimestamp != s_instance->m_shadersLastModified[i])
+			{
+				INFO("Live reloading {}...", shader->GetPath());
+				shader->Reload();
+				s_instance->m_shadersLastModified[i] = newTimestamp;
+			}
+		}
 	}
 
 	// use a specific shader by relative path
@@ -257,6 +251,7 @@ namespace Lobster
 		}
 		Shader* newShader = new Shader(path);
 		s_instance->m_shaders.push_back(newShader);
+		s_instance->m_shadersLastModified.push_back(FileSystem::LastModified(path));
 		return newShader;
 	}
 
