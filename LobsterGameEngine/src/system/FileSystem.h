@@ -29,6 +29,8 @@ namespace Lobster
 		static std::string ReadText(const char* path);
 		static std::string OpenFileDialog();
 		static std::filesystem::file_time_type LastModified(const char* path);
+		static std::stringstream ReadStringStream(const char* path);
+		static void WriteStringStream(const char* path, const std::stringstream& ss);
 		
 		bool assignWorkingDirectory(std::string dir); // for DEBUG
 		bool createWorkingDirectory(std::string dir); // for RELEASE

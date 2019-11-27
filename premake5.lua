@@ -180,13 +180,14 @@ project "LobsterGameEngine"
 		"%{prj.location}/src",
 		"%{prj.location}/vendor/assimp/include",
 		"%{prj.location}/vendor/stb",
+		"%{prj.location}/vendor/cereal/include",
 		"%{prj.location}/vendor/glm",
 		"%{prj.location}/vendor/glfw/include",
-		"%{prj.location}/vendor/spdlog/include",
 		"%{prj.location}/vendor/glad/include",
 		"%{prj.location}/vendor/imgui",
 		"%{prj.location}/vendor/imguizmo",
-		"%{prj.location}/vendor/json/include"
+		"%{prj.location}/vendor/json/include",
+		"%{prj.location}/vendor/spdlog/include"
 	}
 
 	filter "system:windows"

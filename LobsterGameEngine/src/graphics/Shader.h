@@ -46,6 +46,7 @@ namespace Lobster
         void SetUniform(const char* name, const glm::mat4& data);
 		void SetTexture2D(uint slot, void* texture2D);
 		void SetTextureCube(uint slot, void* textureCube);
+		size_t GetUniformBufferSize() const;
 		inline const std::vector<UniformDeclaration>& GetUniformDeclarations() const { return m_uniformDeclarations; }
     private:
         Shader(const char* path);
@@ -64,7 +65,7 @@ namespace Lobster
 		static void Initialize();
 		static void LiveReload();
 		static Shader* Use(const char* path);
-		static void SetBlockBinding(const char* name, int bindingPoint);
+		//static void SetBlockBinding(const char* name, int bindingPoint);
 	};
 
     

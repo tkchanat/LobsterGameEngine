@@ -6,52 +6,73 @@
 namespace Lobster
 {
     
-    Material::Material(const char* path) :
+	Material::Material(const char* path) :
 		m_mode(MODE_OPAQUE),
 		m_shader(nullptr),
 		m_name(path),
-		m_json(path),
 		m_uniformData(nullptr),
 		m_uniformDataSize(0),
 		b_dirty(false)
     {
-		// shader
-		std::string shaderPath = m_json.getValue("Shader", "shaders/Phong.glsl");
-        m_shader = !shaderPath.empty() ? ShaderLibrary::Use(shaderPath.c_str()) : nullptr;
-		// rendering mode
-		int mode = m_json.getValue("RenderingMode", 0);
-		m_mode = (RenderingMode)mode;
-		// initialize uniform buffer data
-		InitializeUniformsFromShader();
+		// initialize all material data from binary
+		std::stringstream ss = FileSystem::ReadStringStream(FileSystem::Path(m_name).c_str());
+		try {
+			cereal::BinaryInputArchive iarchive(ss);
+			iarchive(*this);
+		} 
+		catch (std::exception e) {
+			m_shader = ShaderLibrary::Use("shaders/Phong.glsl");
+			LOG("{}", e.what());
+		};
+
+		// initialize shader from paths
+		if (m_uniformData == nullptr) m_uniformData = new byte[m_shader->GetUniformBufferSize()];
+
+		AssignTextureSlot();
     }
 
-	void Material::InitializeUniformsFromShader()
+	Material::Material(Shader * shader) :
+		m_mode(MODE_OPAQUE),
+		m_shader(shader),
+		m_name("Raw Material From Shader"),
+		m_uniformData(nullptr),
+		m_uniformDataSize(0),
+		b_dirty(false)
 	{
-		// deallocate previous buffer if any
-		if (m_uniformData) {
-			delete[] m_uniformData;
-			m_uniformData = nullptr;
-		}
+	}
 
-		// create buffer
+	void Material::AssignTextureSlot()
+	{
+		// assign each texture into its unique slot
+		m_textures.clear();
 		const std::vector<UniformDeclaration>& declarations = m_shader->GetUniformDeclarations();
-		for (auto decl : declarations) {
-			m_uniformDataSize += decl.Size();
-		}
-		m_uniformData = new byte[m_uniformDataSize];
-		memset(m_uniformData, 0, m_uniformDataSize);
-
-		// allocate each texture into its unique slot
 		size_t offset = 0;
 		for (auto decl : declarations) {
 			if (decl.Type == UniformDeclaration::SAMPLER2D) {
 				uint slot = m_textures.size();
 				memcpy(m_uniformData + offset, &slot, sizeof(uint));
-				Texture2D* texture = nullptr;
-				m_textures.push_back(texture);
+				m_textures.push_back(nullptr);
 			}
 			offset += decl.Size();
 		}
+		_textureNames.resize(m_textures.size());
+		for (int i = 0; i < m_textures.size(); ++i) {
+			m_textures[i] = _textureNames[i].empty() ? nullptr : TextureLibrary::Use(_textureNames[i].c_str());
+		}
+	}
+
+	void Material::ResizeUniformBuffer(size_t newSize)
+	{
+		if (newSize == m_uniformDataSize) return;
+		// create new buffer with new size
+		byte* newBuffer = new byte[newSize];
+		// copy the content from the old buffer
+		memcpy(newBuffer, m_uniformData, std::min(newSize, m_uniformDataSize));
+		// assign the new buffer size
+		m_uniformDataSize = newSize;
+		// removing old buffer
+		if (m_uniformData) delete[] m_uniformData;
+		m_uniformData = newBuffer;
 	}
     
     Material::~Material()
@@ -77,7 +98,22 @@ namespace Lobster
 			Texture2D* notFound = TextureLibrary::Placeholder();
             static std::string selectedTexture;
 			// Shader
-			ImGui::Text(("Shader: " + m_shader->GetName()).c_str());
+			const auto findShaderIndex = [this](const char* shaders[], size_t size) -> int {
+				for (int i = 0; i < size; ++i) {
+					if (m_shader->GetName() == shaders[i])
+						return i;
+				}
+			};
+			const char* shaders[] = { "shaders/Phong.glsl", "shaders/PBR.glsl" };
+			static int usedShader = findShaderIndex(shaders, sizeof(shaders));
+			int prev_shader = usedShader;
+			ImGui::Combo("Shader", &usedShader, shaders, IM_ARRAYSIZE(shaders));
+			if (prev_shader != usedShader) {
+				m_shader = ShaderLibrary::Use(shaders[usedShader]);
+				ResizeUniformBuffer(m_shader->GetUniformBufferSize());
+				AssignTextureSlot();
+				b_dirty = true;
+			}
 			ImGui::Spacing();
 			// Rendering Mode
 			const char* modes[] = { "Opaque", "Transparent" };
@@ -139,6 +175,7 @@ namespace Lobster
 
 	void Material::SetUniforms()
 	{
+		if (m_uniformData == nullptr) return;
 		auto declaration = m_shader->GetUniformDeclarations();
 		size_t offset = 0;
 		for (auto decl : declaration) {
@@ -155,17 +192,14 @@ namespace Lobster
 
 	void Material::SaveConfiguration()
 	{
-		// save the material configurations accordingly
-		//m_json.setValue("Shader", m_shader->GetName());
-		//m_json.setValue("RenderingMode", (int)m_mode);
+		for (int i = 0; i < m_textures.size(); ++i) _textureNames[i] = m_textures[i] ? m_textures[i]->GetName() : "";
 
-		//std::vector<std::string> paths;
-		//for (Texture2D* texture : m_textures) paths.push_back(texture ? texture->GetName() : "");
-		//m_json.setValue("Texture2D", paths);
-
-		//std::string binary;
-		//for (int i = 0; i < m_uniformDataSize; ++i) binary += m_uniformData[i];
-		//m_json.setValue("Uniforms", binary);
+		std::stringstream ss;
+		{
+			cereal::BinaryOutputArchive oachive(ss);
+			oachive(*this);
+		}
+		FileSystem::WriteStringStream(FileSystem::Path(m_name).c_str(), ss);
 
 		b_dirty = false;
 	}
@@ -196,6 +230,21 @@ namespace Lobster
 		Material* newMaterial = new Material(path);
 		s_instance->m_materials.push_back(newMaterial);
 		return newMaterial;
+	}
+
+	Material * MaterialLibrary::UseShader(const char * shaderPath)
+	{
+		return new Material(ShaderLibrary::Use(shaderPath));
+	}
+
+	void MaterialLibrary::ResizeUniformBuffer(Shader * shader)
+	{
+		for (Material* material : s_instance->m_materials) {
+			if (material->GetShader() == shader) {
+				material->ResizeUniformBuffer(shader->GetUniformBufferSize());
+				material->AssignTextureSlot();
+			}
+		}
 	}
 
 }

@@ -81,7 +81,6 @@ namespace Lobster
 		TextureLibrary::Initialize();
 		ShaderLibrary::Initialize();
 		MaterialLibrary::Initialize();
-		UniformBufferLibrary::Initialize();
 		
         //  Initialize Renderer
         m_renderer = new Renderer();
@@ -100,9 +99,9 @@ namespace Lobster
 		//});
 
 
-		//GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
-		//barrel->transform.Translate(0, 2, 0);
-		//m_scene->AddGameObject(barrel);
+		GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
+		barrel->transform.Translate(0, 2, 0);
+		m_scene->AddGameObject(barrel);
 
 		for (int i = 0; i < 10; ++i)
 		{

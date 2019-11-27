@@ -44,11 +44,12 @@ uniform vec3 sys_cameraPosition;
 uniform vec3 sys_lightDirection;
 uniform vec4 sys_lightColor;
 
+uniform float AmbientStrength = 0.45;
 uniform sampler2D DiffuseMap;
 uniform sampler2D NormalMap;
-uniform vec4 DiffuseColor;
-uniform vec4 SpecularColor;
-uniform float Shininess;
+uniform vec4 DiffuseColor = vec4(0, 1, 0, 1);
+uniform vec4 SpecularColor = vec4(1, 1, 1, 1);
+uniform float Shininess = 0.5;
 
 void main()
 {
@@ -59,11 +60,11 @@ void main()
     vec3 normal = UseNormalMap ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
 
     // ambient
-    vec4 ambient = vec4(vec3(0.15), 1.0);
+    vec4 ambient = vec4(vec3(AmbientStrength), 1.0);
   	
     // diffuse 
     float intensity = max(dot(normal, -sys_lightDirection), 0.0);
-    vec4 diffuse = UseDiffuseMap ? texture(DiffuseMap, frag_texcoord) : DiffuseColor;
+    vec4 diffuse = UseDiffuseMap ? texture(DiffuseMap, frag_texcoord) * DiffuseColor : DiffuseColor;
 
     // specular
     vec3 viewDirection = normalize(sys_cameraPosition - frag_position);

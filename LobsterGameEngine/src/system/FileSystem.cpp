@@ -215,4 +215,22 @@ namespace Lobster {
 	{
 		return fs::last_write_time(fs::path(Path(path)));
 	}
+	std::stringstream FileSystem::ReadStringStream(const char * path)
+	{
+		std::ifstream inFile(path);
+		std::stringstream ss;
+		if (inFile.is_open()) {
+			ss << inFile.rdbuf();
+			inFile.close();
+		}
+		return ss;
+	}
+	void FileSystem::WriteStringStream(const char * path, const std::stringstream & ss)
+	{
+		std::ofstream outFile(path);
+		if (outFile.is_open()) {
+			outFile << ss.rdbuf();
+			outFile.close();
+		}
+	}
 }

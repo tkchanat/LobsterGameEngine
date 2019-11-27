@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Shader.h"
+#include "Material.h"
 #include "system/FileSystem.h"
 #include "graphics/Texture.h"
-#include "graphics/UniformBuffer.h"
 
 namespace Lobster
 {
@@ -109,8 +109,9 @@ namespace Lobster
 			size_t blockEnd = source.find(";", readLocation);
 			block = source.substr(readLocation, blockEnd - readLocation);
 			readLocation = blockEnd;
-			std::string uniformType = block.substr(8, block.find_first_of(" ", 8) - 8);
-			std::string uniformName = block.substr(block.find_last_of(" ") + 1);
+			std::vector<std::string> tokens = StringOps::split(block, ' ');
+			std::string uniformType = tokens[1];
+			std::string uniformName = tokens[2];
 			if (uniformName.find("sys_") != std::string::npos) continue; // this is a system uniform, no need to process
 			m_uniformLocationMap[uniformName] = glGetUniformLocation(m_id, uniformName.c_str());
 			m_uniformDeclarations.push_back(UniformDeclaration(uniformName, uniformType));
@@ -205,6 +206,15 @@ namespace Lobster
 		glBindTexture(GL_TEXTURE_CUBE_MAP, (intptr_t)textureCube);
 	}
 
+	size_t Shader::GetUniformBufferSize() const
+	{
+		size_t size = 0;
+		for (auto decl : m_uniformDeclarations) {
+			size += decl.Size();
+		}
+		return size;
+	}
+
 	// =======================================================
 	// ShaderLibrary =========================================
 	// =======================================================
@@ -234,6 +244,7 @@ namespace Lobster
 			{
 				INFO("Live reloading {}...", shader->GetPath());
 				shader->Reload();
+				MaterialLibrary::ResizeUniformBuffer(shader);
 				s_instance->m_shadersLastModified[i] = newTimestamp;
 			}
 		}
@@ -255,13 +266,13 @@ namespace Lobster
 		return newShader;
 	}
 
-	void ShaderLibrary::SetBlockBinding(const char * name, int bindingPoint)
-	{
-		for (Shader* shader : s_instance->m_shaders)
-		{
-			shader->SetBlockBinding(name, bindingPoint);
-		}
-	}
+	//void ShaderLibrary::SetBlockBinding(const char * name, int bindingPoint)
+	//{
+	//	for (Shader* shader : s_instance->m_shaders)
+	//	{
+	//		shader->SetBlockBinding(name, bindingPoint);
+	//	}
+	//}
 
 
 }
