@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Application.h"
 #include "CameraComponent.h"
+#include "imgui/ImGuiScene.h"
 #include "graphics/FrameBuffer.h"
 
 namespace Lobster
@@ -41,21 +42,24 @@ namespace Lobster
     
     void CameraComponent::OnUpdate(double deltaTime)
     {
+#ifdef LOBSTER_BUILD_DEBUG
+		// submit gizmos command
+		GizmosCommand command;
+		command.texture = "textures/ui/camera.png";
+		command.position = transform->WorldPosition;
+		ImGuiScene::SubmitGizmos(command);
+#endif
     }
 
 	void CameraComponent::OnImGuiRender()
 	{
 		if (ImGui::CollapsingHeader("CameraComponent", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::BeginChild("Camera Preview", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-			{
-				// draw camera preview
-				ImGui::Text("Camera Preview");
-				ImVec2 window_size = ImGui::GetWindowSize();
-				void* image = m_frameBuffer->Get();
-				ImGui::Image(image, ImVec2(window_size.x, window_size.x / m_frameBuffer->GetAspectRatio()), ImVec2(0, 1), ImVec2(1, 0));
-			}
-			ImGui::EndChild();
+			// draw camera preview
+			ImVec2 window_size = ImGui::GetItemRectSize();
+			void* image = m_frameBuffer->Get();
+			ImGui::Text("Camera Preview");
+			ImGui::Image(image, ImVec2(window_size.x, window_size.x / m_frameBuffer->GetAspectRatio()), ImVec2(0, 1), ImVec2(1, 0));
 		}
 	}
 

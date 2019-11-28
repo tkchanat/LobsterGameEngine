@@ -102,17 +102,17 @@ namespace Lobster
     Scene* Scene::AddGameObject(GameObject* gameObject)
     {
         CameraComponent* camera = gameObject->GetComponent<CameraComponent>();
-        if(camera)
-        {
+        if (camera) {
             if(m_activeCamera == nullptr)
-            {
 				SetActiveCamera(camera);  //  Assign this to be main camera
-            }
             else
-            {
                 LOG("Main camera for this scene has already been assigned. Ignoring this new camera...");
-            }
         }
+
+		LightComponent* light = gameObject->GetComponent<LightComponent>();
+		if (light) {
+			LightLibrary::AddLight(light, light->GetType());
+		}
         
         m_gameObjects.push_back(gameObject);
 

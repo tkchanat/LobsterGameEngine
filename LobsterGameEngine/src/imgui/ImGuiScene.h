@@ -13,6 +13,13 @@
 
 namespace Lobster
 {
+
+	struct GizmosCommand {
+		std::string texture;
+		glm::vec3 position;
+		ImVec2 size = ImVec2(32, 32);
+	};
+
 	class ImGuiScene : public ImGuiComponent
 	{
 	private:
@@ -25,6 +32,8 @@ namespace Lobster
 		ImGuizmo::OPERATION m_operation = ImGuizmo::TRANSLATE;
 		ImGuizmo::MODE m_mode = ImGuizmo::LOCAL;
 		glm::vec3 m_originalScale;
+		// Custom gizmos
+		static std::list<GizmosCommand> m_gizmosQueue;
 		// not the owner of these objects, don't delete
 		Scene* m_scene;
 		Renderer* m_renderer;
@@ -63,6 +72,7 @@ namespace Lobster
 		}
 		
 		inline CameraComponent* GetCamera() { return m_editorCamera->GetComponent<CameraComponent>(); }
+		inline static void SubmitGizmos(GizmosCommand command) { m_gizmosQueue.push_back(command); }
 
 		// Check if moues is inside the "scene" window 
 		bool insideWindow(const ImVec2& mouse, const ImVec2& pos, const ImVec2& size) {
@@ -110,7 +120,7 @@ namespace Lobster
 			void* image = camera->GetFrameBuffer()->Get();
 			ImGui::GetWindowDrawList()->AddImage(image, ImVec2(window_pos.x, window_pos.y), ImVec2(window_pos.x + window_size.x, window_pos.y + window_size.y), ImVec2(0, 1), ImVec2(1, 0));
 			
-			DrawCameraComponentGizmo();
+			DrawCustomGizmos();
 
 			// Control the camera ONLY IF window is focused and mouse on the window
 			{
@@ -239,26 +249,29 @@ namespace Lobster
 
 		private:
 			// draw camera gizmo
-			void DrawCameraComponentGizmo()
+			void DrawCustomGizmos()
 			{
-				CameraComponent* editorCamera = m_editorCamera->GetComponent<CameraComponent>();
-				glm::mat4 viewProjectionMatrix = editorCamera->GetProjectionMatrix() * editorCamera->GetViewMatrix();
-				for (GameObject* go : m_scene->GetGameObjects())
+				for (std::list<GizmosCommand>::iterator it = m_gizmosQueue.begin(); it != m_gizmosQueue.end(); ++it)
 				{
-					CameraComponent* camera = go->GetComponent<CameraComponent>();
-					if (camera)
-					{
-						auto remap = [](float value, float start1, float stop1, float start2, float stop2) {
-							return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
-						};
-						void* cameraGizmo = TextureLibrary::Use("textures/ui/camera.png")->Get();
-						glm::vec4 pos = viewProjectionMatrix * glm::vec4(go->transform.WorldPosition, 1);
-						if (pos.w <= 0.0) continue;
-						float screenX = remap(pos.x / pos.w, -1.f, 1.f, window_pos.x, window_pos.x + window_size.x);
-						float screenY = remap(-pos.y / pos.w, -1.f, 1.f, window_pos.y, window_pos.y + window_size.y);
-						ImVec2 startPos = { screenX - 16, screenY - 16 };
-						ImGui::GetWindowDrawList()->AddImage(cameraGizmo, startPos, ImVec2(startPos.x + 32, startPos.y + 32));
-					}
+					GizmosCommand& command = *it;
+
+					// get view and projection matrix
+					CameraComponent* editorCamera = m_editorCamera->GetComponent<CameraComponent>();
+					glm::mat4 viewProjectionMatrix = editorCamera->GetProjectionMatrix() * editorCamera->GetViewMatrix();
+					
+					// select texture and specify world position
+					void* cameraGizmo = TextureLibrary::Use(command.texture.c_str())->Get();
+					glm::vec4 pos = viewProjectionMatrix * glm::vec4(command.position, 1);
+					auto remap = [](float value, float start1, float stop1, float start2, float stop2) {
+						return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
+					};
+					if (pos.w <= 0.0) continue;
+					float screenX = remap(pos.x / pos.w, -1.f, 1.f, window_pos.x, window_pos.x + window_size.x);
+					float screenY = remap(-pos.y / pos.w, -1.f, 1.f, window_pos.y, window_pos.y + window_size.y);
+					ImVec2 startPos = { screenX - command.size.x / 2.f, screenY - command.size.y / 2.f };
+					ImGui::GetWindowDrawList()->AddImage(cameraGizmo, startPos, ImVec2(startPos.x + command.size.x, startPos.y + command.size.y));
+
+					m_gizmosQueue.pop_front();
 				}
 			}
 

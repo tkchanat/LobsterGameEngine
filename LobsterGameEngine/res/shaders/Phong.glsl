@@ -1,5 +1,4 @@
 ///VertexShader
-#version 410 core
 layout (location = 0) in vec3 in_position;
 layout (location = 1) in vec3 in_normal;
 layout (location = 2) in vec2 in_texcoord;
@@ -10,10 +9,6 @@ out vec3 frag_position;
 out vec3 frag_normal;
 out vec2 frag_texcoord;
 out mat3 frag_TBN;
-
-uniform mat4 sys_world;
-uniform mat4 sys_view;
-uniform mat4 sys_projection;
 
 void main()
 {
@@ -32,17 +27,12 @@ void main()
 }
 
 ///FragmentShader
-#version 410 core
 in vec3 frag_position;
 in vec3 frag_normal;
 in vec2 frag_texcoord;
 in mat3 frag_TBN;
 
 out vec4 FragColor;
-
-uniform vec3 sys_cameraPosition;
-uniform vec3 sys_lightDirection;
-uniform vec4 sys_lightColor;
 
 uniform float AmbientStrength = 0.45;
 uniform sampler2D DiffuseMap;
@@ -51,27 +41,31 @@ uniform vec4 DiffuseColor = vec4(0, 1, 0, 1);
 uniform vec4 SpecularColor = vec4(1, 1, 1, 1);
 uniform float Shininess = 0.5;
 
+vec4 CalcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir) 
+{
+    vec3 lightDir = normalize(light.direction);
+    // diffuse shading
+    float intensity = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float multiplier = pow(max(dot(viewDir, reflectDir), 0.0), Shininess);
+    // combine results
+    vec4 ambient = vec4(vec3(AmbientStrength), 1.0);
+    vec4 diffuse = TextureExists(DiffuseMap) ? texture(DiffuseMap, frag_texcoord) * DiffuseColor : DiffuseColor;
+    vec4 specular = Shininess * multiplier * SpecularColor;
+    return vec4((ambient + diffuse * intensity + specular).rgb, diffuse.a);
+}
+
 void main()
 {
-    bool UseDiffuseMap = textureSize(DiffuseMap, 0).x > 1;
-    bool UseNormalMap = textureSize(NormalMap, 0).x > 1;
-
     // calculate normal in tangent space
-    vec3 normal = UseNormalMap ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
+    vec3 normal = TextureExists(NormalMap) ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
+    vec3 viewDir = normalize(sys_cameraPosition - frag_position);
 
-    // ambient
-    vec4 ambient = vec4(vec3(AmbientStrength), 1.0);
-  	
-    // diffuse 
-    float intensity = max(dot(normal, -sys_lightDirection), 0.0);
-    vec4 diffuse = UseDiffuseMap ? texture(DiffuseMap, frag_texcoord) * DiffuseColor : DiffuseColor;
-
-    // specular
-    vec3 viewDirection = normalize(sys_cameraPosition - frag_position);
-    vec3 reflectDirection = reflect(sys_lightDirection, normal);
-    float multiplier = pow(max(dot(viewDirection, reflectDirection), 0.0), 16);
-    vec4 specular = Shininess * multiplier * SpecularColor;
-
-    vec4 result = (ambient + diffuse * intensity + specular) * sys_lightColor;
-    FragColor = vec4(result.rgb, diffuse.a);
+    vec4 result = vec4(0.0);
+    for(int i = 0; i < MAX_DIRECTIONAL_LIGHTS; ++i) {
+        if(i >= Lights.directionalLightCount) break;
+        result += CalcDirectionalLight(Lights.directionalLights[i], normal, viewDir);
+    }
+    FragColor = vec4(result);
 }

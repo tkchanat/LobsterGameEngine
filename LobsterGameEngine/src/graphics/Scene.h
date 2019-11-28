@@ -6,6 +6,7 @@ namespace Lobster
     class GameObject;
     class CameraComponent;
 	class TextureCube;
+	class LightComponent;
 
 	//	This class encapsulates all the game objects and elements in the game world.
 	//	A scene currently only allows one main camera, and a list of game objects.
@@ -16,6 +17,7 @@ namespace Lobster
         CameraComponent* m_activeCamera; // non-removable main camera
 		TextureCube* m_skybox;
         std::vector<GameObject*> m_gameObjects;
+		std::vector<LightComponent*> m_lights;
     public:
         Scene();
         ~Scene();

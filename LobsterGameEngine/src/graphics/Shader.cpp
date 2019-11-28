@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Shader.h"
 #include "Material.h"
+#include "components/LightComponent.h"
 #include "system/FileSystem.h"
 #include "graphics/Texture.h"
 
@@ -43,6 +44,8 @@ namespace Lobster
 			return;
 		}
 		ParseUniform();
+		int block_index = glGetUniformBlockIndex(m_id, "ubo_Lights");
+		glUniformBlockBinding(m_id, block_index, 1);
     }
     
     //  TODO:
@@ -58,6 +61,32 @@ namespace Lobster
 		}
 		std::string vs = StringOps::substr(source, "///VertexShader", "///FragmentShader");
 		std::string fs = StringOps::substr(source, "///FragmentShader", nullptr);
+
+		StringOps::ReplaceAll(vs, "///VertexShader", 
+			R"(#version 410 core
+uniform mat4 sys_world;
+uniform mat4 sys_view;
+uniform mat4 sys_projection;)");
+		StringOps::ReplaceAll(fs, "///FragmentShader",
+			R"(#version 410 core
+#define TextureExists(tex) textureSize(##tex, 0).x > 1
+#define PI 3.14159265359
+#define MAX_DIRECTIONAL_LIGHTS )" + std::to_string(MAX_DIRECTIONAL_LIGHTS) + R"(
+struct DirectionalLight {
+    vec3 direction;
+    float intensity;
+    vec3 color;
+	float padding;
+};
+layout (std140) uniform ubo_Lights {
+    DirectionalLight directionalLights[MAX_DIRECTIONAL_LIGHTS];
+    int directionalLightCount;
+	int pointLightCount;
+	int spotLightCount;
+	int padding;
+} Lights;
+uniform vec3 sys_cameraPosition;)");
+
         const char* vertexShaderSource = vs.c_str();
         const char* fragmentShaderSource = fs.c_str();
         
@@ -94,6 +123,7 @@ namespace Lobster
 			return false;
 		}
         
+		INFO("{} successfully compiled!", m_name);
         return true;
     }
 
@@ -112,7 +142,6 @@ namespace Lobster
 			std::vector<std::string> tokens = StringOps::split(block, ' ');
 			std::string uniformType = tokens[1];
 			std::string uniformName = tokens[2];
-			if (uniformName.find("sys_") != std::string::npos) continue; // this is a system uniform, no need to process
 			m_uniformLocationMap[uniformName] = glGetUniformLocation(m_id, uniformName.c_str());
 			m_uniformDeclarations.push_back(UniformDeclaration(uniformName, uniformType));
 		}

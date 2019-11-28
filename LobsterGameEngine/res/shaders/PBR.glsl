@@ -1,5 +1,4 @@
 ///VertexShader
-#version 410 core
 layout (location = 0) in vec3 in_position;
 layout (location = 1) in vec3 in_normal;
 layout (location = 2) in vec2 in_texcoord;
@@ -10,10 +9,6 @@ out vec3 frag_position;
 out vec3 frag_normal;
 out vec2 frag_texcoord;
 out mat3 frag_TBN;
-
-uniform mat4 sys_world;
-uniform mat4 sys_view;
-uniform mat4 sys_projection;
 
 void main()
 {
@@ -32,7 +27,6 @@ void main()
 }
 
 ///FragmentShader
-#version 410 core
 in vec3 frag_position;
 in vec3 frag_normal;
 in vec2 frag_texcoord;
@@ -49,14 +43,6 @@ uniform vec3 Albedo;
 uniform float Metallic;
 uniform float Roughness;
 uniform float AmbientOcclusion;
-
-uniform vec3 sys_cameraPosition;
-uniform vec3 sys_lightPosition;
-uniform vec3 sys_lightDirection;
-uniform vec4 sys_lightColor;
-
-#define PI 3.14159265359
-#define LIGHT_COUNT 1
 
 float Distribution(float cosLh, float roughness)
 {
@@ -87,37 +73,30 @@ vec3 Fresnel(float cosTheta, vec3 f0)
 
 void main()
 {
-	// check maps
-	bool UseAlbedoMap = textureSize(AlbedoMap, 0).x > 1;
-	bool UseNormalMap = textureSize(NormalMap, 0).x > 1;
-	bool UseRoughnessMap = textureSize(RoughnessMap, 0).x > 1;
-	bool UseMetallicMap = textureSize(MetallicMap, 0).x > 1;
-	bool UseAmbientOcclusionMap = textureSize(AmbientOcclusionMap, 0).x > 1;
-
 	// texture maps
-	vec3 albedo = UseAlbedoMap ? texture(AlbedoMap, frag_texcoord).rgb : Albedo;
-	vec3 normal = UseNormalMap ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
-	float metallic = UseMetallicMap ? texture(MetallicMap, frag_texcoord).r : Metallic;
-
-	vec3 n = normal;
-	vec3 v = normalize(sys_cameraPosition - frag_position);
-	vec3 l = normalize(sys_lightPosition);
-	vec3 h = normalize(v + l);
-	float cosLi = max(dot(n, l), 0.0);
-	float cosLh = max(dot(n, h), 0.0);
-	float nv = max(dot(n, v), 0.0);
+	vec3 albedo = TextureExists(AlbedoMap) ? texture(AlbedoMap, frag_texcoord).rgb : Albedo;
+	vec3 normal = TextureExists(NormalMap) ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
+	float metallic = TextureExists(MetallicMap) ? texture(MetallicMap, frag_texcoord).r : Metallic;
 
 	// choose initial reflectance value at normal incidence
 	vec3 f0 = mix(vec3(0.04), albedo, metallic);
 
 	// reflectance equation
 	vec3 Lo = vec3(0.0);
-	for(int i = 0; i < LIGHT_COUNT; ++i)
+	for(int i = 0; i < MAX_DIRECTIONAL_LIGHTS; ++i)
 	{
+		vec3 n = normal;
+		vec3 v = normalize(sys_cameraPosition - frag_position);
+		vec3 l = normalize(Lights.directionalLights[i].direction);
+		vec3 h = normalize(v + l);
+		float cosLi = max(dot(n, l), 0.0);
+		float cosLh = max(dot(n, h), 0.0);
+		float nv = max(dot(n, v), 0.0);
+
 		// Radiance
-		float distance = length(sys_lightPosition - frag_position);
+		float distance = length(Lights.directionalLights[i].direction - frag_position);
 		float attenuation = 1.0 / (distance * distance);
-		vec3 radiance = vec3(sys_lightColor);// * attenuation;
+		vec3 radiance = vec3(Lights.directionalLights[i].color);// * attenuation;
 
 		// BRDF
 		vec3 F = Fresnel(clamp(dot(h, v), 0.0, 1.0), f0);

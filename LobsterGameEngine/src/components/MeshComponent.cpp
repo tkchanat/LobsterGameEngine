@@ -66,7 +66,6 @@ namespace Lobster
 			{
 				ImGui::Indent();
 				m_materials[i]->OnImGuiRender();
-				ImGui::Separator();
 				ImGui::Unindent();
 			}
 		}

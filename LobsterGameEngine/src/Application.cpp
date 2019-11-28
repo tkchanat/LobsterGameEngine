@@ -81,6 +81,7 @@ namespace Lobster
 		TextureLibrary::Initialize();
 		ShaderLibrary::Initialize();
 		MaterialLibrary::Initialize();
+		LightLibrary::Initialize();
 		
         //  Initialize Renderer
         m_renderer = new Renderer();
@@ -114,6 +115,14 @@ namespace Lobster
 		GameObject* camera = (new GameObject("main camera"))->AddComponent<CameraComponent>(ProjectionType::PERSPECTIVE);
 		camera->transform.Translate(0, 2, 10);
 		m_scene->AddGameObject(camera);
+
+		GameObject* light = (new GameObject("Directional Light"))->AddComponent<LightComponent>(LightType::DIRECTIONAL_LIGHT);
+		light->transform.Translate(0, 2, 3);
+		m_scene->AddGameObject(light);
+
+		GameObject* light2 = (new GameObject("Directional Light 2"))->AddComponent<LightComponent>(LightType::DIRECTIONAL_LIGHT);
+		light2->transform.Translate(2, 3, 0);
+		m_scene->AddGameObject(light2);
 
         //GameObject* sibenik = (new GameObject("sibenik"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/sibenik.obj").c_str(), "materials/sibenik.mat");
 		LOG("Model loading spent {} ms", loadTimer.GetElapsedTime());

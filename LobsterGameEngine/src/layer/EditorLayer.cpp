@@ -21,6 +21,7 @@ namespace Lobster
 {
 	// Static initialization
 	uint EditorLayer::s_dockspace_id = 0; 
+	std::list<GizmosCommand> ImGuiScene::m_gizmosQueue;
 	GameObject* ImGuiProperties::selectedObj = nullptr;
 	SSFLog ImGuiConsole::log;
 

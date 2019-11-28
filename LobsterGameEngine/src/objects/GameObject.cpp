@@ -116,6 +116,7 @@ namespace Lobster
 			ImGui::DragFloat3("Scale", glm::value_ptr(transform.LocalScale), 0.05f, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 			isChanging = isChanging || ImGui::IsItemActive();
 		}
+		ImGui::Separator();
 
 		//	Keep track of transform before we start transforming.
 		if (!b_isChanging) {
@@ -139,6 +140,7 @@ namespace Lobster
 		{
 			ImGui::PushID(component);
 			component->OnImGuiRender();
+			ImGui::Separator();
 			ImGui::PopID();
 		}
 	}

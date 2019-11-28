@@ -111,6 +111,9 @@ namespace Lobster
 		renderTarget->Bind();
 		Renderer::Clear(0.2f, 0.3f, 0.3f);
 		Renderer::SetFaceCulling(true);
+		
+		// Update lightings
+		LightLibrary::SetUniforms();
 
 		// Background
 		if (m_activeSceneEnvironment.Skybox)
@@ -118,9 +121,9 @@ namespace Lobster
 			Renderer::SetFaceCulling(true, CULL_FRONT);
 			Renderer::SetDepthTest(true, DEPTH_LEQUAL);
 			m_skyboxShader->Bind();
-			m_skyboxShader->SetUniform("world", glm::translate(camera->GetPosition())); // camera position
-			m_skyboxShader->SetUniform("view", camera->GetViewMatrix());
-			m_skyboxShader->SetUniform("projection", camera->GetProjectionMatrix());
+			m_skyboxShader->SetUniform("sys_world", glm::translate(camera->GetPosition())); // camera position
+			m_skyboxShader->SetUniform("sys_view", camera->GetViewMatrix());
+			m_skyboxShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
 			m_skyboxShader->SetTextureCube(0, m_activeSceneEnvironment.Skybox->Get());
 			m_skyboxMesh->Draw();
 			Renderer::SetDepthTest(true, DEPTH_LESS);
