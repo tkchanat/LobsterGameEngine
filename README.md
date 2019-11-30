@@ -19,6 +19,7 @@ For details, please refer to our [Wiki Page](https://github.com/tkchanat/StealSt
 2. Execute `setup.command` and open project workspace `LobsterGameEngine.xcodeproj`.
 
 ## Third-party Dependencies
+* [cereal](https://github.com/USCiLab/cereal) - A C++11 library for serialization
 * [glfw](https://github.com/glfw/glfw) - A multi-platform library for OpenGL, OpenGL ES, Vulkan, window and input
 * [glm](https://github.com/g-truc/glm.git) - OpenGL Mathematics
 * [glad](https://github.com/Dav1dde/glad) - Multi-Language Vulkan/GL/GLES/EGL/GLX/WGL Loader-Generator based on the official specs.

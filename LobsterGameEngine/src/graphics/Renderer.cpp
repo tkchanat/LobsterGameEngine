@@ -85,9 +85,12 @@ namespace Lobster
 			useShader->SetUniform("sys_view", camera->GetViewMatrix());
 			useShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
 			useShader->SetUniform("sys_cameraPosition", camera->GetPosition());
-			useShader->SetUniform("sys_lightPosition", glm::vec3(0.0, 2.0, 3.0));
-			useShader->SetUniform("sys_lightDirection", glm::normalize(glm::vec3(0.0, -2.0, -3.0)));
-			useShader->SetUniform("sys_lightColor", glm::vec4(1.0, 1.0, 1.0, 1.0));
+			useShader->SetTextureCube(8, m_activeSceneEnvironment.Skybox->GetIrradiance());
+			useShader->SetTextureCube(9, m_activeSceneEnvironment.Skybox->GetPrefilter());
+			useShader->SetTexture2D(10, m_activeSceneEnvironment.Skybox->GetBRDF());
+			useShader->SetUniform("sys_irradianceMap", 8);
+			useShader->SetUniform("sys_prefilterMap", 9);
+			useShader->SetUniform("sys_brdfLUTMap", 10);
 			
 			if (boundedMaterial != useMaterial) {
 				useMaterial->SetUniforms();
@@ -95,7 +98,6 @@ namespace Lobster
 			}
 
 			command.UseVertexArray->Draw();
-
 			//queue.pop_front();
 		}
 	}
@@ -125,6 +127,7 @@ namespace Lobster
 			m_skyboxShader->SetUniform("sys_view", camera->GetViewMatrix());
 			m_skyboxShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
 			m_skyboxShader->SetTextureCube(0, m_activeSceneEnvironment.Skybox->Get());
+			m_skyboxShader->SetUniform("skybox", 0);
 			m_skyboxMesh->Draw();
 			Renderer::SetDepthTest(true, DEPTH_LESS);
 			Renderer::SetFaceCulling(true, CULL_BACK);

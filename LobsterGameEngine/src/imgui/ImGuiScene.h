@@ -251,27 +251,25 @@ namespace Lobster
 			// draw camera gizmo
 			void DrawCustomGizmos()
 			{
+				// get view and projection matrix
+				CameraComponent* editorCamera = m_editorCamera->GetComponent<CameraComponent>();
+				glm::mat4 viewProjectionMatrix = editorCamera->GetProjectionMatrix() * editorCamera->GetViewMatrix();
 				for (std::list<GizmosCommand>::iterator it = m_gizmosQueue.begin(); it != m_gizmosQueue.end(); ++it)
 				{
 					GizmosCommand& command = *it;
-
-					// get view and projection matrix
-					CameraComponent* editorCamera = m_editorCamera->GetComponent<CameraComponent>();
-					glm::mat4 viewProjectionMatrix = editorCamera->GetProjectionMatrix() * editorCamera->GetViewMatrix();
-					
 					// select texture and specify world position
-					void* cameraGizmo = TextureLibrary::Use(command.texture.c_str())->Get();
+					void* customGizmo = TextureLibrary::Use(command.texture.c_str())->Get();
 					glm::vec4 pos = viewProjectionMatrix * glm::vec4(command.position, 1);
-					auto remap = [](float value, float start1, float stop1, float start2, float stop2) {
+					ImVec2 size = command.size;
+					m_gizmosQueue.pop_front(); // already extract all data, remove from queue
+					if (pos.w <= 0.0) continue;
+					constexpr auto remap = [](float value, float start1, float stop1, float start2, float stop2) {
 						return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
 					};
-					if (pos.w <= 0.0) continue;
 					float screenX = remap(pos.x / pos.w, -1.f, 1.f, window_pos.x, window_pos.x + window_size.x);
 					float screenY = remap(-pos.y / pos.w, -1.f, 1.f, window_pos.y, window_pos.y + window_size.y);
-					ImVec2 startPos = { screenX - command.size.x / 2.f, screenY - command.size.y / 2.f };
-					ImGui::GetWindowDrawList()->AddImage(cameraGizmo, startPos, ImVec2(startPos.x + command.size.x, startPos.y + command.size.y));
-
-					m_gizmosQueue.pop_front();
+					ImVec2 startPos = { screenX - size.x / 2.f, screenY - size.y / 2.f };
+					ImGui::GetWindowDrawList()->AddImage(customGizmo, startPos, ImVec2(startPos.x + size.x, startPos.y + size.y));
 				}
 			}
 

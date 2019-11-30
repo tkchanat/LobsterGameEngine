@@ -182,8 +182,9 @@ namespace Lobster
 			std::string label = decl.Name;
 			byte* data = m_uniformData + offset;
 			if (decl.Type == UniformDeclaration::SAMPLER2D) {
-				Texture2D* texture = m_textures[*(uint*)data];
-				m_shader->SetTexture2D(*(uint*)data, texture ? texture->Get() : nullptr);
+				uint slot = *(uint*)data;
+				Texture2D* texture = m_textures[slot];
+				m_shader->SetTexture2D(slot, texture ? texture->Get() : nullptr);
 			}
 			m_shader->SetUniform(decl.Name.c_str(), decl.Type, data);
 			offset += decl.Size();

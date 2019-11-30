@@ -71,6 +71,7 @@ uniform mat4 sys_projection;)");
 			R"(#version 410 core
 #define TextureExists(tex) textureSize(##tex, 0).x > 1
 #define PI 3.14159265359
+#define EPSILON 0.0001
 #define MAX_DIRECTIONAL_LIGHTS )" + std::to_string(MAX_DIRECTIONAL_LIGHTS) + R"(
 struct DirectionalLight {
     vec3 direction;
@@ -85,7 +86,10 @@ layout (std140) uniform ubo_Lights {
 	int spotLightCount;
 	int padding;
 } Lights;
-uniform vec3 sys_cameraPosition;)");
+uniform vec3 sys_cameraPosition;
+uniform samplerCube sys_irradianceMap;
+uniform samplerCube sys_prefilterMap;
+uniform sampler2D sys_brdfLUTMap;)");
 
         const char* vertexShaderSource = vs.c_str();
         const char* fragmentShaderSource = fs.c_str();
@@ -122,7 +126,7 @@ uniform vec3 sys_cameraPosition;)");
 		if (!successVS || !successFS || !successLink) {
 			return false;
 		}
-        
+
 		INFO("{} successfully compiled!", m_name);
         return true;
     }
@@ -184,6 +188,20 @@ uniform vec3 sys_cameraPosition;)");
 			glUniformMatrix4fv(location, 1, GL_FALSE, (float*)data); break;
 		default: break;
 		}
+	}
+
+	void Shader::SetUniform(const char * name, int data)
+	{
+		int location = glGetUniformLocation(m_id, name);
+		if (location == -1) return;
+		glUniform1i(location, data);
+	}
+
+	void Shader::SetUniform(const char * name, float data)
+	{
+		int location = glGetUniformLocation(m_id, name);
+		if (location == -1) return;
+		glUniform1f(location, data);
 	}
 
 	void Shader::SetUniform(const char * name, const bool & data)

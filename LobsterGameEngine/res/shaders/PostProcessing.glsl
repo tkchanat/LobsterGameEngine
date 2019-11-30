@@ -7,17 +7,17 @@ out vec2 frag_texcoord;
 
 void main()
 {
-    gl_Position = vec4(in_position.x, in_position.y, 0.0, 1.0); 
     frag_texcoord = in_texcoord;
+    gl_Position = vec4(in_position, 1.0); 
 }  
 
 ///FragmentShader
 in vec2 frag_texcoord;
-out vec4 out_FinalColor;
+out vec4 out_color;
 
 uniform sampler2D screenTexture;
 
 void main()
 { 
-    out_FinalColor = texture(screenTexture, frag_texcoord);
+    out_color = texture(screenTexture, frag_texcoord);
 }

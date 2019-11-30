@@ -24,8 +24,6 @@ namespace Lobster
         std::string m_path;
 		std::unordered_map<std::string, int> m_uniformLocationMap;
 		std::vector<UniformDeclaration> m_uniformDeclarations;
-		std::vector<uint> m_texture2DSlots;
-		std::vector<uint> m_textureCubeSlots;
 		bool b_compileSuccess;
     public:
 		Shader() = delete;
@@ -39,6 +37,8 @@ namespace Lobster
 		inline bool CompileSuccess() const { return b_compileSuccess; }
         //  Shader uniforms
 		void SetUniform(const char* name, UniformDeclaration::DataType type, byte* data);
+		void SetUniform(const char* name, int data);
+		void SetUniform(const char* name, float data);
 		void SetUniform(const char* name, const bool& data);
 		void SetUniform(const char* name, const glm::vec2& data);
         void SetUniform(const char* name, const glm::vec3& data);

@@ -71,7 +71,6 @@ namespace Lobster
 		m_properties->Show(&show_properties); // Properties
 		m_assets->Show(&show_assets); // Assets
 		m_console->Show(&show_console); // Logger
-
 		m_demoWindow->Show(&show_demo); // Demo window
 	}
 

@@ -48,7 +48,7 @@ vec4 CalcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir)
     float intensity = max(dot(normal, lightDir), 0.0);
     // specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
-    float multiplier = pow(max(dot(viewDir, reflectDir), 0.0), Shininess);
+    float multiplier = pow(max(dot(viewDir, reflectDir), 0.0), Shininess + EPSILON);
     // combine results
     vec4 ambient = vec4(vec3(AmbientStrength), 1.0);
     vec4 diffuse = TextureExists(DiffuseMap) ? texture(DiffuseMap, frag_texcoord) * DiffuseColor : DiffuseColor;
@@ -63,8 +63,8 @@ void main()
     vec3 viewDir = normalize(sys_cameraPosition - frag_position);
 
     vec4 result = vec4(0.0);
-    for(int i = 0; i < MAX_DIRECTIONAL_LIGHTS; ++i) {
-        if(i >= Lights.directionalLightCount) break;
+    for(int i = 0; i < Lights.directionalLightCount; ++i) {
+        // if(i >= Lights.directionalLightCount) break;
         result += CalcDirectionalLight(Lights.directionalLights[i], normal, viewDir);
     }
     FragColor = vec4(result);

@@ -87,7 +87,8 @@ namespace Lobster
 		std::string iconPath = m_json.getValue("icon", "../icon.png");
 		if (!iconPath.empty())
 		{
-			image.pixels = stbi_load(FileSystem::Path(iconPath).c_str(), &image.width, &image.height, 0, 4); //rgba channels 
+			std::string path = FileSystem::Path(iconPath);
+			image.pixels = stbi_load(path.c_str(), &image.width, &image.height, 0, 4); //rgba channels 
 			glfwSetWindowIcon(m_window, 1, &image);
 			stbi_image_free(image.pixels);
 		}

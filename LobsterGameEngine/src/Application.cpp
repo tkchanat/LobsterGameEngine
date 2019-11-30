@@ -100,15 +100,15 @@ namespace Lobster
 		//});
 
 
-		GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
-		barrel->transform.Translate(0, 2, 0);
-		m_scene->AddGameObject(barrel);
+		//GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
+		//barrel->transform.Translate(0, 2, 0);
+		//m_scene->AddGameObject(barrel);
 
-		for (int i = 0; i < 10; ++i)
+		for (int i = 0; i < 5; ++i)
 		{
 			GameObject* cube = (new GameObject(std::to_string(i).c_str()))
 				->AddComponent<MeshComponent>(FileSystem::Path("meshes/sphere.obj").c_str(), "materials/cube.mat");
-			cube->transform.WorldPosition = glm::vec3(0, 0, (i - 4.5)*1.5);
+			cube->transform.WorldPosition = glm::vec3(0, 0, (i - 2.0)*2.5);
 			m_scene->AddGameObject(cube);
 		}
 
@@ -119,10 +119,6 @@ namespace Lobster
 		GameObject* light = (new GameObject("Directional Light"))->AddComponent<LightComponent>(LightType::DIRECTIONAL_LIGHT);
 		light->transform.Translate(0, 2, 3);
 		m_scene->AddGameObject(light);
-
-		GameObject* light2 = (new GameObject("Directional Light 2"))->AddComponent<LightComponent>(LightType::DIRECTIONAL_LIGHT);
-		light2->transform.Translate(2, 3, 0);
-		m_scene->AddGameObject(light2);
 
         //GameObject* sibenik = (new GameObject("sibenik"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/sibenik.obj").c_str(), "materials/sibenik.mat");
 		LOG("Model loading spent {} ms", loadTimer.GetElapsedTime());
