@@ -21,6 +21,7 @@ namespace Lobster
 		Center(glm::vec3(0, 0, 0)),
 		Min(glm::vec3(0, 0, 0)),
 		Max(glm::vec3(0, 0, 0)),
+		m_debugColor(glm::vec4(0, 1, 0, 1)),
         m_debugMaterial(nullptr),
         m_debugMesh(nullptr),
         m_debugVertexBuffer(nullptr),
@@ -30,7 +31,8 @@ namespace Lobster
         memset(m_debugData, 0, sizeof(float) * 24);
 		memset(m_debugInitialData, 0, sizeof(float) * 24);
 		memset(m_debugTranslatedData, 0, sizeof(float) * 24);
-        m_debugMaterial = MaterialLibrary::Use("materials/AABB.mat");
+        m_debugMaterial = MaterialLibrary::UseShader("shaders/SolidColor.glsl");
+		m_debugMaterial->SetRawUniform("color", glm::value_ptr(m_debugColor));
         m_debugVertexBuffer = new VertexBuffer(DrawMode::DYNAMIC_DRAW);
         IndexBuffer* indexBuffer = new IndexBuffer();
         VertexLayout* layout = new VertexLayout();

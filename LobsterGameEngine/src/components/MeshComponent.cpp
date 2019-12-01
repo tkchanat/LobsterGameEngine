@@ -65,7 +65,7 @@ namespace Lobster
 			for (int i = 0; i < m_materials.size(); ++i)
 			{
 				ImGui::Indent();
-				m_materials[i]->OnImGuiRender();
+				m_materials[i]->OnImGuiRender(i);
 				ImGui::Unindent();
 			}
 		}

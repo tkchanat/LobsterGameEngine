@@ -39,9 +39,9 @@ uniform sampler2D RoughnessMap;
 uniform sampler2D MetallicMap;
 uniform sampler2D AmbientOcclusionMap;
 
-uniform vec3 Albedo;
-uniform float Metallic;
-uniform float Roughness;
+uniform vec3 Albedo = vec3(1, 1, 1);
+uniform float Metallic = 0.0;
+uniform float Roughness = 0.0;
 
 float Distribution(float cosLh, float roughness)
 {

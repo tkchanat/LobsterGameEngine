@@ -10,6 +10,9 @@ namespace Lobster {
 		//	Returning a substring by char* with nullptr handling.
 		std::string substr(const std::string& str, const char* from, const char* to);
 
+		//  Wrapper for std::regex_replace
+		std::string RegexReplace(const std::string& str, const char* expr, const char* pattern);
+		
 		//	Finding occurrence of expression with regex.
 		std::vector<std::string> RegexAllOccurrence(const std::string& str, const char* expr);
 

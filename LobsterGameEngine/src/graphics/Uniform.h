@@ -7,6 +7,7 @@ namespace Lobster
 	{
 	public:
 		std::string Name;
+		std::string DefaultValueString;
 		enum DataType : uint {
 			BOOL, BVEC2, BVEC3, BVEC4,
 			UINT, UVEC2, UVEC3, UVEC4,
@@ -17,8 +18,9 @@ namespace Lobster
 			SAMPLER2D, SAMPLER3D, SAMPLERCUBE
 		} Type;
 	public:
-		UniformDeclaration(const std::string_view& name, const std::string_view& type) {
-			this->Name = std::string(name);
+		UniformDeclaration(const std::string& name, const std::string& defaultValStr, const std::string& type) {
+			this->Name = name;
+			this->DefaultValueString = defaultValStr;
 			if (type == "bool") this->Type = BOOL;
 			else if (type == "bvec2") this->Type = BVEC2;
 			else if (type == "bvec3") this->Type = BVEC3;

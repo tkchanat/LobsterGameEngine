@@ -30,7 +30,8 @@ namespace Lobster
 		std::vector<std::string> _textureNames;
 	public:
 		virtual ~Material();
-		void OnImGuiRender();
+		void OnImGuiRender(int material_id);
+		void SetRawUniform(const char* name, void* data);
 		void SetUniforms();
 		void SaveConfiguration();
 		inline std::string GetName() const { return m_name; }
@@ -65,6 +66,7 @@ namespace Lobster
 	private:
         Material(const char* path);
 		Material(Shader* shader);
+		void InitializeUniformsFromShader();
 		void AssignTextureSlot();
 		void ResizeUniformBuffer(size_t newSize);
 	};

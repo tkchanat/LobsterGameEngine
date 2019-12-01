@@ -7,7 +7,7 @@ namespace Lobster
 	Profiler* Profiler::s_instance = nullptr;
 
 	Profiler::Profiler() :
-		m_interval(50.0)
+		m_interval(25.0)
 	{
 	}
 
@@ -22,12 +22,8 @@ namespace Lobster
 
 	void Profiler::SubmitData(const std::string & name, double data)
 	{
-		s_instance->m_cumulativeTime += s_instance->m_timer.GetDeltaTime();
-		if (s_instance->m_cumulativeTime > s_instance->m_interval)
-		{
-			s_instance->m_profilerData[name] = data;
-			s_instance->m_cumulativeTime = 0.0;
-		}
+		s_instance->m_profilerData[name] = data;
+		s_instance->m_cumulativeTime = 0.0;
 	}
 
 }

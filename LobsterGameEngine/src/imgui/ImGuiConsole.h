@@ -139,39 +139,15 @@ namespace Lobster
 		{
 			ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
 			ImGui::Begin("Console", nullptr);
-			if (ImGui::SmallButton("[Debug] Add some entries"))
-			{
-				log.AddLog(fmt::format("[{}] Hello, current time is {}", ImGui::GetFrameCount(), ImGui::GetTime()).c_str());
-			}
+			//if (ImGui::SmallButton("[Debug] Add some entries"))
+			//{
+			//	log.AddLog(fmt::format("[{}] Hello, current time is {}", ImGui::GetFrameCount(), ImGui::GetTime()).c_str());
+			//}
 			ImGui::End();
 
 			log.Draw("Console", nullptr);
 		}
 	};
-//
-//    template<class ...Args>
-//    void LOG(const char* f, Args... args)
-//    {
-//        ImGuiConsole::log.AddLog("%s", fmt::format(std::string("[LOG] ") + f, args...).c_str());
-//    }
-//
-//    template<class ...Args>
-//    void INFO(const char* f, Args... args)
-//    {
-//        ImGuiConsole::log.AddLog("%s", fmt::format(std::string("[LOG] ") + f, args...).c_str());
-//    }
-//
-//    template<class ...Args>
-//    void WARN(const char* f, Args... args)
-//    {
-//        ImGuiConsole::log.AddLog("%s", fmt::format(std::string("[LOG] ") + f, args...).c_str());
-//    }
-//
-//    template<class ...Args>
-//    void ERROR(const char* f, Args... args)
-//    {
-//        ImGuiConsole::log.AddLog("%s", fmt::format(std::string("[LOG] ") + f, args...).c_str());
-//    }
 
 }
 

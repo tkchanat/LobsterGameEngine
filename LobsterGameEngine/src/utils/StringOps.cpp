@@ -21,16 +21,22 @@ namespace Lobster
 			return str.substr(begin, end);
 		}
 
+		std::string RegexReplace(const std::string & str, const char * expr, const char * pattern)
+		{
+			const std::regex r(expr);
+			return std::regex_replace(str, r, pattern);
+		}
+
 		std::vector<std::string> RegexAllOccurrence(const std::string& str, const char* expr) {
 			std::vector<std::string> output;
+			// extracting the matching pattern.
+			std::string subject = str;
+			std::smatch match;
 			const std::regex r(expr);
-			std::smatch sm;
-			if (std::regex_search(str, sm, r))
-			{
-				for (int i = 0; i < sm.size(); ++i)
-				{
-					output.push_back(sm.str(i));
-				}
+			int i = 1;
+			while (std::regex_search(subject, match, r)) {
+				output.emplace_back(match.str());
+				subject = match.suffix().str();
 			}
 			return output;
 		}

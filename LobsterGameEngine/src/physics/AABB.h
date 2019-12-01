@@ -23,6 +23,7 @@ namespace Lobster
         glm::vec3 Min;
         glm::vec3 Max;
     private:
+		glm::vec4 m_debugColor;
         Material* m_debugMaterial;
         VertexArray* m_debugMesh;
         VertexBuffer* m_debugVertexBuffer;

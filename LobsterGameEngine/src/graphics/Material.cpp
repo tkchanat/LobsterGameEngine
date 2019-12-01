@@ -16,18 +16,20 @@ namespace Lobster
     {
 		// initialize all material data from binary
 		std::stringstream ss = FileSystem::ReadStringStream(FileSystem::Path(m_name).c_str());
+		bool matFileExist = false;
 		try {
 			cereal::BinaryInputArchive iarchive(ss);
 			iarchive(*this);
+			matFileExist = true;
 		} 
 		catch (std::exception e) {
 			m_shader = ShaderLibrary::Use("shaders/Phong.glsl");
 			LOG("{}", e.what());
 		};
 
-		// initialize shader from paths
-		if (m_uniformData == nullptr) m_uniformData = new byte[m_shader->GetUniformBufferSize()];
-
+		m_uniformDataSize = m_shader->GetUniformBufferSize();
+		if (m_uniformData == nullptr) m_uniformData = new byte[m_uniformDataSize];
+		if (matFileExist == false) InitializeUniformsFromShader();
 		AssignTextureSlot();
     }
 
@@ -39,6 +41,55 @@ namespace Lobster
 		m_uniformDataSize(0),
 		b_dirty(false)
 	{
+		m_uniformDataSize = m_shader->GetUniformBufferSize();
+		if (m_uniformData == nullptr) m_uniformData = new byte[m_uniformDataSize];
+		InitializeUniformsFromShader();
+		AssignTextureSlot();
+	}
+
+	void Material::InitializeUniformsFromShader()
+	{
+		// assume all uniform default values are zero
+		if (m_uniformData == nullptr) return;
+		memset(m_uniformData, 0, m_uniformDataSize);
+		auto declaration = m_shader->GetUniformDeclarations();
+		size_t offset = 0;
+		for (auto decl : declaration) {
+			if (!decl.DefaultValueString.empty())
+			{
+				std::vector<std::string> elements = StringOps::RegexAllOccurrence(decl.DefaultValueString, "[0-9.]+|true|false");
+				switch (decl.Type)
+				{
+				case UniformDeclaration::BOOL: case UniformDeclaration::BVEC2: case UniformDeclaration::BVEC3: case UniformDeclaration::BVEC4:
+					uint bbuf[4];
+					for (int i = 0; i < elements.size(); ++i)
+						bbuf[i] = elements[i] == "true" ? 1 : 0;
+					memcpy(m_uniformData + offset, bbuf, decl.Size());
+					break;
+				case UniformDeclaration::UINT: case UniformDeclaration::UVEC2: case UniformDeclaration::UVEC3: case UniformDeclaration::UVEC4:
+					uint ubuf[4];
+					for (int i = 0; i < elements.size(); ++i)
+						ubuf[i] = std::stoul(elements[i]);
+					memcpy(m_uniformData + offset, ubuf, decl.Size());
+					break;
+				case UniformDeclaration::INT: case UniformDeclaration::IVEC2: case UniformDeclaration::IVEC3: case UniformDeclaration::IVEC4:
+					int ibuf[4];
+					for (int i = 0; i < elements.size(); ++i)
+						ibuf[i] = std::stoi(elements[i]);
+					memcpy(m_uniformData + offset, ibuf, decl.Size());
+					break;
+				case UniformDeclaration::FLOAT: case UniformDeclaration::VEC2: case UniformDeclaration::VEC3: case UniformDeclaration::VEC4:
+					float fbuf[4];
+					for (int i = 0; i < elements.size(); ++i)
+						fbuf[i] = std::stof(elements[i]);
+					memcpy(m_uniformData + offset, fbuf, decl.Size());
+					break;
+				case UniformDeclaration::MAT3: case UniformDeclaration::MAT4:
+					break; // do nothing. we don't do initialization for matrix types for now.
+				}
+			}
+			offset += decl.Size();
+		}
 	}
 
 	void Material::AssignTextureSlot()
@@ -49,7 +100,7 @@ namespace Lobster
 		size_t offset = 0;
 		for (auto decl : declarations) {
 			if (decl.Type == UniformDeclaration::SAMPLER2D) {
-				uint slot = m_textures.size();
+				uint slot = (uint)m_textures.size();
 				memcpy(m_uniformData + offset, &slot, sizeof(uint));
 				m_textures.push_back(nullptr);
 			}
@@ -79,7 +130,7 @@ namespace Lobster
     {
     }
 
-	void Material::OnImGuiRender()
+	void Material::OnImGuiRender(int material_id)
 	{
 		std::string headerLabel = fmt::format("Material{}: {}", b_dirty ? "*" : "", m_name);
 		if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
@@ -103,6 +154,7 @@ namespace Lobster
 					if (m_shader->GetName() == shaders[i])
 						return i;
 				}
+				return 0;
 			};
 			const char* shaders[] = { "shaders/Phong.glsl", "shaders/PBR.glsl" };
 			static int usedShader = findShaderIndex(shaders, sizeof(shaders));
@@ -127,18 +179,17 @@ namespace Lobster
 			auto declaration = m_shader->GetUniformDeclarations();
 			size_t offset = 0;
 			for (auto decl : declaration) {
-				const char* label = decl.Name.c_str();
 				void* data = m_uniformData + offset;
-				ImGui::PushID(label);
+				ImGui::PushID((decl.Name + std::to_string(material_id)).c_str());
 				switch (decl.Type) {
 				case UniformDeclaration::BOOL:
-					ImGui::Checkbox(label, (bool*)data); break;
+					ImGui::Checkbox(decl.Name.c_str(), (bool*)data); break;
 				case UniformDeclaration::FLOAT:
-					ImGui::SliderFloat(label, (float*)data, 0.f, 1.f); break;
+					ImGui::SliderFloat(decl.Name.c_str(), (float*)data, 0.f, 1.f); break;
 				case UniformDeclaration::VEC3:
-					ImGui::ColorEdit3(label, (float*)data); break;
+					ImGui::ColorEdit3(decl.Name.c_str(), (float*)data); break;
 				case UniformDeclaration::VEC4:
-					ImGui::ColorEdit4(label, (float*)data); break;
+					ImGui::ColorEdit4(decl.Name.c_str(), (float*)data); break;
 				case UniformDeclaration::SAMPLER2D:
 					if (ImGui::ImageButton(m_textures[*(uint*)data] ? m_textures[*(uint*)data]->Get() : notFound->Get(), previewSize)) {
 						std::string path = FileSystem::OpenFileDialog();
@@ -161,7 +212,7 @@ namespace Lobster
 						ImGui::EndPopup();
 					}
 					ImGui::SameLine();
-					ImGui::Text(label);
+					ImGui::Text(decl.Name.c_str());
 					break;
 				default: break;
 				}
@@ -170,6 +221,18 @@ namespace Lobster
 				offset += decl.Size();
 			}
 
+		}
+	}
+
+	void Material::SetRawUniform(const char * name, void * data)
+	{
+		size_t offset = 0;
+		auto declaration = m_shader->GetUniformDeclarations();
+		for (auto decl : declaration) {
+			if (decl.Name == name) {
+				memcpy(m_uniformData + offset, data, decl.Size());
+			}
+			offset += decl.Size();
 		}
 	}
 

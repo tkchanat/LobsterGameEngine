@@ -38,6 +38,8 @@ namespace Lobster
 		Scene* m_scene;
 		Renderer* m_renderer;
 		// grid line
+		bool b_showGrid;
+		glm::vec4 m_gridColor;
 		Material* m_gridMaterial;
 		VertexArray* m_gridVertexArray;
 		// profiler
@@ -51,6 +53,8 @@ namespace Lobster
 			m_editorCamera(nullptr),
 			m_scene(scene),
 			m_renderer(renderer),
+			b_showGrid(true),
+			m_gridColor(glm::vec4(1.0)),
 			m_gridMaterial(nullptr),
 			m_gridVertexArray(nullptr),
 			b_showProfiler(true)
@@ -59,7 +63,8 @@ namespace Lobster
 			m_editorCamera->transform.Translate(10, 8, 10);
 			m_editorCamera->transform.LookAt(glm::vec3(0, 0, 0));
 
-			m_gridMaterial = MaterialLibrary::Use("materials/gridline.mat");
+			m_gridMaterial = MaterialLibrary::UseShader("shaders/SolidColor.glsl");
+			m_gridMaterial->SetRawUniform("color", glm::value_ptr(m_gridColor));
 			m_gridVertexArray = MeshFactory::Grid(20, 20);
 
 			// listen events
@@ -98,11 +103,14 @@ namespace Lobster
 		void OnUpdate(double deltaTime)
 		{
 			// grid line rendering
-			RenderCommand command;
-			command.UseMaterial = m_gridMaterial;
-			command.UseVertexArray = m_gridVertexArray;
-			command.UseWorldTransform = glm::mat4(1.0f);
-			Renderer::Submit(command);
+			if (b_showGrid) 
+			{
+				RenderCommand command;
+				command.UseMaterial = m_gridMaterial;
+				command.UseVertexArray = m_gridVertexArray;
+				command.UseWorldTransform = glm::mat4(1.0f);
+				Renderer::Submit(command);
+			}
 		}
 
 		virtual void Show(bool* p_open) override
@@ -110,9 +118,21 @@ namespace Lobster
 			// ====================================================
 			// Scene window
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-			ImGui::Begin("Scene", p_open, ImGuiWindowFlags_None);	
+			ImGui::Begin("Scene", p_open, ImGuiWindowFlags_None);
 			window_pos = ImGui::GetWindowPos();
 			window_size = ImGui::GetWindowSize();
+
+			// right-click settings pop up
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
+			if (ImGui::BeginPopupContextItem()) {
+				ImGui::Checkbox("Show Reference Grid", &b_showGrid);
+				ImGui::Separator();
+				ImGui::Text("Grid Color");
+				ImGui::ColorEdit3("", glm::value_ptr(m_gridColor), 0);
+				m_gridMaterial->SetRawUniform("color", glm::value_ptr(m_gridColor));
+				ImGui::EndPopup();
+			}
+			ImGui::PopStyleVar();
 
 			// draw scene
 			CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();

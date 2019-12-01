@@ -62,6 +62,7 @@ namespace Lobster
 		std::string vs = StringOps::substr(source, "///VertexShader", "///FragmentShader");
 		std::string fs = StringOps::substr(source, "///FragmentShader", nullptr);
 
+		// Preprocess system uniforms and shader version
 		StringOps::ReplaceAll(vs, "///VertexShader", 
 			R"(#version 410 core
 uniform mat4 sys_world;
@@ -69,7 +70,6 @@ uniform mat4 sys_view;
 uniform mat4 sys_projection;)");
 		StringOps::ReplaceAll(fs, "///FragmentShader",
 			R"(#version 410 core
-#define TextureExists(tex) textureSize(##tex, 0).x > 1
 #define PI 3.14159265359
 #define EPSILON 0.0001
 #define MAX_DIRECTIONAL_LIGHTS )" + std::to_string(MAX_DIRECTIONAL_LIGHTS) + R"(
@@ -90,6 +90,9 @@ uniform vec3 sys_cameraPosition;
 uniform samplerCube sys_irradianceMap;
 uniform samplerCube sys_prefilterMap;
 uniform sampler2D sys_brdfLUTMap;)");
+
+		// System defined macro
+		fs = StringOps::RegexReplace(fs, "TextureExists\\((\\w*)\\)", "textureSize($1, 0).x > 1");
 
         const char* vertexShaderSource = vs.c_str();
         const char* fragmentShaderSource = fs.c_str();
@@ -146,8 +149,13 @@ uniform sampler2D sys_brdfLUTMap;)");
 			std::vector<std::string> tokens = StringOps::split(block, ' ');
 			std::string uniformType = tokens[1];
 			std::string uniformName = tokens[2];
+			std::string defaultValStr = "";
+			if (block.find("=") != std::string::npos) {
+				size_t parenthesesPos = block.find("(");
+				defaultValStr = block.substr(parenthesesPos != std::string::npos ? parenthesesPos : block.find("=") + 1);
+			}
 			m_uniformLocationMap[uniformName] = glGetUniformLocation(m_id, uniformName.c_str());
-			m_uniformDeclarations.push_back(UniformDeclaration(uniformName, uniformType));
+			m_uniformDeclarations.push_back(UniformDeclaration(uniformName, defaultValStr, uniformType));
 		}
 	}
 
@@ -289,7 +297,8 @@ uniform sampler2D sys_brdfLUTMap;)");
 			std::filesystem::file_time_type newTimestamp = FileSystem::LastModified(shader->GetPath().c_str());
 			if (newTimestamp != s_instance->m_shadersLastModified[i])
 			{
-				INFO("Live reloading {}...", shader->GetPath());
+				INFO("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv");
+				INFO("Live reloading {}...", shader->GetName());
 				shader->Reload();
 				MaterialLibrary::ResizeUniformBuffer(shader);
 				s_instance->m_shadersLastModified[i] = newTimestamp;
