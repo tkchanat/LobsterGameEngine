@@ -48,7 +48,9 @@ namespace Lobster
 		std::vector<ColliderComponent*> colliders;
 		for (GameObject* gameObject : m_gameObjects) {
 			//	TODO: Physics Update
-			for (ColliderComponent* collider : gameObject->GetColliders()) {
+			Rigidbody* rigidbody = gameObject->GetComponent<Rigidbody>();
+			if (!rigidbody) continue;
+			for (ColliderComponent* collider : rigidbody->GetColliders()) {
 				if (collider->IsEnabled() && collider->GetOwner()->GetComponent<PhysicsComponent>()->GetPhysicsType() != 2) colliders.push_back(collider);
 			}
 		}
@@ -131,8 +133,25 @@ namespace Lobster
 	}
 
 	Scene* Scene::RemoveGameObject(GameObject* gameObject) {
-		std::remove(m_gameObjects.begin(), m_gameObjects.end(), gameObject);
+		if (!gameObject) return this;
+		auto index = std::find(m_gameObjects.begin(), m_gameObjects.end(), gameObject);
+		if (index != m_gameObjects.end()) {
+			m_gameObjects.erase(index);
+			delete gameObject;
+			gameObject = nullptr;
+		}
 		return this;
+	}
+
+	GameObject * Scene::GetGameObject(GameObject * gameObject)
+	{
+		std::stack<GameObject*> parents;
+		GameObject* parent = gameObject->GetParent();
+		while (parent != nullptr) {
+			parents.push(parent);
+			parent = parent->GetParent();
+		}
+		return nullptr;
 	}
     
 	bool Scene::IsObjectNameDuplicated(std::string name, std::string except) {

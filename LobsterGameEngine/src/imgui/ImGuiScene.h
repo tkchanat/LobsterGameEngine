@@ -59,7 +59,8 @@ namespace Lobster
 			m_gridVertexArray(nullptr),
 			b_showProfiler(true)
 		{
-			m_editorCamera = (new GameObject("EditorCamera"))->AddComponent<CameraComponent>(ProjectionType::PERSPECTIVE);
+			m_editorCamera = new GameObject("EditorCamera");
+			m_editorCamera->AddComponent(new CameraComponent(ProjectionType::PERSPECTIVE));
 			m_editorCamera->transform.Translate(10, 8, 10);
 			m_editorCamera->transform.LookAt(glm::vec3(0, 0, 0));
 
@@ -177,7 +178,7 @@ namespace Lobster
 
 			// ImGuizmo
 			{
-				GameObject* gameObject = ImGuiProperties::selectedObj;
+				GameObject* gameObject = EditorLayer::s_selectedGameObject;
 				if (gameObject)
 				{
 					glm::mat4 transformMatrix = gameObject->transform.GetMatrix();

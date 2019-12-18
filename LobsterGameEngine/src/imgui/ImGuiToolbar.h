@@ -38,21 +38,21 @@ namespace Lobster
 			// Plane Generation
 			if (ImGui::ImageButton(m_tex[0]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {					
 				GameObject* plane = new GameObject("Plane");
-				plane->AddComponent<MeshComponent>(MeshFactory::Plane(), glm::vec3(-1, -1, 0), glm::vec3(1, 1, 0));
+				plane->AddComponent(new MeshComponent(MeshFactory::Plane(), glm::vec3(-1, -1, 0), glm::vec3(1, 1, 0)));
 				scene->AddGameObject(plane);
 			}
 			ImGui::SameLine();
 			// Cube Generation
 			if (ImGui::ImageButton(m_tex[1]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
 				GameObject* cube = new GameObject("Cube");
-				cube->AddComponent<MeshComponent>(MeshFactory::Cube(), glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1));
+				cube->AddComponent(new MeshComponent(MeshFactory::Cube(), glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)));
 				scene->AddGameObject(cube);
 			}
 			ImGui::SameLine();
 			// Sphere Generation
 			if (ImGui::ImageButton(m_tex[2]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
 				GameObject* sphere = new GameObject("Sphere");
-				sphere->AddComponent<MeshComponent>(MeshFactory::Sphere(1, 16, 16), glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1));
+				sphere->AddComponent(new MeshComponent(MeshFactory::Sphere(1, 16, 16), glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)));
 				scene->AddGameObject(sphere);
 			}			
 			ImGui::End();

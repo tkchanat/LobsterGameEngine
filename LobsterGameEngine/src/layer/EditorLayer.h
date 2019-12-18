@@ -7,6 +7,7 @@ namespace Lobster
 	class Scene;
 	class Renderer;
 	class CameraComponent;
+	class GameObject;
 	class ImGuiMenuBar;
 	class ImGuiScene;
 	class ImGuiDemoWindow;
@@ -14,6 +15,8 @@ namespace Lobster
 
 	class EditorLayer : public Layer
 	{
+	public:
+		static GameObject* s_selectedGameObject;
 	private:
 		static uint s_dockspace_id;
 		ImGuiMenuBar* m_menuBar;
@@ -22,6 +25,7 @@ namespace Lobster
 		ImGuiComponent* m_properties;
 		ImGuiComponent* m_console;
 		ImGuiComponent* m_assets;
+		ImGuiComponent* m_hierarchy;
 		ImGuiDemoWindow* m_demoWindow;
 	public:
 		EditorLayer(Scene* scene, Renderer* renderer);

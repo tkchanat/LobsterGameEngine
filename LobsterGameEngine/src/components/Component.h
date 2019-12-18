@@ -27,6 +27,8 @@ namespace Lobster
 
     public:
 		virtual ~Component() {}
+		virtual void OnAttach() {}
+		virtual void OnDetach() {}
         virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender() = 0;
         void SetOwner(GameObject* owner) { gameObject = owner; }

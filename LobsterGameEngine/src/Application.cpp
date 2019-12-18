@@ -100,8 +100,13 @@ namespace Lobster
 		//});
 
 
-		GameObject* barrel = (new GameObject("barrel"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat")->AddComponent<Rigidbody>()->AddComponent<AABB>();
+		GameObject* barrel = new GameObject("barrel");
+		barrel->AddComponent(new MeshComponent(FileSystem::Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat"));
+		//barrel->AddComponent(new AABB());
+		//barrel->AddComponent(new Rigidbody());
 		barrel->transform.Translate(0, 2, 0);
+		barrel->AddChild(new GameObject("child 1"));
+		barrel->AddChild(new GameObject("child 2"));
 		m_scene->AddGameObject(barrel);
 
 		//for (int i = 0; i < 5; ++i)
@@ -112,11 +117,13 @@ namespace Lobster
 		//	m_scene->AddGameObject(cube);
 		//}
 
-		GameObject* camera = (new GameObject("main camera"))->AddComponent<CameraComponent>(ProjectionType::PERSPECTIVE);
+		GameObject* camera = new GameObject("Main Camera");
+		camera->AddComponent(new CameraComponent(ProjectionType::PERSPECTIVE));
 		camera->transform.Translate(0, 2, 10);
 		m_scene->AddGameObject(camera);
 
-		GameObject* light = (new GameObject("Directional Light"))->AddComponent<LightComponent>(LightType::DIRECTIONAL_LIGHT);
+		GameObject* light = new GameObject("Directional Light");
+		light->AddComponent(new LightComponent(LightType::DIRECTIONAL_LIGHT));
 		light->transform.Translate(0, 2, 3);
 		m_scene->AddGameObject(light);
 

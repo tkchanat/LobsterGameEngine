@@ -66,7 +66,9 @@ namespace Lobster
 						nothing = true;
 					}
 					else {
-						scene->AddGameObject((new GameObject(rename))->AddComponent<MeshComponent>(path.c_str()));
+						GameObject* renamedGO = new GameObject(rename);
+						renamedGO->AddComponent(new MeshComponent(path.c_str()));
+						scene->AddGameObject(renamedGO);
 						rename[0] = '\0';
 						nothing = false;
 						ImGui::CloseCurrentPopup();

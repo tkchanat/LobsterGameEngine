@@ -9,7 +9,8 @@ namespace Lobster
 	std::hash<uintptr_t> GameObject::hashFunc;
     
     GameObject::GameObject(const char* name) :
-        m_name(name)
+        m_name(name),
+		m_parent(nullptr)
     {
 		m_id = hashFunc((unsigned long long) this);
     }
@@ -23,6 +24,19 @@ namespace Lobster
 			component = nullptr;
 		}
     }
+
+	void GameObject::Destroy()
+	{
+		if (m_parent) {
+			auto index = std::find(m_parent->m_children.begin(), m_parent->m_children.end(), this);
+			if (index == m_parent->m_children.end()) {
+				throw std::runtime_error("Attempting to destroy an invalid GameObject");
+				return;
+			}
+			m_parent->m_children.erase(index);
+		}
+		this->~GameObject();
+	}
     
     void GameObject::OnUpdate(double deltaTime)
     {
@@ -37,24 +51,28 @@ namespace Lobster
                 component->OnUpdate(deltaTime);
             }
         }
+
+		// Update all children
+		for (GameObject* child : m_children) {
+			child->OnUpdate(deltaTime);
+		}
     }
 
 	// This function is called when the object is selected in ImGui::Properties
 	// It will create the ImGui widgets according to its property
-	void GameObject::OnImGuiRender(Scene* scene) {
-		ImGui::Text("Object: %s", m_name.c_str());
+	void GameObject::OnImGuiRender() {
+		static bool test_bool;
+		ImGui::Checkbox("", &test_bool);
+		ImGui::SameLine();
+		ImGui::Text(m_name.c_str());
+		ImGui::Separator();
 		ImGui::Text("ID: %X", GetId());
-		if (ImGui::Button("Remove")) {
-			scene->RemoveGameObject(m_name);
-			ImGuiProperties::selectedObj = nullptr;
-		}
 		ImGui::SameLine();
-		ImGui::Button("Clone"); // TODO implement this
-		ImGui::SameLine();
+		//ImGui::Button("Clone"); // TODO implement this
+		//ImGui::SameLine();
 		static char rename[128];
 		static bool nothing = false;
 		if (ImGui::Button("Rename")) {
-			sprintf(rename, m_name.c_str());
 			ImGui::OpenPopup("Rename Game Object");
 		}
 
@@ -95,15 +113,15 @@ namespace Lobster
 
 		//	TODO: Assumed to be rigidbody / collider component for now. Ask about what components to include. (and change button name)
 		//	TODO: Ask for a component name perhaps?
-		if (!m_physics) {
-			if (ImGui::Button("Add Rigidbody")) {
-				AddComponent<Rigidbody>();
-			}
-		} else {
-			if (ImGui::Button("Add Collider")) {
-				AddComponent<AABB>();
-			}
-		}
+		//if (!m_physics) {
+		//	if (ImGui::Button("Add Rigidbody")) {
+		//		AddComponent(new Rigidbody());
+		//	}
+		//} else {
+		//	if (ImGui::Button("Add Collider")) {
+		//		AddComponent(new AABB());
+		//	}
+		//}
 
 		//	Check if transform is active, ie: we are trying to change the value of transform.
 		bool isChanging = false;
@@ -145,15 +163,55 @@ namespace Lobster
 		}
 	}
 
+	GameObject * GameObject::AddComponent(Component * component)
+	{
+		//  TODO:
+		//  One game object can only have one mesh component
+		//	Sunny: Function returns this directly when we add the second one now. Need discussion on deletion tho
+		//	Also discuss about whether we need to keep m_mesh.
+
+		//	3 conditions of not creating a new component.
+		//	1. If we are creating MeshComponent and one already exists;
+		//	2. If we are creating PhysicsComponent, and no MeshComponent found;
+		//	3. If we are creating PhysicsComponent and one already exists.
+		//if (dynamic_cast<MeshComponent*>(component) && m_mesh || dynamic_cast<PhysicsComponent*>(component) && (!m_mesh || m_physics)) 
+			//return this;
+
+		// Key:
+		// No duplicates for the following component types:
+		// MeshComponent, PhysicsComponent
+		if (dynamic_cast<MeshComponent*>(component) && GetComponent<MeshComponent>())
+			return this;
+		if (dynamic_cast<PhysicsComponent*>(component) && GetComponent<PhysicsComponent>())
+			return this;
+
+		component->SetOwner(this);
+		component->SetOwnerTransform(&transform);
+
+		if (dynamic_cast<ColliderComponent*>(component)) {
+			Rigidbody* rigidbody = GetComponent<Rigidbody>();
+			rigidbody->AddCollider(dynamic_cast<ColliderComponent*>(component));
+			return this;
+		}
+
+		m_components.push_back(component);
+		component->OnAttach();
+		return this;
+	}
+
+	GameObject * GameObject::AddChild(GameObject * child)
+	{
+		child->m_parent = this;
+		m_children.push_back(child);
+		return this;
+	}
+
 	void GameObject::RemoveComponent(Component* comp) {
 		int i = 0;
 		for (Component* component : m_components) {
 			if (comp == component) m_components.erase(m_components.begin() + i);
 			i++;
 		}
-
-		//	If it is a PhysicsComponent, so erase it in physics list too.
-		if (dynamic_cast<PhysicsComponent*>(comp)) m_physics = nullptr;
 
 		delete comp;
 	}
