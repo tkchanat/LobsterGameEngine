@@ -40,7 +40,7 @@ namespace Lobster
         glm::vec3 max(-std::numeric_limits<float>::max());
         
         if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-        {
+		{
             LOG(import.GetErrorString());
             return { glm::vec3(0, 0, 0), glm::vec3(0, 0, 0) };
         }
