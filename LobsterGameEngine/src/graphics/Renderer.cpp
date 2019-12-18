@@ -104,6 +104,8 @@ namespace Lobster
 
 	void Renderer::Render(CameraComponent* camera)
 	{
+		if (!camera) return;
+
 		// =====================================================
 		// [First Pass] Render the scene to frame buffer
 		// Render order: Background -> Opaque -> Transparent(sorted) -> Overlay

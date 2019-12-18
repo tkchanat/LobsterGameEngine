@@ -7,13 +7,14 @@
 #include "objects/GameObject.h"
 #include "window/Window.h"
 
-#include "imgui/ImGuiMenuBar.h"
-#include "imgui/ImGuiScene.h"
-#include "imgui/ImGuiToolbar.h"
-#include "imgui/ImGuiDemoWindow.h"
-#include "imgui/ImGuiProperties.h"
 #include "imgui/ImGuiAssets.h"
 #include "imgui/ImGuiConsole.h"
+#include "imgui/ImGuiDemoWindow.h"
+#include "imgui/ImGuiHierarchy.h"
+#include "imgui/ImGuiMenuBar.h"
+#include "imgui/ImGuiProperties.h"
+#include "imgui/ImGuiScene.h"
+#include "imgui/ImGuiToolbar.h"
 
 #include <imgui_internal.h>
 
@@ -21,19 +22,20 @@ namespace Lobster
 {
 	// Static initialization
 	uint EditorLayer::s_dockspace_id = 0; 
+	GameObject* EditorLayer::s_selectedGameObject = nullptr;
 	std::list<GizmosCommand> ImGuiScene::m_gizmosQueue;
-	GameObject* ImGuiProperties::selectedObj = nullptr;
 	SSFLog ImGuiConsole::log;
 
 	EditorLayer::EditorLayer(Scene* scene, Renderer* renderer) :
 		Layer("Game Layer"),
-		m_menuBar(new ImGuiMenuBar(scene)),
-		m_scene(new ImGuiScene(scene, renderer)),
-		m_toolbar(new ImGuiToolbar(scene)),
-		m_properties(new ImGuiProperties(scene)),
-		m_console(new ImGuiConsole()),
 		m_assets(new ImGuiAssets(scene)),
-		m_demoWindow(new ImGuiDemoWindow())
+		m_console(new ImGuiConsole()),
+		m_demoWindow(new ImGuiDemoWindow()),
+		m_hierarchy(new ImGuiHierarchy(scene)),
+		m_menuBar(new ImGuiMenuBar(scene)),
+		m_properties(new ImGuiProperties()),
+		m_scene(new ImGuiScene(scene, renderer)),
+		m_toolbar(new ImGuiToolbar(scene))
 	{
 	}
 
@@ -58,20 +60,22 @@ namespace Lobster
 	void EditorLayer::OnImGuiRender()
 	{
 		RenderDockSpace();
-		static bool show_menuBar = true;
-		static bool show_scene = true;
-		static bool show_toolbar = true;
-		static bool show_properties = true;
 		static bool show_assets = true;
 		static bool show_console = true;
 		static bool show_demo = true;
+		static bool show_hierarchy = true;
+		static bool show_menuBar = true;
+		static bool show_properties = true;
+		static bool show_scene = true;
+		static bool show_toolbar = true;
+		m_assets->Show(&show_assets); // Assets
+		m_console->Show(&show_console); // Console
+		m_demoWindow->Show(&show_demo); // Demo window
+		m_hierarchy->Show(&show_hierarchy); // Hierarchy
 		m_menuBar->Show(&show_menuBar); // Menu bar
+		m_properties->Show(&show_properties); // Properties
 		m_scene->Show(&show_scene); // Scene
 		m_toolbar->Show(&show_toolbar); // Toolbar
-		m_properties->Show(&show_properties); // Properties
-		m_assets->Show(&show_assets); // Assets
-		m_console->Show(&show_console); // Logger
-		m_demoWindow->Show(&show_demo); // Demo window
 	}
 
 	void EditorLayer::RenderDockSpace()
@@ -130,32 +134,30 @@ namespace Lobster
 		// ============================================================================ //
 		//										0w01									//
 		// ============================================================================ //
+		//			0314		|								|						//
+		//			    		|								|			    		//
+		// =====================|				3718			|						//
+		//	        0348		|								|           7w0h        //
 		//						|								|						//
-		//						|								|			7w15		//
-		//			0318		|				3718			|						//
-		//						|								|====================== //
-		//						|								|						//
-		// =====================================================|			7w5h		//
+		// =====================================================|			    		//
 		//							078h						|						//
 		// ============================================================================ //
 		// Naming scheme: dock_<left><right><top><bottom>, 0 = leftmost, w/h(10) = rightmost/downmost
-		ImGuiID dock_0w01, dock_0w1h, dock_070h, dock_7w0h, dock_0708, dock_078h, dock_0318, dock_3718,
-			dock_7w15, dock_7w5h;
+		ImGuiID dock_0w01, dock_0w1h, dock_070h, dock_7w0h, dock_0708, dock_078h, dock_0318, dock_3718, dock_0314, dock_0348;
 		// Disable tab bar for custom toolbar
 		ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.06f, &dock_0w01, &dock_0w1h);
 		ImGui::DockBuilderGetNode(dock_0w01)->LocalFlags |= ImGuiDockNodeFlags_AutoHideTabBar;
 		ImGui::DockBuilderSplitNode(dock_0w1h, ImGuiDir_Left, 0.7f, &dock_070h, &dock_7w0h);
 		ImGui::DockBuilderSplitNode(dock_070h, ImGuiDir_Up, 0.8f, &dock_0708, &dock_078h);
 		ImGui::DockBuilderSplitNode(dock_0708, ImGuiDir_Left, 0.3f, &dock_0318, &dock_3718);
-		ImGui::DockBuilderSplitNode(dock_7w0h, ImGuiDir_Up, 0.5f, &dock_7w15, &dock_7w5h);
+		ImGui::DockBuilderSplitNode(dock_0318, ImGuiDir_Up, 0.4f, &dock_0314, &dock_0348);
 		ImGui::DockBuilderDockWindow("Toolbar", dock_0w01);
 		ImGui::DockBuilderDockWindow("Scene", dock_3718);
+		ImGui::DockBuilderDockWindow("Assets", dock_078h);
 		ImGui::DockBuilderDockWindow("Console", dock_078h);
-		ImGui::DockBuilderDockWindow("Properties", dock_0318);
-		ImGui::DockBuilderDockWindow("Dear ImGui Demo", dock_7w5h);
-		ImGui::DockBuilderDockWindow("Assets", dock_7w15);
-
-
+		ImGui::DockBuilderDockWindow("Hierarchy", dock_0314);
+		ImGui::DockBuilderDockWindow("Dear ImGui Demo", dock_0348);
+		ImGui::DockBuilderDockWindow("Properties", dock_7w0h);
 		ImGui::DockBuilderFinish(s_dockspace_id);
 	}
 

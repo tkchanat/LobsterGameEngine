@@ -145,7 +145,7 @@ namespace Lobster
 				ImGui::EndPopup();
 			}
 
-			ImVec2 previewSize(32, 32);
+			ImVec2 previewSize(24, 24);
 			Texture2D* notFound = TextureLibrary::Placeholder();
             static std::string selectedTexture;
 			// Shader

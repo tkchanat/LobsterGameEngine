@@ -81,7 +81,7 @@ vec3 Lighting(vec3 f0, vec3 view, vec3 albedo, vec3 normal, float roughness, flo
 	vec3 v = view;
 
 	vec3 result = vec3(0.0);
-	for(int i = 0; i < MAX_DIRECTIONAL_LIGHTS; ++i)
+	for(int i = 0; i < Lights.directionalLightCount; ++i)
 	{
 		vec3 l = normalize(Lights.directionalLights[i].direction);
 		vec3 h = normalize(v + l);

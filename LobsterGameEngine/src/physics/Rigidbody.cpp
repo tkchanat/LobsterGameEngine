@@ -19,11 +19,11 @@ namespace Lobster {
 
 	void Rigidbody::OnImGuiRender() {
 		bool statement;
-		if (gameObject->GetColliders().size() == 0) {
-			statement = ImGui::CollapsingHeader("Rigidbody", &m_show, ImGuiTreeNodeFlags_DefaultOpen);
-		} else {
-			statement = ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen);
-		}
+		//if (gameObject->GetColliders().size() == 0) {
+		//	statement = ImGui::CollapsingHeader("Rigidbody", &m_show, ImGuiTreeNodeFlags_DefaultOpen);
+		//} else {
+		//	statement = ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen);
+		//}
 		
 		if (statement) {
 			ImGui::Checkbox("Enabled?", &m_enabled);
