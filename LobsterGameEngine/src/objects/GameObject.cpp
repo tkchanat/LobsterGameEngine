@@ -17,11 +17,16 @@ namespace Lobster
     
     GameObject::~GameObject()
     {
-		//  Delete all enabled components
+		// Delete all enabled components
 		for (Component* component : m_components)
 		{
-			if(component)	delete component;
+			if (component) delete component;
 			component = nullptr;
+		}
+		// Delete all childrens
+		for (GameObject* child : m_children) 
+		{
+			child->Destroy();
 		}
     }
 

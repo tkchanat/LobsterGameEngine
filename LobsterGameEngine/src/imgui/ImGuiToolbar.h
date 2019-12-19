@@ -87,7 +87,7 @@ namespace Lobster
 			// Sphere Generation
 			if (ImGui::ImageButton(m_tex[6]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
 				GameObject* sphere = new GameObject("Sphere");
-				sphere->AddComponent(new MeshComponent(MeshFactory::Sphere(1, 16, 16), glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)));
+				sphere->AddComponent(new MeshComponent(MeshFactory::Sphere(1, 32, 32)));
 				scene->AddGameObject(sphere);
 			}			
 			ImGui::End();

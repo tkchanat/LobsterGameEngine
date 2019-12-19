@@ -77,7 +77,7 @@ namespace Lobster
 						}
 						if (ImGui::MenuItem("Sphere", "", false)) {
 							GameObject* sphere = new GameObject("Sphere");
-							sphere->AddComponent(new MeshComponent(MeshFactory::Sphere(1, 16, 16), glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)));
+							sphere->AddComponent(new MeshComponent(MeshFactory::Sphere(1, 32, 16)));
 							scene->AddGameObject(sphere);
 						}
 						if (ImGui::MenuItem("Plane", "", false)) {

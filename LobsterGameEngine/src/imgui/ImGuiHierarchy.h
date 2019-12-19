@@ -22,7 +22,8 @@ namespace Lobster
 				}
 				if (!gameObject->GetComponent<CameraComponent>()) {
 					if (ImGui::MenuItem("Destroy", "", false)) {
-						EditorLayer::s_selectedGameObject->Destroy();
+						m_scene->RemoveGameObject(EditorLayer::s_selectedGameObject);
+						EditorLayer::s_selectedGameObject->Destroy();						
 						EditorLayer::s_selectedGameObject = nullptr;
 					}
 				}
