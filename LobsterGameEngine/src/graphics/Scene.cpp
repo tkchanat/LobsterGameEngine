@@ -143,6 +143,11 @@ namespace Lobster
 		return this;
 	}
 
+	// Deprecated
+	const std::vector<GameObject*>& Scene::GetGameObjects() {
+		return m_gameObjects;
+	}
+
 	GameObject * Scene::GetGameObject(GameObject * gameObject)
 	{
 		std::stack<GameObject*> parents;

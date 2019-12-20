@@ -18,6 +18,7 @@ namespace Lobster
 		std::string texture;
 		glm::vec3 position;
 		ImVec2 size = ImVec2(32, 32);
+		GameObject* source = nullptr;
 	};
 
 	class ImGuiScene : public ImGuiComponent
@@ -37,6 +38,8 @@ namespace Lobster
 		// not the owner of these objects, don't delete
 		Scene* m_scene;
 		Renderer* m_renderer;
+		// camera staring point
+		glm::vec3 at = glm::vec3(0, 0, 0);
 		// grid line
 		bool b_showGrid;
 		glm::vec4 m_gridColor;
@@ -46,6 +49,7 @@ namespace Lobster
 		bool b_showProfiler;
 		// boolean to indicate whether we are moving object in previous frame
 		bool b_isMoving = false;
+		bool b_mouseDownSelect = false;		
 		// transform object storing previous state of the game object prior to move
 		Transform m_transform;
 	public:
@@ -114,6 +118,37 @@ namespace Lobster
 			}
 		}
 
+		void SelectObject(glm::vec3 pos, glm::vec3 dir) {
+			const std::vector<GameObject*>& gameObjects = m_scene->GetGameObjects();
+			GameObject* nearestGameObject = nullptr; 
+			float tmin = 9999999.f;			
+			for (GameObject* gameObject : gameObjects) {
+				ColliderComponent* component = gameObject->GetComponent<ColliderComponent>();
+				if (component) {
+					float t = 9999999.f;
+					bool hit = component->Intersects(pos, dir, t);
+					if (hit && t < tmin) {
+						tmin = t;
+						nearestGameObject = gameObject;
+					}					
+				}
+			}	
+			// check gizmos
+			for (const GizmosCommand& cm : m_gizmosQueue) {
+				glm::vec3 dist = cm.position - pos;
+				float len = glm::length(dir);
+				float distlen = glm::length(dist);
+				glm::vec3 closeVec = glm::dot(glm::normalize(dist), glm::normalize(dir)) * distlen * dir - dist;
+				glm::vec3 closePt = cm.position + closeVec; 
+				float threshold = 0.02 * distlen; // 0.02 is a good size after testing
+				if (glm::length(closePt - cm.position) < threshold && distlen < tmin) {
+					tmin = distlen;
+					nearestGameObject = cm.source;
+				}
+			}
+			if (nearestGameObject) EditorLayer::s_selectedGameObject = nearestGameObject;
+		}
+
 		virtual void Show(bool* p_open) override
 		{			
 			// ====================================================
@@ -139,19 +174,30 @@ namespace Lobster
 			CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
 			camera->ResizeProjection(window_size.x / window_size.y);
 			void* image = camera->GetFrameBuffer()->Get();
-			ImGui::GetWindowDrawList()->AddImage(image, ImVec2(window_pos.x, window_pos.y), ImVec2(window_pos.x + window_size.x, window_pos.y + window_size.y), ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::GetWindowDrawList()->AddImage(image, ImVec2(window_pos.x, window_pos.y), ImVec2(window_pos.x + window_size.x, window_pos.y + window_size.y), ImVec2(0, 1), ImVec2(1, 0));						
 			
-			DrawCustomGizmos();
-
-			// Control the camera ONLY IF window is focused and mouse on the window
+			// Control the camera ONLY IF window is focused and mouse on the window			
 			{
 				float deltaTime = ImGui::GetIO().DeltaTime;
 				if (ImGui::IsWindowFocused() && insideWindow(ImGui::GetIO().MousePos, ImGui::GetWindowPos(), ImGui::GetWindowSize()))
 				{
 					glm::vec2 lastScroll = Input::GetLastScroll();
 					glm::vec2 mouseDelta = Input::GetMouseDelta();
+					// distinguish drag and click
+					if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) 
+						b_mouseDownSelect = false;
+					// Cast ray and select object (only activated by click but not drag)
+					if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !b_mouseDownSelect) {
+						// Need to initialize imguizmo earlier,
+						// call ImGuizmo::SetRect() before this scope
+						ImVec4 zmodir = ImGuizmo::GetCastedRayDirection();
+						glm::vec3 pos = m_editorCamera->transform.WorldPosition;
+						glm::vec3 dir = glm::vec3(zmodir.x, zmodir.y, zmodir.z);
+						SelectObject(pos, dir);
+						b_mouseDownSelect = true;
+					}
 					// Free Look
-					if (Input::IsKeyDown(GLFW_KEY_SPACE) && Input::IsMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
+					else if (Input::IsKeyDown(GLFW_KEY_SPACE) && Input::IsMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
 					{
 						m_editorCamera->transform.RotateEuler(-mouseDelta.y * 10.0f * deltaTime, m_editorCamera->transform.Right());
 						m_editorCamera->transform.RotateEuler(-mouseDelta.x * 10.0f * deltaTime, glm::vec3(0, 1, 0));
@@ -160,23 +206,26 @@ namespace Lobster
 					else if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_RIGHT)) {
 						float dx = -mouseDelta.x * deltaTime * 10.f;
 						float dy = -mouseDelta.y * deltaTime * 10.f;
-						m_editorCamera->transform.RotateAround(dy, m_editorCamera->transform.Right(), glm::vec3(0, 0, 0));
-						m_editorCamera->transform.RotateAround(dx, glm::vec3(0, 1, 0), glm::vec3(0, 0, 0));
+						m_editorCamera->transform.RotateAround(dy, m_editorCamera->transform.Right(), at);
+						m_editorCamera->transform.RotateAround(dx, glm::vec3(0, 1, 0), at);
 					}
 					// Pan
 					else if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_MIDDLE)) {
 						glm::vec3 pan = -mouseDelta.x * m_editorCamera->transform.Right() + mouseDelta.y * m_editorCamera->transform.Up();
-						m_editorCamera->transform.WorldPosition += pan * deltaTime * 2.0f;
+						glm::vec3 t = pan * deltaTime * 2.0f;
+						m_editorCamera->transform.WorldPosition += t;
+						at += t;
 					}
 					// Zoom
 					else if (lastScroll.y != 0 && insideWindow(ImGui::GetIO().MousePos, ImGui::GetWindowPos(), ImGui::GetWindowSize())) {
 						glm::vec3 zoom = -lastScroll.y * m_editorCamera->transform.Forward();
-						m_editorCamera->transform.WorldPosition += zoom * 50.0f * deltaTime;					
+						m_editorCamera->transform.WorldPosition += zoom * 50.0f * deltaTime;
 					}
 				}
 			}
-
+			
 			// ImGuizmo
+			DrawCustomGizmos();			
 			{
 				GameObject* gameObject = EditorLayer::s_selectedGameObject;
 				if (gameObject)
@@ -235,8 +284,7 @@ namespace Lobster
 							UndoSystem::GetInstance()->Push(new TransformCommand(gameObject, m_transform, gameObject->transform));
 						}
 					}
-				}
-				
+				}				
 				ImGui::End();
 				ImGui::PopStyleVar();
 			}
@@ -265,7 +313,6 @@ namespace Lobster
 				ImGui::End();
 				ImGui::PopStyleVar();
 			}
-
 		}
 
 		private:
@@ -293,7 +340,6 @@ namespace Lobster
 					ImGui::GetWindowDrawList()->AddImage(customGizmo, startPos, ImVec2(startPos.x + size.x, startPos.y + size.y));
 				}
 			}
-
 	};
 
 }

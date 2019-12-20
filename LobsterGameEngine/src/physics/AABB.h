@@ -37,6 +37,7 @@ namespace Lobster
 
 		void OnUpdate(double deltaTime) override;
         bool Intersects(ColliderComponent* other) override;
+		bool Intersects(glm::vec3 pos, glm::vec3 dir, float& t) override;
 
 	protected:
 		virtual void DebugDraw() override;

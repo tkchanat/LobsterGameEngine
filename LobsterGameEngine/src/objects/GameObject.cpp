@@ -20,14 +20,15 @@ namespace Lobster
 		// Delete all enabled components
 		for (Component* component : m_components)
 		{
-			if (component) delete component;
-			component = nullptr;
+			delete component;
 		}
+		m_components.clear();
 		// Delete all childrens
 		for (GameObject* child : m_children) 
 		{
 			child->Destroy();
 		}
+		m_children.clear();
     }
 
 	void GameObject::Destroy()
@@ -116,17 +117,18 @@ namespace Lobster
 			ImGui::EndPopup();
 		}
 
-		//	TODO: Assumed to be rigidbody / collider component for now. Ask about what components to include. (and change button name)
-		//	TODO: Ask for a component name perhaps?
-		//if (!m_physics) {
-		//	if (ImGui::Button("Add Rigidbody")) {
-		//		AddComponent(new Rigidbody());
-		//	}
-		//} else {
-		//	if (ImGui::Button("Add Collider")) {
-		//		AddComponent(new AABB());
-		//	}
-		//}
+		//todo: assumed to be rigidbody / collider component for now. ask about what components to include. (and change button name)
+		//todo: ask for a component name perhaps?
+		if (!GetComponent<PhysicsComponent>()) {
+			if (ImGui::Button("Add Rigidbody")) {
+				AddComponent(new Rigidbody());
+			}
+		}
+		else {
+			if (ImGui::Button("Add Collider")) {
+				AddComponent(new AABB());
+			}
+		}
 
 		//	Check if transform is active, ie: we are trying to change the value of transform.
 		bool isChanging = false;
@@ -199,7 +201,7 @@ namespace Lobster
 			return this;
 		}
 
-		m_components.push_back(component);
+		m_components.push_back(component);		
 		component->OnAttach();
 		return this;
 	}
