@@ -190,11 +190,13 @@ namespace Lobster
 					if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !b_mouseDownSelect) {
 						// Need to initialize imguizmo earlier,
 						// call ImGuizmo::SetRect() before this scope
+						/*
 						ImVec4 zmodir = ImGuizmo::GetCastedRayDirection();
 						glm::vec3 pos = m_editorCamera->transform.WorldPosition;
 						glm::vec3 dir = glm::vec3(zmodir.x, zmodir.y, zmodir.z);
 						SelectObject(pos, dir);
 						b_mouseDownSelect = true;
+						*/
 					}
 					// Free Look
 					else if (Input::IsKeyDown(GLFW_KEY_SPACE) && Input::IsMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
