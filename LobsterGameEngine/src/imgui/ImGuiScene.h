@@ -118,6 +118,26 @@ namespace Lobster
 			}
 		}
 
+		// Modified version from ImGuizmo::ComputeCameraRay()
+		void ComputeCameraRay(glm::vec3& origin, glm::vec3& direction)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
+			glm::mat4 viewMat = camera->GetViewMatrix();
+			glm::mat4 projMat = camera->GetProjectionMatrix();
+			glm::mat4 viewProjInv = glm::inverse(projMat * viewMat);
+
+			float mox = ((io.MousePos.x - window_pos.x) / window_size.x) * 2.f - 1.f;
+			float moy = (1.f - ((io.MousePos.y - window_pos.y) / window_size.y)) * 2.f - 1.f;
+
+			glm::vec4 rayOrigin = viewProjInv * glm::vec4(mox, moy, 0.f, 1.f);
+			rayOrigin /= rayOrigin.w;
+			origin = rayOrigin;
+			glm::vec4 rayEnd = viewProjInv * glm::vec4(mox, moy, 1.f, 1.f);
+			rayEnd /= rayEnd.w;
+			direction = glm::normalize(glm::vec3(rayEnd - rayOrigin));
+		}
+
 		void SelectObject(glm::vec3 pos, glm::vec3 dir) {
 			const std::vector<GameObject*>& gameObjects = m_scene->GetGameObjects();
 			GameObject* nearestGameObject = nullptr; 
@@ -151,6 +171,7 @@ namespace Lobster
 
 		virtual void Show(bool* p_open) override
 		{			
+			GameObject* gameObject = EditorLayer::s_selectedGameObject;
 			// ====================================================
 			// Scene window
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -175,7 +196,7 @@ namespace Lobster
 			camera->ResizeProjection(window_size.x / window_size.y);
 			void* image = camera->GetFrameBuffer()->Get();
 			ImGui::GetWindowDrawList()->AddImage(image, ImVec2(window_pos.x, window_pos.y), ImVec2(window_pos.x + window_size.x, window_pos.y + window_size.y), ImVec2(0, 1), ImVec2(1, 0));						
-			
+						
 			// Control the camera ONLY IF window is focused and mouse on the window			
 			{
 				float deltaTime = ImGui::GetIO().DeltaTime;
@@ -188,15 +209,11 @@ namespace Lobster
 						b_mouseDownSelect = false;
 					// Cast ray and select object (only activated by click but not drag)
 					if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !b_mouseDownSelect) {
-						// Need to initialize imguizmo earlier,
-						// call ImGuizmo::SetRect() before this scope
-						/*
-						ImVec4 zmodir = ImGuizmo::GetCastedRayDirection();
-						glm::vec3 pos = m_editorCamera->transform.WorldPosition;
-						glm::vec3 dir = glm::vec3(zmodir.x, zmodir.y, zmodir.z);
+						// Need to initialize imguizmo earlier
+						glm::vec3 pos, dir;
+						ComputeCameraRay(pos, dir);
 						SelectObject(pos, dir);
 						b_mouseDownSelect = true;
-						*/
 					}
 					// Free Look
 					else if (Input::IsKeyDown(GLFW_KEY_SPACE) && Input::IsMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
@@ -228,8 +245,7 @@ namespace Lobster
 			
 			// ImGuizmo
 			DrawCustomGizmos();			
-			{
-				GameObject* gameObject = EditorLayer::s_selectedGameObject;
+			{							
 				if (gameObject)
 				{
 					glm::mat4 transformMatrix = gameObject->transform.GetMatrix();

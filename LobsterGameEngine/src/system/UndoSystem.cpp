@@ -68,7 +68,6 @@ namespace Lobster {
 
 	void UndoSystem::Push(Command* command) {
 		m_redo.empty();
-
 		m_undo.push(command);
 		m_undo_str.push(command->ToString());
 	}
