@@ -17,7 +17,8 @@ namespace Lobster {
 		void OnImGuiRender();
 
 		virtual void DebugDraw() = 0;
-		virtual bool Intersects(ColliderComponent* collider) = 0;
+		virtual bool Intersects(ColliderComponent* collider) = 0;	
+		virtual bool Intersects(glm::vec3 pos, glm::vec3 dir, float& t) = 0;	// ray intersection
 
 	protected:
 		bool m_draw = true;

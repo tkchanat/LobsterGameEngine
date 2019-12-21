@@ -15,6 +15,7 @@ namespace Lobster
 	{
 	private:
 		Scene* scene;
+		const float spacer_width = 10.f;
 		const static int numBtn = 7;		
 		std::string image_path[numBtn] = { 
 			"textures/ui/undo.png", "textures/ui/undo_grey.png",
@@ -70,6 +71,8 @@ namespace Lobster
 				ImGui::PopItemFlag();
 			}
 			ImGui::SameLine();
+			ImGui::Dummy(ImVec2(spacer_width, 0.0f));
+			ImGui::SameLine();
 			// Plane Generation
 			if (ImGui::ImageButton(m_tex[4]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {					
 				GameObject* plane = new GameObject("Plane");
@@ -89,7 +92,8 @@ namespace Lobster
 				GameObject* sphere = new GameObject("Sphere");
 				sphere->AddComponent(new MeshComponent(MeshFactory::Sphere(1, 32, 32)));
 				scene->AddGameObject(sphere);
-			}			
+			}
+			ImGui::Dummy(ImVec2(spacer_width, 0.0f));
 			ImGui::End();
 		}
 	};

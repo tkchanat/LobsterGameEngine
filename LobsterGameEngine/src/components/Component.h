@@ -31,8 +31,8 @@ namespace Lobster
 		virtual void OnDetach() {}
         virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender() = 0;
-        void SetOwner(GameObject* owner) { gameObject = owner; }
-        inline void SetOwnerTransform(Transform* t) { transform = t; }
+        void virtual SetOwner(GameObject* owner) { gameObject = owner; }
+        inline virtual void SetOwnerTransform(Transform* t) { transform = t; }
         inline void RemoveOwner() { gameObject = nullptr; }
 		inline GameObject* GetOwner() { return gameObject; }	//	TODO: Discuss if this class is needed, used for print intersection result only for now.
         inline bool IsEnabled() { return m_enabled; }

@@ -47,6 +47,7 @@ namespace Lobster
 		GizmosCommand command;
 		command.texture = "textures/ui/camera.png";
 		command.position = transform->WorldPosition;
+		command.source = gameObject;
 		ImGuiScene::SubmitGizmos(command);
 #endif
     }

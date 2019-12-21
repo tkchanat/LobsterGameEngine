@@ -29,6 +29,7 @@ namespace Lobster
         Scene* AddGameObject(GameObject* gameObject);
 		Scene* RemoveGameObject(std::string name);
 		Scene* RemoveGameObject(GameObject* gameObject);
+		const std::vector<GameObject*>& GetGameObjects();
 		GameObject* GetGameObject(GameObject* gameObject);
 		bool IsObjectNameDuplicated(std::string name, std::string except = "");
 		inline void SetActiveCamera(CameraComponent* camera) { m_activeCamera = camera; }
