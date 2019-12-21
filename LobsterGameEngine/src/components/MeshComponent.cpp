@@ -1,4 +1,6 @@
 #include "pch.h"
+#include "objects/GameObject.h"
+#include "physics/Rigidbody.h"
 #include "MeshComponent.h"
 #include "system/FileSystem.h"
 #include "graphics/Renderer.h"
@@ -45,6 +47,13 @@ namespace Lobster
 		memset(m_meshes.data(), 0, sizeof(VertexArray*) * m_meshes.size());
     }
     
+	void MeshComponent::OnAttach()
+	{
+		Rigidbody* rigidbody = new Rigidbody();
+		rigidbody->SetEnabled(false);
+		gameObject->AddComponent(rigidbody);
+	}
+
 	void MeshComponent::OnUpdate(double deltaTime)
 	{
 		//	Submit render command

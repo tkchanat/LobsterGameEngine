@@ -1,0 +1,37 @@
+{
+    "Shader": "shaders/Phong.glsl",
+    "Texture2D": {
+        "DiffuseMap": "textures/sibenik/KAMEN-stup.png",
+        "NormalMap": ""
+    },
+    "UniformBuffer": {
+        "ubo_Phong": {
+            "DiffuseColor": [
+                0.7341,
+                0.7306,
+                0.6741
+            ],
+            "Shininess": [
+                0.0
+            ],
+            "SpecularColor": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "UseDiffuseMap": [
+                true
+            ],
+            "UseNormalMap": [
+                false
+            ],
+            "padding0": [
+                0.0,
+                0.0
+            ],
+            "padding1": [
+                0.0
+            ]
+        }
+    }
+}

@@ -3,6 +3,7 @@
 #include "CameraComponent.h"
 #include "imgui/ImGuiScene.h"
 #include "graphics/FrameBuffer.h"
+#include "physics/Rigidbody.h"
 
 namespace Lobster
 {
@@ -51,6 +52,13 @@ namespace Lobster
 		ImGuiScene::SubmitGizmos(command);
 #endif
     }
+
+	void CameraComponent::OnAttach()
+	{
+		Rigidbody* rigidbody = new Rigidbody();
+		rigidbody->SetEnabled(false);
+		gameObject->AddComponent(rigidbody);
+	}
 
 	void CameraComponent::OnImGuiRender()
 	{

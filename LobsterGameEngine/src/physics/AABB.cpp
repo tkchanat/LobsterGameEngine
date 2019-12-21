@@ -17,7 +17,7 @@ namespace Lobster
     // in each axis from those 8 points to find the two points(min & max)
     // points of your new AABB.
 
-    AABB::AABB(Transform transform, bool draw) :
+    AABB::AABB(PhysicsComponent* physics, Transform transform, bool draw) :
 		Center(glm::vec3(0, 0, 0)),
 		Min(glm::vec3(0, 0, 0)),
 		Max(glm::vec3(0, 0, 0)),
@@ -25,7 +25,7 @@ namespace Lobster
         m_debugMaterial(nullptr),
         m_debugMesh(nullptr),
         m_debugVertexBuffer(nullptr),
-		ColliderComponent(transform, draw)
+		Collider(physics, transform, draw)
     {
         // member variable initialization
         memset(m_debugData, 0, sizeof(float) * 24);
@@ -54,8 +54,8 @@ namespace Lobster
     }
 
 	void AABB::SetOwner(GameObject* owner) {
-		gameObject = owner;
-		std::pair<glm::vec3, glm::vec3> pair = owner->GetComponent<MeshComponent>()->GetBound();
+		//gameObject = owner;
+		std::pair<glm::vec3, glm::vec3> pair = owner->GetBound();
 		Min = pair.first;
 		Max = pair.second;
 		SetVertices(1);
@@ -75,7 +75,7 @@ namespace Lobster
     {
 #ifdef LOBSTER_BUILD_DEBUG
         // validate data, and return if we haven't define game object yet
-		if (!gameObject) return;
+		if (!physics) return;
         if(!m_debugMaterial || !m_debugMesh || Min == Max)
         {
             throw std::runtime_error("Oops... This AABB is not ready to be drawn!");
@@ -97,7 +97,7 @@ namespace Lobster
 #endif
     }
 
-    bool AABB::Intersects(ColliderComponent* component)
+    bool AABB::Intersects(Collider* component)
     {
 		//	We can assume the given component is also AABB for now.
 		AABB* other = dynamic_cast<AABB*>(component);
@@ -111,13 +111,14 @@ namespace Lobster
 
 	bool AABB::Intersects(glm::vec3 pos, glm::vec3 dir, float& t)
 	{
+		glm::vec3 epsilon(0.01, 0.01, 0.01);
 		glm::vec3 dist = Center - pos;
 		float len = glm::length(dir);
 		float distlen = glm::length(dist);
 		glm::vec3 closeVec = glm::dot(glm::normalize(dist), glm::normalize(dir)) * distlen * dir - dist;
 		glm::vec3 closePt = Center + closeVec;
-		glm::vec3 gmax = Center + Max;
-		glm::vec3 gmin = Center + Min;
+		glm::vec3 gmax = Center + Max - epsilon;
+		glm::vec3 gmin = Center + Min + epsilon;
 		if (closePt.x < gmax.x && closePt.y < gmax.y && closePt.z < gmax.z &&
 			closePt.x > gmin.x && closePt.y > gmin.y && closePt.z > gmin.z) {
 			t = distlen;

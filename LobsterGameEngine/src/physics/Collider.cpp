@@ -1,12 +1,13 @@
 #pragma once
 #include "pch.h"
-#include "physics/ColliderComponent.h"
+#include "physics/Collider.h"
 #include "objects/GameObject.h"
+#include "physics/PhysicsComponent.h"
 
 namespace Lobster {
-	const char* ColliderComponent::ColliderType[] = { "Box Collider", "Sphere Collider" };
+	const char* Collider::ColliderType[] = { "Box Collider", "Sphere Collider" };
 
-	void ColliderComponent::OnImGuiRender() {
+	void Collider::OnImGuiRender() {
 		ImGui::PushID(this);
 		if (ImGui::CollapsingHeader(ColliderType[m_colliderType], &m_show, ImGuiTreeNodeFlags_DefaultOpen)) {
 			ImGui::Checkbox("Enabled?", &m_enabled);
@@ -33,7 +34,7 @@ namespace Lobster {
 
 		//	TODO: Confirmation Window.
 		if (!m_show) {
-			gameObject->GetComponent<PhysicsComponent>()->RemoveCollider(this);
+			physics->RemoveCollider(this);
 		}
 	}
 }

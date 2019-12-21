@@ -8,8 +8,8 @@ namespace Lobster {
 	void Rigidbody::OnUpdate(double deltaTime) {
 		//	We should update but not draw the bounding box. Update and draw the collider according to user's option.
 		m_boundingBox->OnUpdate(deltaTime);
-		for (ColliderComponent* collider : m_colliders) {
-			collider->OnUpdate(deltaTime);
+		for (Collider* collider : m_colliders) {
+			if (collider->IsEnabled()) collider->OnUpdate(deltaTime);
 		}
 
 		if (m_enabled) {
@@ -17,13 +17,19 @@ namespace Lobster {
 		}
 	}
 
+	void Rigidbody::OnAttach() {
+		AABB* boundingBox = new AABB(this, Transform(), false);
+		std::pair<glm::vec3, glm::vec3> pair = gameObject->GetBound();
+		boundingBox->Min = pair.first;
+		boundingBox->Max = pair.second;
+		boundingBox->SetOwner(gameObject);
+		boundingBox->SetOwnerTransform(transform);
+
+		m_boundingBox = boundingBox;
+	}
+
 	void Rigidbody::OnImGuiRender() {
 		bool statement;
-		//if (gameObject->GetColliders().size() == 0) {
-		//	statement = ImGui::CollapsingHeader("Rigidbody", &m_show, ImGuiTreeNodeFlags_DefaultOpen);
-		//} else {
-		//	statement = ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen);
-		//}
 		
 		if (statement) {
 			ImGui::Checkbox("Enabled?", &m_enabled);
@@ -36,7 +42,7 @@ namespace Lobster {
 		}
 
 		//	Call colliders OnImGuiRender, by invoking base class OnImGuiRender.
-		for (ColliderComponent* collider : m_colliders) {
+		for (Collider* collider : m_colliders) {
 			collider->OnImGuiRender();
 		}
 	}

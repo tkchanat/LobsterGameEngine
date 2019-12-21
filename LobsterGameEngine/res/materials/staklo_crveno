@@ -1,0 +1,37 @@
+{
+    "Shader": "shaders/Phong.glsl",
+    "Texture2D": {
+        "DiffuseMap": "",
+        "NormalMap": ""
+    },
+    "UniformBuffer": {
+        "ubo_Phong": {
+            "DiffuseColor": [
+                0.4412,
+                0.1039,
+                0.049
+            ],
+            "Shininess": [
+                0.0
+            ],
+            "SpecularColor": [
+                0.8824,
+                0.2078,
+                0.098
+            ],
+            "UseDiffuseMap": [
+                false
+            ],
+            "UseNormalMap": [
+                false
+            ],
+            "padding0": [
+                0.0,
+                0.0
+            ],
+            "padding1": [
+                0.0
+            ]
+        }
+    }
+}

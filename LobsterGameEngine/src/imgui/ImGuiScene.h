@@ -143,7 +143,10 @@ namespace Lobster
 			GameObject* nearestGameObject = nullptr; 
 			float tmin = 9999999.f;			
 			for (GameObject* gameObject : gameObjects) {
-				ColliderComponent* component = gameObject->GetComponent<ColliderComponent>();
+				PhysicsComponent* physics = gameObject->GetComponent<PhysicsComponent>();
+				if (!physics) continue;
+
+				Collider* component = physics->GetBoundingBox();
 				if (component) {
 					float t = 9999999.f;
 					bool hit = component->Intersects(pos, dir, t);

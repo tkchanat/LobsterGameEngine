@@ -27,7 +27,7 @@ namespace Lobster
 		std::vector<GameObject*> m_children;
         std::vector<Component*> m_components;
 		//	Shortcut to access the vector of colliders.
-		std::vector<ColliderComponent*> m_colliders;
+		std::vector<Collider*> m_colliders;
 		//	Boolean to indicate whether we are changing object in previous frame.
 		bool b_isChanging = false;
 		//	Transform object to store previous state of game object prior to change.
@@ -45,6 +45,7 @@ namespace Lobster
 		GameObject* AddComponent(Component* component);
 		GameObject* AddChild(GameObject* child);
 		template<typename T> T* GetComponent();
+		std::pair<glm::vec3, glm::vec3> GetBound();
 		inline unsigned long long GetId() { return m_id; }
         inline std::string GetName() const { return m_name; }
 		inline GameObject* GetParent() const { return m_parent; }
