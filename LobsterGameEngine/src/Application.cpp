@@ -4,6 +4,7 @@
 #include "system/Input.h"
 
 //  Placeholder
+#include "audio/AudioSystem.h"
 #include "components/ComponentCollection.h"
 #include "events/EventDispatcher.h"
 #include "events/EventQueue.h"
@@ -60,7 +61,8 @@ namespace Lobster
 		JsonFile config("../config.json");
 
 		// Independent system initialization
-		//ThreadPool::Initialize(32);
+		ThreadPool::Initialize(16);
+		AudioSystem::Initialize();
 		Profiler::Initialize();
 		EventDispatcher::Initialize();
 		EventQueue::Initialize();
@@ -93,11 +95,11 @@ namespace Lobster
 		Timer loadTimer;
         m_scene = new Scene();
 
-		//ThreadPool::Enqueue([]() {
-		//	// This job should be running in a separate thread without blocking the main thread
-		//	Sleep(10000); // sleep for 10 seconds
-		//	LOG("ThreadPool is working! :D");
-		//});
+		ThreadPool::Enqueue([]() {
+			// This job should be running in a separate thread without blocking the main thread
+			Sleep(10000); // sleep for 10 seconds
+			LOG("ThreadPool is working! :D");
+		});
 
 
 		GameObject* barrel = new GameObject("barrel");

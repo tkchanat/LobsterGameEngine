@@ -168,7 +168,8 @@ project "LobsterGameEngine"
 	targetdir ("bin/%{cfg.buildcfg}")
 	objdir ("bin/int/%{cfg.buildcfg}")
 	libdirs	{
-		"%{prj.location}/vendor/assimp/lib"
+		"%{prj.location}/vendor/assimp/lib",
+		"%{prj.location}/vendor/openal/libs/Win64"
 	}
 
 	files {
@@ -187,7 +188,8 @@ project "LobsterGameEngine"
 		"%{prj.location}/vendor/imgui",
 		"%{prj.location}/vendor/imguizmo",
 		"%{prj.location}/vendor/json/include",
-		"%{prj.location}/vendor/spdlog/include"
+		"%{prj.location}/vendor/spdlog/include",
+		"%{prj.location}/vendor/openal/include"
 	}
 
 	filter "system:windows"
@@ -205,7 +207,8 @@ project "LobsterGameEngine"
 			"ImGui",
 			"ImGuizmo",
 			"GLAD",
-			"opengl32"
+			"opengl32",
+			"OpenAL32"
 		}
 
 		prebuildcommands {
