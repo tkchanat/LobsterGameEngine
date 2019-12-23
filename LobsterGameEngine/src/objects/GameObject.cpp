@@ -119,6 +119,7 @@ namespace Lobster
 
 		//todo: assumed to be rigidbody / collider component for now. ask about what components to include. (and change button name)
 		//todo: ask for a component name perhaps?
+		// Note: this part is moved to ImGuiProperties::Show()
 		if (!GetComponent<PhysicsComponent>()) {
 			if (ImGui::Button("Add Rigidbody")) {
 				AddComponent(new Rigidbody());

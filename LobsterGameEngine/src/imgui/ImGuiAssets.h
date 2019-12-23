@@ -3,13 +3,16 @@
 #include "layer/EditorLayer.h"
 
 #include "ImGuiFileBrowser.h"
+#include "audio/AudioSystem.h"
 
 namespace Lobster
 {
 	class ImGuiAssets : public ImGuiComponent
 	{
-	private:
+	private:		
 		int itemSelected = -1;
+		int audioSelected = -1;
+		AudioClip* audioPlaying = nullptr;
 		std::string subdirSelected = "meshes"; // by default
 		std::string pathSelected;
 		ImGui::FileBrowser fileDialog;
@@ -84,6 +87,56 @@ namespace Lobster
 			}
 		}
 
+		void DisplayAudioPanel() {
+			if (ImGui::Button("Load Selected")) {
+				if (itemSelected != -1)
+					AudioSystem::AddAudioClip(FileSystem::Path(pathSelected).c_str());
+			}
+			ImGui::Text("Loaded Audio Files:");
+			ImGui::BeginChild("Loaded Audio", ImVec2(0, -25), true);
+			{
+				int i = 0;
+				for (AudioClip* audioClip : AudioSystem::GetAudioList()) {
+					std::string displayName = audioClip->GetName();
+					if (audioClip == audioPlaying) displayName = "[PLAYING] " + displayName;
+					if (ImGui::Selectable(displayName.c_str(), audioSelected == i)) {
+						audioSelected = i;
+					}
+					i++;
+				}
+			}
+			ImGui::EndChild();
+
+			if (audioSelected == -1) {
+				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+			}
+			if (audioPlaying) {
+				if (ImGui::Button("Stop")) {
+					audioPlaying->Stop();
+					audioPlaying = nullptr;
+				}
+			}
+			else {
+				if (ImGui::Button("Play")) {
+					AudioClip* ac = AudioSystem::GetAudioList()[audioSelected];
+					audioPlaying = ac;
+					ThreadPool::Enqueue([ac]() {
+						ac->Play();
+					});
+				}
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Unload")) {
+				AudioClip* ac = AudioSystem::GetAudioList()[audioSelected];
+				AudioSystem::RemoveAudioClip(ac);
+			}
+			if (audioSelected == -1) {
+				ImGui::PopStyleVar();
+				ImGui::PopItemFlag();				
+			}
+		}
+
 		virtual void Show(bool* p_open) override
 		{
 			if (!ImGui::Begin("Assets", nullptr)) {
@@ -107,6 +160,7 @@ namespace Lobster
 				for (const auto& iter : structure)
 				{
 					if (ImGui::Selectable(iter.first.c_str(), !subdirSelected.compare(iter.first))) {
+						itemSelected = audioSelected = -1;
 						subdirSelected = iter.first;
 					}
 				}
@@ -122,10 +176,12 @@ namespace Lobster
 			if (fileDialog.HasSelected())
 			{
 				LOG(fileDialog.GetSelected().string());
-				FileSystem::GetInstance()->addResource(fileDialog.GetSelected().string());
+				if (subdirSelected == "audio")
+					FileSystem::GetInstance()->addResource(fileDialog.GetSelected().string());
 				fileDialog.ClearSelected();
 			}
 
+			// The "Add" and "Delete" function in mesh
 			if (subdirSelected == "meshes" && itemSelected != -1) {				
 				ImGui::SameLine();
 				std::string path = FileSystem::GetInstance()->Path(pathSelected);				
@@ -141,8 +197,10 @@ namespace Lobster
 			}
 
 			// The region for displaying files that included as asset
-			ImGui::BeginChild("Files", ImVec2(0, 0), true);
+			int height = (subdirSelected == "audio" ? 300 : 0);
+			ImGui::BeginChild("Files", ImVec2(0, height), true);
 			{
+				// Note (AG): I am thinking whether to change it into the way of audio or not
 				int i = 0;
 				fs::path subdir = FileSystem::GetCurrentWorkingDirectory() / fs::path(subdirSelected);
 				for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {
@@ -155,6 +213,11 @@ namespace Lobster
 				}
 			}
 			ImGui::EndChild();
+
+			// a section to show audios under track
+			if (subdirSelected == "audio") {
+				DisplayAudioPanel();
+			}
 
 			ImGui::End();
 		}

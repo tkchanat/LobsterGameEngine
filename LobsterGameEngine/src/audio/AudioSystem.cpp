@@ -41,57 +41,15 @@ namespace Lobster
 		alListener3f(AL_VELOCITY, 0, 0, 0);
 		alListenerfv(AL_ORIENTATION, listenerOri);
 
-		// Source Generation
-		// Note: keep every data stored in main thread
-		// TODO: make a AudioClip class managing the source and audio buffer objects
-		ALuint source;
-		ALuint buffer;
-		alGenSources((ALuint)1, &source);
-		alGenBuffers(1, &buffer);
-
-		alSourcef(source, AL_PITCH, 1);
-		alSourcef(source, AL_GAIN, 1);
-		alSource3f(source, AL_POSITION, 0, 0, 0);
-		alSource3f(source, AL_VELOCITY, 0, 0, 0);
-		alSourcei(source, AL_LOOPING, AL_FALSE);
-
-		// Audio Loading
-		// Note: do not ever load the audio when before it's played (loading takes time), pre-load helps
-		// TODO: audio loading can be done in AudioSystem initialization stage, load all necessary AudioClip into memory
-		ALsizei size, freq;
-		ALenum format;
-		ALvoid *data;
-		ALboolean loop = AL_FALSE;
-		LoadWAVFile(FileSystem::Path("audio/test.wav").c_str(), &format, &data, &size, &freq);
-
-		// Bind to Buffer
-		// Note: just like loading a CD into a CD player
-		alBufferData(buffer, format, data, size, freq);
-		alSourcei(source, AL_BUFFER, buffer);
-
-		// Play the Audio
-		// Note: the following code must be executed in a separated thread. otherwise, the playback will block the main thread execution
-		ThreadPool::Enqueue([source, buffer]() {
-			// This job should be running in a separate thread without blocking the main thread
-			ALint source_state;
-			alSourcePlay(source);
-			alGetSourcei(source, AL_SOURCE_STATE, &source_state);
-			while (source_state == AL_PLAYING) {
-				alGetSourcei(source, AL_SOURCE_STATE, &source_state);
-			}
-		});
-
-		// Release memory
-		// Note: do not clean up immediately, since another thread is using this data to play audio
-		// TODO: put these lines in AudioClip's destructor
-		//alDeleteSources(1, &source);
-		//alDeleteBuffers(1, &buffer);
-
 		INFO("AudioSystem initialized!");
 	}
 
 	AudioSystem::~AudioSystem()
 	{
+		// Clear all audio clips
+		for (AudioClip* ac : m_audioClips) {
+			delete ac;
+		}
 		// Release all OpenAL related resources
 		INFO("AudioSystem shutting down...");
 		m_device = alcGetContextsDevice(m_context);
@@ -109,6 +67,35 @@ namespace Lobster
 		s_instance = new AudioSystem();
 	}
 
+	void AudioSystem::AddAudioClip(const char* file, AudioType type) {
+		// TODO base on type, classify into different loading method
+		// load the file
+		ALsizei size, freq;
+		ALenum format;
+		ALvoid *data;
+		LoadWAVFile(file, &format, &data, &size, &freq);
+		// if loaded successfully, create AudioClip
+		AudioClip* ac = new AudioClip(fs::path(file).filename().string().c_str());
+		ac->BindBuffer(format, data, size, freq);
+		s_instance->m_audioClips.push_back(ac);
+	}
+
+	void AudioSystem::RemoveAudioClip(AudioClip* target) {		
+		std::remove(s_instance->m_audioClips.begin(), s_instance->m_audioClips.end(), target);
+		s_instance->m_audioClips.pop_back();
+	}
+
+	void AudioSystem::RemoveAudioClip(std::string name) {
+		AudioClip* tracer = nullptr;
+		for (AudioClip* ac : s_instance->m_audioClips) {
+			if (ac->GetName().compare(name) == 0) {
+				tracer = ac;
+				break;
+			}
+		}
+		if (tracer) RemoveAudioClip(tracer);
+	}
+
 	void AudioSystem::ListAllDevices(const ALCchar * devices)
 	{
 		const ALCchar *device = devices, *next = devices + 1;
@@ -122,6 +109,10 @@ namespace Lobster
 			next += (len + 2);
 		}		
 		LOG("===============================================================");
+	}
+
+	std::vector<AudioClip*>& AudioSystem::GetAudioList() {
+		return s_instance->m_audioClips;
 	}
 
 	void AudioSystem::LoadWAVFile(const char * path, ALsizei * format, ALvoid ** data, ALsizei * size, ALsizei * freq)
