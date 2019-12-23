@@ -16,7 +16,7 @@ namespace Lobster {
 	}
 
 	void AudioSource::OnImGuiRender() {
-		if (ImGui::CollapsingHeader("Audio Source", ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader("Audio Source", &m_open, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			if (ImGui::BeginCombo("Audio Clip", (m_source ? m_source->GetName().c_str() : "None"))) {
 				for (AudioClip* audioClip : AudioSystem::GetAudioList()) {
@@ -41,8 +41,12 @@ namespace Lobster {
 				ImGui::TreePop();
 			}
 		}
+		
+		// Remove the component upon the cross button click
+		if (!m_open) {
+			gameObject->RemoveComponent(this);
+		}
 	}
-
 
 	// ========= Members of AudioListener ==========
 	AudioListener::AudioListener() {
@@ -54,8 +58,13 @@ namespace Lobster {
 	}
 
 	void AudioListener::OnImGuiRender() {
-		if (ImGui::CollapsingHeader("Audio Listener", ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader("Audio Listener", &m_open, ImGuiTreeNodeFlags_DefaultOpen)) {
 			ImGui::Text("Hi I am listening");
+		}
+
+		// Remove the component upon the cross button click
+		if (!m_open) {
+			gameObject->RemoveComponent(this);
 		}
 	}
 

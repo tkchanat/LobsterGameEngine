@@ -2,6 +2,7 @@
 #include "Component.h"
 #include "audio/AudioSystem.h"
 #include "audio/AudioClip.h"
+#include "objects/GameObject.h"
 
 namespace Lobster {
 
@@ -11,6 +12,7 @@ namespace Lobster {
 	private:		
 		AudioClip* m_source = nullptr;
 		// basic setting
+		bool m_open = true;		// Remove the component when this is false
 		bool m_muted = false;
 		float m_gain = 1.0;
 		float m_pitch = 1.0;		
@@ -27,6 +29,7 @@ namespace Lobster {
 	};
 
 	class AudioListener : public Component {
+		bool m_open = true;		// Remove the component when this is false
 	public:
 		AudioListener();
 		virtual void OnUpdate(double deltaTime);
