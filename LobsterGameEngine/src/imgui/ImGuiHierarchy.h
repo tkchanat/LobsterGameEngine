@@ -33,9 +33,9 @@ namespace Lobster
 				ImGui::EndPopup();
 			}
 		}
-		void ShowChildren(std::vector<GameObject*>& children) {
+		void ShowChildren(std::vector<std::shared_ptr<GameObject>>& children) {
 			for (int i = 0; i < children.size(); ++i) {
-				GameObject* gameObject = children[i];
+				GameObject* gameObject = children[i].get();
 
 				ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_SpanFullWidth;
 				if (EditorLayer::s_selectedGameObject == gameObject) node_flags |= ImGuiTreeNodeFlags_Selected;

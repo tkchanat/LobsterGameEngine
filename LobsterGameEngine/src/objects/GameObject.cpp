@@ -24,17 +24,18 @@ namespace Lobster
 		}
 		m_components.clear();
 		// Delete all childrens
-		for (GameObject* child : m_children) 
-		{
-			child->Destroy();
-		}
+		// Note: no need for explicit release of memory due to smart pointers
+		//for (GameObject* child : m_children) 
+		//{
+		//	child->Destroy();
+		//}
 		m_children.clear();
     }
 
 	void GameObject::Destroy()
 	{
 		if (m_parent) {
-			auto index = std::find(m_parent->m_children.begin(), m_parent->m_children.end(), this);
+			auto index = std::find(m_parent->m_children.begin(), m_parent->m_children.end(), std::shared_ptr<GameObject>(this));
 			if (index == m_parent->m_children.end()) {
 				throw std::runtime_error("Attempting to destroy an invalid GameObject");
 				return;
@@ -59,7 +60,7 @@ namespace Lobster
         }
 
 		// Update all children
-		for (GameObject* child : m_children) {
+		for (auto child : m_children) {
 			child->OnUpdate(deltaTime);
 		}
     }
@@ -214,7 +215,7 @@ namespace Lobster
 	GameObject * GameObject::AddChild(GameObject * child)
 	{
 		child->m_parent = this;
-		m_children.push_back(child);
+		m_children.emplace_back(child);
 		return this;
 	}
 
