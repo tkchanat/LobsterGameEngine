@@ -9,19 +9,9 @@ namespace Lobster {
 	const char* PhysicsComponent::PhysicsBodyTypes[] = { "Rigid body", "Non-rigid body" };
 	const char* PhysicsComponent::PhysicsType[] = { "Block", "Overlap", "Ignore" };
 
-	void PhysicsComponent::SetOwner(GameObject* owner) {
-		gameObject = owner;
-		AABB* boundingBox = new AABB(Transform(), false);
-		std::pair<glm::vec3, glm::vec3> pair = owner->GetComponent<MeshComponent>()->GetBound();
-		boundingBox->Min = pair.first;
-		boundingBox->Max = pair.second;
-		boundingBox->SetOwner(gameObject);
-		m_boundingBox = boundingBox;
-	}
-
-	void PhysicsComponent::RemoveCollider(ColliderComponent* collider) {
+	void PhysicsComponent::RemoveCollider(Collider* collider) {
 		int i = 0;
-		for (ColliderComponent* c : m_colliders) {
+		for (Collider* c : m_colliders) {
 			if (c == collider) m_colliders.erase(m_colliders.begin() + i);
 			i++;
 		}

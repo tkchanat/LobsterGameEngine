@@ -13,6 +13,7 @@ namespace Lobster {
 			m_acceleration(glm::vec3(0, 0, 0))
 		{}
 
+		void OnAttach() override;
 		void OnUpdate(double deltaTime) override;
 		void OnImGuiRender() override;
 

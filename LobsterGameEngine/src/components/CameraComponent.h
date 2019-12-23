@@ -35,6 +35,7 @@ namespace Lobster
         CameraComponent(ProjectionType type);
         ~CameraComponent();
 		void ResizeProjection(float aspectRatio);
+		virtual void OnAttach() override;
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 		glm::mat4 GetViewMatrix() const;

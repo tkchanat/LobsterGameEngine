@@ -40,6 +40,7 @@ namespace Lobster
 	public:
 		LightComponent(LightType type = DIRECTIONAL_LIGHT);
 		~LightComponent();
+		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 		inline LightType GetType() const{ return m_type; }

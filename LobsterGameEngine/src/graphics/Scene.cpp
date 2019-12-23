@@ -45,26 +45,27 @@ namespace Lobster
 		//	First perform physics update.
 		//	TODO: Some type of structure to record which pair of game objects / colliders intersected.
 
-		std::vector<ColliderComponent*> colliders;
+		std::vector<Collider*> colliders;
 		for (GameObject* gameObject : m_gameObjects) {
 			//	TODO: Physics Update
 			Rigidbody* rigidbody = gameObject->GetComponent<Rigidbody>();
-			if (!rigidbody) continue;
-			for (ColliderComponent* collider : rigidbody->GetColliders()) {
-				if (collider->IsEnabled() && collider->GetOwner()->GetComponent<PhysicsComponent>()->GetPhysicsType() != 2) colliders.push_back(collider);
+			if (!rigidbody || !rigidbody->IsEnabled()) continue;
+			for (Collider* collider : rigidbody->GetColliders()) {
+				if (collider->IsEnabled() && collider->GetPhysics()->GetPhysicsType() != 2)
+					colliders.push_back(collider);
 			}
 		}
 
 		//	Next, do collision check on all physics components we extracted.
 		//	Currently, we adapted a naive approach of comparing all pairs of AABB.
 		int i = 0;
-		for (ColliderComponent* c1 : colliders) {
+		for (Collider* c1 : colliders) {
 			int j = 0;
-			for (ColliderComponent* c2 : colliders) {
+			for (Collider* c2 : colliders) {
 				if (i <= j) break;
 				//	TODO: Actually use the computed result here instead of printing.
-				bool intersect = c1->Intersects(c2) && (c1->GetOwner() != c2->GetOwner());
-				if (intersect) LOG("{} intersects with {} (Type: {})", c1->GetOwner()->GetName(), c2->GetOwner()->GetName(), PhysicsComponent::PhysicsType[std::max(c1->GetOwner()->GetComponent<PhysicsComponent>()->GetPhysicsType(), c2->GetOwner()->GetComponent<PhysicsComponent>()->GetPhysicsType())]);
+				bool intersect = c1->Intersects(c2) && (c1->GetPhysics() != c2->GetPhysics());
+				if (intersect) LOG("{} intersects with {} (Type: {})", c1->GetPhysics()->GetOwner()->GetName(), c2->GetPhysics()->GetOwner()->GetName(), PhysicsComponent::PhysicsType[std::max(c1->GetPhysics()->GetPhysicsType(), c2->GetPhysics()->GetPhysicsType())]);
 				j++;
 			}
 			i++;

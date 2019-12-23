@@ -36,6 +36,7 @@ namespace Lobster
         inline void RemoveOwner() { gameObject = nullptr; }
 		inline GameObject* GetOwner() { return gameObject; }	//	TODO: Discuss if this class is needed, used for print intersection result only for now.
         inline bool IsEnabled() { return m_enabled; }
+		inline void SetEnabled(bool enabled) { m_enabled = enabled; }
     protected:
         Component() : m_enabled(true), gameObject(nullptr), transform(nullptr) {}
     };

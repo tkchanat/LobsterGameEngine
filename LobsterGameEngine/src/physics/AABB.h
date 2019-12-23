@@ -1,5 +1,5 @@
 #pragma once
-#include "physics/ColliderComponent.h"
+#include "physics/Collider.h"
 
 namespace Lobster
 {
@@ -16,7 +16,7 @@ namespace Lobster
 	//	TODO 2:
 	//	After completion of the function, create a proper draw function.
 	//	We should not create a private draw function and rely on friend class to render the bounding box.
-    class AABB : public ColliderComponent
+    class AABB : public Collider
     {
     public:
         glm::vec3 Center;
@@ -31,12 +31,12 @@ namespace Lobster
 		float m_debugInitialData[24]; // raw initial vertices position
 		float m_debugTranslatedData[24]; // raw translated (for once) vertices position
     public:
-        AABB(Transform transform = Transform(), bool draw = true);
+        AABB(PhysicsComponent* physics, Transform transform = Transform(), bool draw = true);
 
 		void SetOwner(GameObject* owner);
 
 		void OnUpdate(double deltaTime) override;
-        bool Intersects(ColliderComponent* other) override;
+        bool Intersects(Collider* other) override;
 		bool Intersects(glm::vec3 pos, glm::vec3 dir, float& t) override;
 
 	protected:

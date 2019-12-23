@@ -42,14 +42,15 @@ namespace Lobster
 							ImGui::EndMenu();
 						}
 						if (ImGui::BeginMenu("Physics")) {
-							if (!selectedGO->GetComponent<PhysicsComponent>()) {
-								if (ImGui::MenuItem("Rigidbody")) {
-									selectedGO->AddComponent(new Rigidbody());
+							PhysicsComponent* physics = selectedGO->GetComponent<PhysicsComponent>();
+							if (!physics || !physics->IsEnabled()) {
+								if (ImGui::Selectable("Enable Rigidbody")) {
+									physics->SetEnabled(true);
 								}
 							}
 							else {
-								if (ImGui::MenuItem("Collider")) {
-									selectedGO->AddComponent(new AABB());
+								if (ImGui::Selectable("Add Collider")) {
+									physics->AddCollider(new AABB(physics));
 								}
 							}
 							ImGui::EndMenu();

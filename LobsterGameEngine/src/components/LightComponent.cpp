@@ -2,6 +2,7 @@
 #include "LightComponent.h"
 #include "imgui/ImGuiScene.h"
 #include "objects/Transform.h"
+#include "physics/Rigidbody.h"
 
 namespace Lobster
 {
@@ -17,6 +18,13 @@ namespace Lobster
 	LightComponent::~LightComponent()
 	{
 		LightLibrary::RemoveLight(this, m_type);
+	}
+
+	void LightComponent::OnAttach()
+	{
+		Rigidbody* rigidbody = new Rigidbody();
+		rigidbody->SetEnabled(false);
+		gameObject->AddComponent(rigidbody);
 	}
 
 	void LightComponent::OnUpdate(double deltaTime)

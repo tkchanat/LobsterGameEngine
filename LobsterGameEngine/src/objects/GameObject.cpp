@@ -52,7 +52,7 @@ namespace Lobster
         //  Update all enabled components
         for(Component* component : m_components)
         {
-            if(component->IsEnabled())
+            if(component->IsEnabled() || dynamic_cast<PhysicsComponent*>(component))
             {
                 component->OnUpdate(deltaTime);
             }
@@ -117,17 +117,21 @@ namespace Lobster
 			ImGui::EndPopup();
 		}
 
-		//todo: assumed to be rigidbody / collider component for now. ask about what components to include. (and change button name)
-		//todo: ask for a component name perhaps?
-		// Note: this part is moved to ImGuiProperties::Show()
-		if (!GetComponent<PhysicsComponent>()) {
+		//	TODO: ask for a component name perhaps?
+		//	We will always keep one physics component and one collider.
+		//	They shall be used for selecting objects on scene (by ray-casting)
+		//	Therefore, "Add Rigidbody" here will just enable the object instead of creating it;
+		//	"Add Collider" here will do the same for the first collider.
+
+		// Note: this part will be moved to ImGuiProperties::Show()
+		PhysicsComponent* physics = GetComponent<PhysicsComponent>();
+		if (!physics || !physics->IsEnabled()) {
 			if (ImGui::Button("Add Rigidbody")) {
-				AddComponent(new Rigidbody());
+				physics->SetEnabled(true);
 			}
-		}
-		else {
+		} else {
 			if (ImGui::Button("Add Collider")) {
-				AddComponent(new AABB());
+				physics->AddCollider(new AABB(physics));
 			}
 		}
 
@@ -196,11 +200,11 @@ namespace Lobster
 		component->SetOwner(this);
 		component->SetOwnerTransform(&transform);
 
-		if (dynamic_cast<ColliderComponent*>(component)) {
+		/*if (dynamic_cast<Collider*>(component)) {
 			Rigidbody* rigidbody = GetComponent<Rigidbody>();
-			rigidbody->AddCollider(dynamic_cast<ColliderComponent*>(component));
+			rigidbody->AddCollider(dynamic_cast<Collider*>(component));
 			return this;
-		}
+		}*/
 
 		m_components.push_back(component);		
 		component->OnAttach();
@@ -212,6 +216,15 @@ namespace Lobster
 		child->m_parent = this;
 		m_children.push_back(child);
 		return this;
+	}
+
+	std::pair<glm::vec3, glm::vec3> GameObject::GetBound() {
+		if (GetComponent<MeshComponent>()) {
+			return GetComponent<MeshComponent>()->GetBound();
+		}
+		else {
+			return { glm::vec3(0, 0, 0), glm::vec3(0.01, 0.01, 0.01) };
+		}
 	}
 
 	void GameObject::RemoveComponent(Component* comp) {

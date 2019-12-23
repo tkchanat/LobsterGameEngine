@@ -24,6 +24,7 @@ namespace Lobster
         MeshComponent(VertexArray* mesh, const char* materialPath = "materials/default.mat");
 		MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char* materialPath = "materials/default.mat");
         virtual ~MeshComponent() override;
+		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 		inline std::pair<glm::vec3, glm::vec3> GetBound() const { return bounds; }
