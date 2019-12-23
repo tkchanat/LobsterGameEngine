@@ -17,7 +17,7 @@ namespace Lobster
     private:
         CameraComponent* m_activeCamera; // non-removable main camera
 		TextureCube* m_skybox;
-        std::vector<GameObject*> m_gameObjects;
+		std::vector<std::shared_ptr<GameObject>> m_gameObjects;
 		std::vector<LightComponent*> m_lights;
     public:
         Scene();
@@ -29,8 +29,7 @@ namespace Lobster
         Scene* AddGameObject(GameObject* gameObject);
 		Scene* RemoveGameObject(std::string name);
 		Scene* RemoveGameObject(GameObject* gameObject);
-		const std::vector<GameObject*>& GetGameObjects();
-		GameObject* GetGameObject(GameObject* gameObject);
+		const std::vector<std::shared_ptr<GameObject>>& GetGameObjects();
 		bool IsObjectNameDuplicated(std::string name, std::string except = "");
 		inline void SetActiveCamera(CameraComponent* camera) { m_activeCamera = camera; }
         inline CameraComponent* GetActiveCamera() const { return m_activeCamera; }

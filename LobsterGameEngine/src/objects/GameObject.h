@@ -15,6 +15,7 @@ namespace Lobster
     class GameObject
     {
 		friend class Scene;
+		friend class ImGuiHierarchy;
     public:
 		//	The world / model matrix of the game object
         Transform transform;
@@ -24,7 +25,7 @@ namespace Lobster
 		unsigned long long m_id;
         std::string m_name;
 		GameObject* m_parent;
-		std::vector<GameObject*> m_children;
+		std::vector<std::shared_ptr<GameObject>> m_children;
         std::vector<Component*> m_components;
 		//	Shortcut to access the vector of colliders.
 		std::vector<Collider*> m_colliders;
@@ -49,10 +50,11 @@ namespace Lobster
 		inline unsigned long long GetId() { return m_id; }
         inline std::string GetName() const { return m_name; }
 		inline GameObject* GetParent() const { return m_parent; }
-		inline std::vector<GameObject*> GetChildren() const { return m_children; }
 		inline size_t GetChildrenCount() const { return m_children.size(); }
 		//	RemoveComponent removes the component in vector and deletes comp afterwards.
 		void RemoveComponent(Component* comp);
+	private:
+		inline std::vector<std::shared_ptr<GameObject>> GetChildren() const { return m_children; }
     };
     
     //=========================================
