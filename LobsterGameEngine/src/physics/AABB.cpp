@@ -111,14 +111,15 @@ namespace Lobster
 
 	bool AABB::Intersects(glm::vec3 pos, glm::vec3 dir, float& t)
 	{
-		glm::vec3 epsilon(0.01, 0.01, 0.01);
+		glm::vec3 epsilon(0.01, 0.01, 0.1);
 		glm::vec3 dist = Center - pos;
 		float len = glm::length(dir);
 		float distlen = glm::length(dist);
 		glm::vec3 closeVec = glm::dot(glm::normalize(dist), glm::normalize(dir)) * distlen * dir - dist;
 		glm::vec3 closePt = Center + closeVec;
-		glm::vec3 gmax = Center + Max - epsilon;
-		glm::vec3 gmin = Center + Min + epsilon;
+		glm::vec3 gmax = Center + Max + epsilon;
+		glm::vec3 gmin = Center + Min - epsilon;
+		//LOG("{} {} {}, {} {} {}", gmax.x, gmax.y, gmax.z, gmin.x, gmin.y, gmin.z);
 		if (closePt.x < gmax.x && closePt.y < gmax.y && closePt.z < gmax.z &&
 			closePt.x > gmin.x && closePt.y > gmin.y && closePt.z > gmin.z) {
 			t = distlen;

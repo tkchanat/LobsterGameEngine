@@ -45,12 +45,21 @@ namespace Lobster
 		//	First perform physics update.
 		//	TODO: Some type of structure to record which pair of game objects / colliders intersected.
 
+		//	order: position -> update. gameobject add oncollision (and whatnot) 
+
+		//	First, find the list of colliders and objects with physics component.
+		//	This is done by finding all active rigidbody components.
 		std::vector<Collider*> colliders;
+		std::vector<PhysicsComponent*> physics;
+
 		for (GameObject* gameObject : m_gameObjects) {
 			//	TODO: Physics Update
-			Rigidbody* rigidbody = gameObject->GetComponent<Rigidbody>();
-			if (!rigidbody || !rigidbody->IsEnabled()) continue;
-			for (Collider* collider : rigidbody->GetColliders()) {
+			PhysicsComponent* physicsObj = gameObject->GetComponent<PhysicsComponent>();
+			if (!physicsObj || !physicsObj->IsEnabled()) continue;
+
+			physics.push_back(physicsObj);
+
+			for (Collider* collider : physicsObj->GetColliders()) {
 				if (collider->IsEnabled() && collider->GetPhysics()->GetPhysicsType() != 2)
 					colliders.push_back(collider);
 			}
@@ -69,6 +78,12 @@ namespace Lobster
 				j++;
 			}
 			i++;
+		}
+
+		//	Finally, after detecting all collision on this frame -
+		//	Time to update the physics. 
+		for (PhysicsComponent* physicsObj : physics) {
+			physicsObj->OnPhysicsUpdate(deltaTime);
 		}
 	}
 

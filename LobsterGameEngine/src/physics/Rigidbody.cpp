@@ -3,17 +3,16 @@
 #include "objects/GameObject.h"
 
 namespace Lobster {
-	const glm::vec3 Rigidbody::GRAVITY = glm::vec3(0, -9.81, 0);
+	const glm::vec3 Rigidbody::GRAVITY = glm::vec3(0, -0.981, 0);
 
 	void Rigidbody::OnUpdate(double deltaTime) {
 		//	We should update but not draw the bounding box. Update and draw the collider according to user's option.
 		m_boundingBox->OnUpdate(deltaTime);
 		for (Collider* collider : m_colliders) {
-			if (collider->IsEnabled()) collider->OnUpdate(deltaTime);
-		}
-
-		if (m_enabled) {
-			m_boundingBox->DebugDraw();
+			if (collider->IsEnabled()) {
+				collider->OnUpdate(deltaTime);
+				collider->DebugDraw();
+			}
 		}
 	}
 
@@ -32,8 +31,11 @@ namespace Lobster {
 		bool statement;
 		
 		if (statement) {
-			ImGui::Checkbox("Enabled?", &m_enabled);
-			ImGui::Combo("Physics Type", &m_physicsType, PhysicsType, 3);
+			if (ImGui::CollapsingHeader("PhysicsComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
+				ImGui::Checkbox("Enabled?", &m_enabled);
+				ImGui::Checkbox("Simulate Physics", &m_simulate);
+				ImGui::Combo("Physics Type", &m_physicsType, PhysicsType, 3);
+			}
 		}
 
 		//	TODO: Confirmation Window.
@@ -45,6 +47,16 @@ namespace Lobster {
 		for (Collider* collider : m_colliders) {
 			collider->OnImGuiRender();
 		}
+	}
+
+	void Rigidbody::OnPhysicsUpdate(double deltaTime) {
+		LOG("{} physics updated", gameObject->GetName());
+		float time = (float)(deltaTime / 1000);
+		if (m_simulate) {
+			m_velocity += GRAVITY * time;
+			transform->WorldPosition += m_velocity * time;
+		}
+
 	}
 
 	//	TODO: Guess by taking half of deltaTime until we find a good approximation

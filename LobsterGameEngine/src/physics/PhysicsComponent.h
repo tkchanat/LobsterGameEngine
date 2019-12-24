@@ -24,6 +24,8 @@ namespace Lobster {
 		inline Collider* GetBoundingBox() const { return m_boundingBox; }
 		inline std::vector<Collider*> GetColliders() const { return m_colliders; }
 
+		virtual void OnPhysicsUpdate(double deltaTime) = 0;
+
 		//	Block / Overlap / Ignore
 		inline int GetPhysicsType() const { return m_physicsType; }
 		void RemoveCollider(Collider* collider);

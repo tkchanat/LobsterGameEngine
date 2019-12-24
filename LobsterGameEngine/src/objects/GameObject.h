@@ -53,6 +53,13 @@ namespace Lobster
 		inline size_t GetChildrenCount() const { return m_children.size(); }
 		//	RemoveComponent removes the component in vector and deletes comp afterwards.
 		void RemoveComponent(Component* comp);
+
+		//	Functions for scripting
+		void OnCollide(GameObject* other);
+		void OnEnter(GameObject* other);
+		void OnOverlap(GameObject* other);
+		void OnLeave(GameObject* other);
+		bool IsOverlap(GameObject* other);
     };
     
     //=========================================

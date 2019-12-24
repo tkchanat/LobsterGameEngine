@@ -16,6 +16,7 @@ namespace Lobster {
 		void OnAttach() override;
 		void OnUpdate(double deltaTime) override;
 		void OnImGuiRender() override;
+		void OnPhysicsUpdate(double deltaTime) override;
 
 		bool WillCollide(double deltaTime);
 
@@ -23,6 +24,7 @@ namespace Lobster {
 		glm::vec3 m_velocity;
 		glm::vec3 m_acceleration;
 
+		bool m_simulate = false;
 		bool m_gravity = false;
 	};
 }

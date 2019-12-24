@@ -22,7 +22,7 @@ namespace Lobster {
 		virtual bool Intersects(glm::vec3 pos, glm::vec3 dir, float& t) = 0;	// ray intersection
 
 	protected:
-		bool m_enabled;
+		bool m_enabled = true;
 		bool m_draw = true;
 
 		//	Stores the physics component that this object belongs to.
@@ -44,6 +44,7 @@ namespace Lobster {
 	public:
 		virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender();
+		virtual void SetOwner(GameObject* owner) = 0;
 		inline virtual void SetOwnerTransform(Transform* t) { transform = t; }
 		inline PhysicsComponent* GetPhysics() const { return physics; }
 		inline bool IsEnabled() { return m_enabled; }

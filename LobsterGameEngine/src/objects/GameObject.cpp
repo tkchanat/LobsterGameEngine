@@ -129,7 +129,10 @@ namespace Lobster
 			}
 		} else {
 			if (ImGui::Button("Add Collider")) {
-				physics->AddCollider(new AABB(physics));
+				AABB* aabb = new AABB(physics);
+				aabb->SetOwner(this);
+				aabb->SetOwnerTransform(&transform);
+				physics->AddCollider(aabb);
 			}
 		}
 
@@ -198,12 +201,6 @@ namespace Lobster
 		component->SetOwner(this);
 		component->SetOwnerTransform(&transform);
 
-		/*if (dynamic_cast<Collider*>(component)) {
-			Rigidbody* rigidbody = GetComponent<Rigidbody>();
-			rigidbody->AddCollider(dynamic_cast<Collider*>(component));
-			return this;
-		}*/
-
 		m_components.push_back(component);		
 		component->OnAttach();
 		return this;
@@ -233,5 +230,25 @@ namespace Lobster
 		}
 
 		delete comp;
+	}
+
+	void GameObject::OnCollide(GameObject* other) {
+		LOG("{} collided with {}", GetName(), other->GetName());
+	}
+
+	void GameObject::OnEnter(GameObject* other) {
+		LOG("{} and {} entered each other", GetName(), other->GetName());
+	}
+
+	void GameObject::OnOverlap(GameObject* other) {
+		LOG("{} and {} is overlapping each other", GetName(), other->GetName());
+	}
+
+	void GameObject::OnLeave(GameObject* other) {
+		LOG("{} and {} left each other", GetName(), other->GetName());
+	}
+
+	bool GameObject::IsOverlap(GameObject* other) {
+		return true;
 	}
 }
