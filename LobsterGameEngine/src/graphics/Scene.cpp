@@ -24,18 +24,17 @@ namespace Lobster
     
     Scene::~Scene()
     {
-		// Note: no need for explicit release of memory due to smart pointers
-		//for (GameObject* gameObject : m_gameObjects)
-		//{
-		//	if(gameObject)	delete gameObject;
-		//	gameObject = nullptr;
-		//}
+		for (GameObject* gameObject : m_gameObjects)
+		{
+			if(gameObject)	delete gameObject;
+			gameObject = nullptr;
+		}
     }
     
     void Scene::OnUpdate(double deltaTime)
     {
 		Renderer::BeginScene(m_skybox);
-        for(auto gameObject : m_gameObjects)
+        for(GameObject* gameObject : m_gameObjects)
         {
             gameObject->OnUpdate(deltaTime);
         }
@@ -47,7 +46,7 @@ namespace Lobster
 		//	TODO: Some type of structure to record which pair of game objects / colliders intersected.
 
 		std::vector<Collider*> colliders;
-		for (auto gameObject : m_gameObjects) {
+		for (GameObject* gameObject : m_gameObjects) {
 			//	TODO: Physics Update
 			Rigidbody* rigidbody = gameObject->GetComponent<Rigidbody>();
 			if (!rigidbody || !rigidbody->IsEnabled()) continue;
@@ -118,7 +117,7 @@ namespace Lobster
 			LightLibrary::AddLight(light, light->GetType());
 		}
         
-        m_gameObjects.emplace_back(gameObject);
+        m_gameObjects.push_back(gameObject);
 
         return this;
     }
@@ -136,7 +135,7 @@ namespace Lobster
 
 	Scene* Scene::RemoveGameObject(GameObject* gameObject) {
 		if (!gameObject) return this;
-		auto index = std::find(m_gameObjects.begin(), m_gameObjects.end(), std::shared_ptr<GameObject>(gameObject));
+		auto index = std::find(m_gameObjects.begin(), m_gameObjects.end(), gameObject);
 		if (index != m_gameObjects.end()) {
 			m_gameObjects.erase(index);
 			delete gameObject;
@@ -146,8 +145,19 @@ namespace Lobster
 	}
 
 	// Deprecated
-	const std::vector<std::shared_ptr<GameObject>>& Scene::GetGameObjects() {
+	const std::vector<GameObject*>& Scene::GetGameObjects() {
 		return m_gameObjects;
+	}
+
+	GameObject * Scene::GetGameObject(GameObject * gameObject)
+	{
+		std::stack<GameObject*> parents;
+		GameObject* parent = gameObject->GetParent();
+		while (parent != nullptr) {
+			parents.push(parent);
+			parent = parent->GetParent();
+		}
+		return nullptr;
 	}
     
 	bool Scene::IsObjectNameDuplicated(std::string name, std::string except) {

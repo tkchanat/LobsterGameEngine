@@ -139,10 +139,10 @@ namespace Lobster
 		}
 
 		void SelectObject(glm::vec3 pos, glm::vec3 dir) {
-			auto gameObjects = m_scene->GetGameObjects();
-			GameObject* nearestGameObject = nullptr;
-			float tmin = 9999999.f;
-			for (auto gameObject : gameObjects) {
+			const std::vector<GameObject*>& gameObjects = m_scene->GetGameObjects();
+			GameObject* nearestGameObject = nullptr; 
+			float tmin = 9999999.f;			
+			for (GameObject* gameObject : gameObjects) {
 				PhysicsComponent* physics = gameObject->GetComponent<PhysicsComponent>();
 				if (!physics) continue;
 
@@ -152,10 +152,10 @@ namespace Lobster
 					bool hit = component->Intersects(pos, dir, t);
 					if (hit && t < tmin) {
 						tmin = t;
-						nearestGameObject = gameObject.get();
-					}
+						nearestGameObject = gameObject;
+					}					
 				}
-			}
+			}	
 			// check gizmos
 			for (const GizmosCommand& cm : m_gizmosQueue) {
 				glm::vec3 dist = cm.position - pos;
