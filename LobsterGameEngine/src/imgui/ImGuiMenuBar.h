@@ -12,10 +12,9 @@ namespace Lobster
 	class ImGuiMenuBar : public ImGuiComponent
 	{
 	private:
-		Scene* scene;
 		ImGuiAbout* m_about;
 	public:
-		ImGuiMenuBar(Scene* scene) : scene(scene), m_about(new ImGuiAbout()) {}
+		ImGuiMenuBar() : m_about(new ImGuiAbout()) {}
 		virtual void Show(bool* p_open) override
 		{
 			if (ImGui::BeginMenuBar())
@@ -29,9 +28,12 @@ namespace Lobster
 					}
 					if (ImGui::MenuItem("Open", "Ctrl+O", false))
 					{
+						Application::GetInstance()->OpenScene("scenes/test.lobster");
 					}
 					if (ImGui::MenuItem("Save", "Ctrl+S", false))
 					{
+						std::stringstream ss = GetScene()->Serialize();
+						FileSystem::WriteStringStream(FileSystem::Path("scenes/test.lobster").c_str(), ss);
 					}
 					if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false))
 					{
@@ -70,6 +72,7 @@ namespace Lobster
 					if (ImGui::MenuItem("Create Empty", "", false)) {}
 					if (ImGui::BeginMenu("Create Primitive"))
 					{
+						Scene* scene = GetScene();
 						if (ImGui::MenuItem("Cube", "", false)) {
 							GameObject* cube = new GameObject("Cube");
 							cube->AddComponent(new MeshComponent(MeshFactory::Cube(), glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)));

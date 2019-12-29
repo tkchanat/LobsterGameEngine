@@ -175,6 +175,23 @@ namespace Lobster
 		}
 	}
 
+	void GameObject::Serialize(cereal::JSONOutputArchive& oarchive)
+	{
+		LOG("Serializing GameObject {}", m_name);
+		oarchive(*this);
+	}
+
+	void GameObject::Deserialize(cereal::JSONInputArchive& iarchive)
+	{
+		LOG("Deserializing GameObject {}", m_name);
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing GameObject {} failed. Reason: {}", m_name, e.what());
+		}
+	}
+
 	GameObject * GameObject::AddComponent(Component * component)
 	{
 		//  TODO:

@@ -1,4 +1,5 @@
 #pragma once
+#include "utils/JsonFile.h"
 #include <GLFW/glfw3.h>
 
 namespace Lobster

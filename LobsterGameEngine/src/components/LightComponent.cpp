@@ -22,6 +22,9 @@ namespace Lobster
 
 	void LightComponent::OnAttach()
 	{
+		this->transform->WorldPosition = glm::vec3(0, 2, 3);
+		LightLibrary::AddLight(this, GetType());
+
 		Rigidbody* rigidbody = new Rigidbody();
 		rigidbody->SetEnabled(false);
 		gameObject->AddComponent(rigidbody);

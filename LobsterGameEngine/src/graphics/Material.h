@@ -27,23 +27,30 @@ namespace Lobster
 		byte* m_uniformData;
 		size_t m_uniformDataSize;
 		bool b_dirty;
-		std::vector<std::string> _textureNames;
 	public:
 		virtual ~Material();
 		void OnImGuiRender(int material_id);
 		void SetRawUniform(const char* name, void* data);
 		void SetUniforms();
 		void SaveConfiguration();
+		std::stringstream Serialize();
+		void Deserialize(std::stringstream ss);
 		inline std::string GetName() const { return m_name; }
 		inline std::string GetPath() const { return FileSystem::Path(m_name); }
 		inline Shader* GetShader() const { return m_shader; }
 		inline RenderingMode GetRenderingMode() const { return m_mode; }
-	public:
+	private:
+		friend class cereal::access;
 		template <class Archive>
 		void save(Archive & ar) const
 		{
-			ar(m_shader->GetName()); // Shader name
-			ar(_textureNames); // Texture maps
+			std::string shaderName = m_shader->GetName();
+			std::vector<std::string> textureNames;
+			for (int i = 0; i < m_textures.size(); ++i) 
+				textureNames.push_back(m_textures[i] == nullptr ? "" : m_textures[i]->GetName());
+			
+			ar(shaderName); // Shader name
+			ar(textureNames); // Texture maps
 			ar(m_mode);
 			ar(m_uniformDataSize);
 			ar(cereal::binary_data(m_uniformData, m_uniformDataSize)); // Uniform data
@@ -51,13 +58,16 @@ namespace Lobster
 		template <class Archive>
 		void load(Archive & ar)
 		{
-			// shader
 			std::string shaderName;
+			std::vector<std::string> textureNames;
 			ar(shaderName);
+			ar(textureNames);
+
 			m_shader = ShaderLibrary::Use(shaderName.c_str());
-			// textures
-			ar(_textureNames);
-			// rendering mode
+			m_textures.resize(textureNames.size());
+			for (int i = 0; i < m_textures.size(); ++i)
+				m_textures[i] = textureNames[i].empty() ? nullptr : TextureLibrary::Use(textureNames[i].c_str());
+			
 			ar(reinterpret_cast<RenderingMode>(m_mode));
 			ar(m_uniformDataSize);
 			m_uniformData = new byte[m_uniformDataSize];
@@ -80,6 +90,7 @@ namespace Lobster
 		static void Initialize();
 		static Material* Use(const char* path);
 		static Material* UseShader(const char* shaderPath);
+		static Material* UseDefault();
 		static void ResizeUniformBuffer(Shader* shader);
 	};
     

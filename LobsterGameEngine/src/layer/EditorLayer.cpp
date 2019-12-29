@@ -26,16 +26,16 @@ namespace Lobster
 	std::list<GizmosCommand> ImGuiScene::m_gizmosQueue;
 	SSFLog ImGuiConsole::log;
 
-	EditorLayer::EditorLayer(Scene* scene, Renderer* renderer) :
+	EditorLayer::EditorLayer() :
 		Layer("Game Layer"),
-		m_assets(new ImGuiAssets(scene)),
+		m_assets(new ImGuiAssets()),
 		m_console(new ImGuiConsole()),
 		m_demoWindow(new ImGuiDemoWindow()),
-		m_hierarchy(new ImGuiHierarchy(scene)),
-		m_menuBar(new ImGuiMenuBar(scene)),
+		m_hierarchy(new ImGuiHierarchy()),
+		m_menuBar(new ImGuiMenuBar()),
 		m_properties(new ImGuiProperties()),
-		m_scene(new ImGuiScene(scene, renderer)),
-		m_toolbar(new ImGuiToolbar(scene))
+		m_scene(new ImGuiScene()),
+		m_toolbar(new ImGuiToolbar())
 	{
 	}
 

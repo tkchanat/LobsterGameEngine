@@ -28,7 +28,7 @@ namespace Lobster
 		ImGuiComponent* m_hierarchy;
 		ImGuiDemoWindow* m_demoWindow;
 	public:
-		EditorLayer(Scene* scene, Renderer* renderer);
+		EditorLayer();
 		~EditorLayer();
 		CameraComponent* GetSceneCamera();
 		virtual void OnUpdate(double deltaTime) override;

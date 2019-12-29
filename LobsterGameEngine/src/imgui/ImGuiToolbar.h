@@ -14,7 +14,6 @@ namespace Lobster
 	class ImGuiToolbar : public ImGuiComponent
 	{
 	private:
-		Scene* scene;
 		const float spacer_width = 10.f;
 		const static int numIco = 9;		
 		std::string image_path[numIco] = { 
@@ -24,7 +23,7 @@ namespace Lobster
 		Texture2D* m_tex[numIco];
 		static GameObject* selectedObj;
 	public:
-		ImGuiToolbar(Scene* scene) : ImGuiComponent(), scene(scene) {
+		ImGuiToolbar() {
 			for (int i = 0; i < numIco; i++) {
 				// load image (texture)
 				m_tex[i] = TextureLibrary::Use(FileSystem::Path(image_path[i]).c_str());
@@ -71,6 +70,7 @@ namespace Lobster
 			ImGui::SameLine();
 			ImGui::Dummy(ImVec2(spacer_width, 0.0f));
 			ImGui::SameLine();
+			Scene* scene = GetScene();
 			// Plane Generation
 			if (ImGui::ImageButton(m_tex[4]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {					
 				GameObject* plane = new GameObject("Plane");

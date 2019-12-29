@@ -14,6 +14,7 @@ namespace Lobster
     
     class Application
     {
+		friend class ImGuiComponent;
     private:
         static Application* m_instance;
         Window* m_window;
@@ -37,6 +38,7 @@ namespace Lobster
         void Initialize();
         void Run();
         void Shutdown();
+		void OpenScene(const char* scenePath);
         inline Window* GetWindow() { return m_window; }
         inline glm::ivec2 GetWindowSize() { return m_window->GetSize(); }
         inline float GetWindowAspectRatio() { return (float)m_window->GetSize().x / (float)m_window->GetSize().y; }

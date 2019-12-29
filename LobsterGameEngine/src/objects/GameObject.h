@@ -37,11 +37,12 @@ namespace Lobster
 
     public:
         GameObject(const char* name);
-        ~GameObject();
+        ~GameObject(); // TODO: private the destructor, forcing users to call Destroy() instead
 		void Destroy();
         void OnUpdate(double deltaTime);
-		//	To update ImGui components that describes this game object's attributes
-		virtual void OnImGuiRender();
+		void OnImGuiRender();
+		void Serialize(cereal::JSONOutputArchive& oarchive);
+		void Deserialize(cereal::JSONInputArchive& iarchive);
 		GameObject* AddComponent(Component* component);
 		GameObject* AddChild(GameObject* child);
 		template<typename T> T* GetComponent();
@@ -53,6 +54,50 @@ namespace Lobster
 		inline size_t GetChildrenCount() const { return m_children.size(); }
 		//	RemoveComponent removes the component in vector and deletes comp afterwards.
 		void RemoveComponent(Component* comp);
+	private:
+		friend class cereal::access;
+		template <class Archive>
+		void save(Archive & ar) const
+		{
+			// mark down all children name
+			std::vector<std::string> childrenNames;
+			for (auto child : m_children) childrenNames.push_back(child->GetName());
+			ar(childrenNames);
+			// recursively serialize all children
+			for (auto child : m_children) {
+				child->Serialize(ar);
+			}
+
+			// then deserialize this GameObject's properties
+			std::vector<std::string> componentNames;
+			for (auto component : m_components) componentNames.push_back(typeid(*component).name());
+			ar(componentNames);
+
+			for (auto component : m_components) {
+				component->Serialize(ar);
+			}
+		}
+		template <class Archive>
+		void load(Archive & ar)
+		{
+			// recreate all children
+			std::vector<std::string> childrenNames;
+			ar(childrenNames);
+			for (auto name : childrenNames) AddChild(new GameObject(name.c_str()));
+
+			// recursively deserialize all children
+			for (auto child : m_children) {
+				child->Deserialize(ar);
+			}
+
+			std::vector<std::string> componentNames;
+			ar(componentNames);
+			for (auto name : componentNames) AddComponent(CreateComponentFromTypeName(name, ar));
+
+			for (auto component : m_components) {
+				component->Deserialize(ar);
+			}
+		}
     };
     
     //=========================================

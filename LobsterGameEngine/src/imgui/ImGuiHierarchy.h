@@ -1,4 +1,5 @@
 #pragma once
+#include "Application.h"
 #include "ImGuiComponent.h"
 #include "layer/EditorLayer.h"
 #include "graphics/Scene.h"
@@ -9,10 +10,7 @@ namespace Lobster
 
 	class ImGuiHierarchy : public ImGuiComponent 
 	{
-	private:
-		Scene* m_scene;
 	public:
-		ImGuiHierarchy(Scene* scene) : m_scene(scene) {}
 		void ShowPopupContext(GameObject* gameObject) {
 			if (ImGui::BeginPopupContextItem()) {
 				EditorLayer::s_selectedGameObject = gameObject;
@@ -22,7 +20,7 @@ namespace Lobster
 				}
 				if (!gameObject->GetComponent<CameraComponent>()) {
 					if (ImGui::MenuItem("Destroy", "", false)) {
-						m_scene->RemoveGameObject(EditorLayer::s_selectedGameObject);
+						GetScene()->RemoveGameObject(EditorLayer::s_selectedGameObject);
 						EditorLayer::s_selectedGameObject->Destroy();						
 						EditorLayer::s_selectedGameObject = nullptr;
 					}
@@ -69,7 +67,7 @@ namespace Lobster
 			if (ImGui::Begin("Hierarchy", nullptr))
 			{
 				// The Region for displaying a list of game components
-				ShowChildren(m_scene->m_gameObjects);
+				ShowChildren(GetScene()->m_gameObjects);
 			}
 			ImGui::End();
 		}

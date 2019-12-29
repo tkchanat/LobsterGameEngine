@@ -35,9 +35,6 @@ namespace Lobster
 		glm::vec3 m_originalScale;
 		// Custom gizmos
 		static std::list<GizmosCommand> m_gizmosQueue;
-		// not the owner of these objects, don't delete
-		Scene* m_scene;
-		Renderer* m_renderer;
 		// camera staring point
 		glm::vec3 at = glm::vec3(0, 0, 0);
 		// grid line
@@ -53,10 +50,8 @@ namespace Lobster
 		// transform object storing previous state of the game object prior to move
 		Transform m_transform;
 	public:
-		explicit ImGuiScene(Scene* scene, Renderer* renderer) :
+		explicit ImGuiScene() :
 			m_editorCamera(nullptr),
-			m_scene(scene),
-			m_renderer(renderer),
 			b_showGrid(true),
 			m_gridColor(glm::vec4(1.0)),
 			m_gridMaterial(nullptr),
@@ -94,13 +89,9 @@ namespace Lobster
 		~ImGuiScene()
 		{
 			if (m_editorCamera) delete m_editorCamera;
-			if (m_scene) delete m_scene;
-			if (m_renderer) delete m_renderer;
 			if (m_gridMaterial) delete m_gridMaterial;
 			if (m_gridVertexArray) delete m_gridVertexArray;
 			m_editorCamera = nullptr;
-			m_scene = nullptr;
-			m_renderer = nullptr;
 			m_gridMaterial = nullptr;
 			m_gridVertexArray = nullptr;
 		}
@@ -139,7 +130,7 @@ namespace Lobster
 		}
 
 		void SelectObject(glm::vec3 pos, glm::vec3 dir) {
-			const std::vector<GameObject*>& gameObjects = m_scene->GetGameObjects();
+			const std::vector<GameObject*>& gameObjects = GetScene()->GetGameObjects();
 			GameObject* nearestGameObject = nullptr; 
 			float tmin = 9999999.f;			
 			for (GameObject* gameObject : gameObjects) {
