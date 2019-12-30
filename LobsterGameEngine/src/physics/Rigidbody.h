@@ -10,21 +10,39 @@ namespace Lobster {
 
 		Rigidbody() :
 			m_velocity(glm::vec3(0, 0, 0)),
-			m_acceleration(glm::vec3(0, 0, 0))
+			m_acceleration(glm::vec3(0, 0, 0)),
+			m_angularVelocity(glm::vec3(0, 0, 0)),
+			m_angularAcceleration(glm::vec3(0, 0, 0)),
+			m_prevLinearPos(glm::vec3(0, 0, 0)),
+			m_prevAngularPos(glm::vec3(0, 0, 0)),
+			m_newLinearVelocity(glm::vec3(0, 0, 0))
 		{}
 
 		void OnAttach() override;
 		void OnUpdate(double deltaTime) override;
 		void OnImGuiRender() override;
 		void OnPhysicsUpdate(double deltaTime) override;
-
-		bool WillCollide(double deltaTime);
+		void OnPhysicsLateUpdate(double deltaTime) override;
 
 	private:
+		//	Velocity and acceleration for physics calculation.
 		glm::vec3 m_velocity;
 		glm::vec3 m_acceleration;
 
-		bool m_simulate = false;
-		bool m_gravity = false;
+		//	Angular velocity and acceleration for physics calculation.
+		glm::vec3 m_angularVelocity;
+		glm::vec3 m_angularAcceleration;
+
+		//	Variables used for position estimation.
+		glm::vec3 m_prevLinearPos;
+		glm::vec3 m_prevAngularPos;
+		glm::vec3 m_newLinearVelocity;
+
+		//	Damping factors. 0 means no damping.
+		float m_linearDamping = 1.0f;
+		float m_angularDamping = 0.0f;
+
+		//	Coefficients of restitution. 0 means not bouncing, 1 means most elastic.
+		float m_restitution = 0.0f;
 	};
 }

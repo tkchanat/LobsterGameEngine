@@ -24,13 +24,20 @@ namespace Lobster {
 		inline Collider* GetBoundingBox() const { return m_boundingBox; }
 		inline std::vector<Collider*> GetColliders() const { return m_colliders; }
 
+		bool Intersects(PhysicsComponent* other);
 		virtual void OnPhysicsUpdate(double deltaTime) = 0;
+		virtual void OnPhysicsLateUpdate(double deltaTime) = 0;
 
 		//	Block / Overlap / Ignore
 		inline int GetPhysicsType() const { return m_physicsType; }
 		void RemoveCollider(Collider* collider);
 
 	protected:
+		//	Mass of component.
+		float m_mass = 1.0f;
+
+		bool m_simulate = false;
+
 		//	Bounding box is not visible to user, and is used by quick collision estimation only.
 		Collider* m_boundingBox = nullptr;
 

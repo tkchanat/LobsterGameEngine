@@ -24,17 +24,18 @@ namespace Lobster
     
     Scene::~Scene()
     {
-		for (GameObject* gameObject : m_gameObjects)
-		{
-			if(gameObject)	delete gameObject;
-			gameObject = nullptr;
-		}
+		// Note: no need for explicit release of memory due to smart pointers
+		//for (GameObject* gameObject : m_gameObjects)
+		//{
+		//	if(gameObject)	delete gameObject;
+		//	gameObject = nullptr;
+		//}
     }
     
     void Scene::OnUpdate(double deltaTime)
     {
 		Renderer::BeginScene(m_skybox);
-        for(GameObject* gameObject : m_gameObjects)
+        for(auto gameObject : m_gameObjects)
         {
             gameObject->OnUpdate(deltaTime);
         }
@@ -42,39 +43,31 @@ namespace Lobster
     }
 
 	void Scene::OnPhysicsUpdate(double deltaTime) {
-		//	First perform physics update.
+		//	First perform physics position update.
+		for (auto gameObj : m_gameObjects) {
+			PhysicsComponent* physicsObj = gameObj->GetComponent<PhysicsComponent>();
+			if (physicsObj && physicsObj->IsEnabled()) physicsObj->OnPhysicsUpdate(deltaTime);
+		}
 		//	TODO: Some type of structure to record which pair of game objects / colliders intersected.
 
-		//	order: position -> update. gameobject add oncollision (and whatnot) 
-
-		//	First, find the list of colliders and objects with physics component.
+		//	Next, find the list of colliders and objects with physics component.
 		//	This is done by finding all active rigidbody components.
-		std::vector<Collider*> colliders;
 		std::vector<PhysicsComponent*> physics;
 
-		for (GameObject* gameObject : m_gameObjects) {
-			//	TODO: Physics Update
-			PhysicsComponent* physicsObj = gameObject->GetComponent<PhysicsComponent>();
-			if (!physicsObj || !physicsObj->IsEnabled()) continue;
-
-			physics.push_back(physicsObj);
-
-			for (Collider* collider : physicsObj->GetColliders()) {
-				if (collider->IsEnabled() && collider->GetPhysics()->GetPhysicsType() != 2)
-					colliders.push_back(collider);
-			}
-		}
-
-		//	Next, do collision check on all physics components we extracted.
-		//	Currently, we adapted a naive approach of comparing all pairs of AABB.
 		int i = 0;
-		for (Collider* c1 : colliders) {
+		for (auto g1 : m_gameObjects) {
+			if (!(g1->GetComponent<PhysicsComponent>())) continue;
+			
+			physics.push_back(g1->GetComponent<PhysicsComponent>());
+
 			int j = 0;
-			for (Collider* c2 : colliders) {
+			for (auto g2 : m_gameObjects) {
 				if (i <= j) break;
-				//	TODO: Actually use the computed result here instead of printing.
-				bool intersect = c1->Intersects(c2) && (c1->GetPhysics() != c2->GetPhysics());
-				if (intersect) LOG("{} intersects with {} (Type: {})", c1->GetPhysics()->GetOwner()->GetName(), c2->GetPhysics()->GetOwner()->GetName(), PhysicsComponent::PhysicsType[std::max(c1->GetPhysics()->GetPhysicsType(), c2->GetPhysics()->GetPhysicsType())]);
+				if (!(g2->GetComponent<PhysicsComponent>())) continue;
+
+				if (g1->Intersects(g2.get())) {
+					g1->HasCollided(g2.get());
+				}
 				j++;
 			}
 			i++;
@@ -83,7 +76,7 @@ namespace Lobster
 		//	Finally, after detecting all collision on this frame -
 		//	Time to update the physics. 
 		for (PhysicsComponent* physicsObj : physics) {
-			physicsObj->OnPhysicsUpdate(deltaTime);
+			physicsObj->OnPhysicsLateUpdate(deltaTime);
 		}
 	}
 
@@ -132,7 +125,7 @@ namespace Lobster
 			LightLibrary::AddLight(light, light->GetType());
 		}
         
-        m_gameObjects.push_back(gameObject);
+        m_gameObjects.emplace_back(gameObject);
 
         return this;
     }
@@ -150,7 +143,7 @@ namespace Lobster
 
 	Scene* Scene::RemoveGameObject(GameObject* gameObject) {
 		if (!gameObject) return this;
-		auto index = std::find(m_gameObjects.begin(), m_gameObjects.end(), gameObject);
+		auto index = std::find(m_gameObjects.begin(), m_gameObjects.end(), std::shared_ptr<GameObject>(gameObject));
 		if (index != m_gameObjects.end()) {
 			m_gameObjects.erase(index);
 			delete gameObject;
@@ -160,19 +153,8 @@ namespace Lobster
 	}
 
 	// Deprecated
-	const std::vector<GameObject*>& Scene::GetGameObjects() {
+	const std::vector<std::shared_ptr<GameObject>>& Scene::GetGameObjects() {
 		return m_gameObjects;
-	}
-
-	GameObject * Scene::GetGameObject(GameObject * gameObject)
-	{
-		std::stack<GameObject*> parents;
-		GameObject* parent = gameObject->GetParent();
-		while (parent != nullptr) {
-			parents.push(parent);
-			parent = parent->GetParent();
-		}
-		return nullptr;
 	}
     
 	bool Scene::IsObjectNameDuplicated(std::string name, std::string except) {

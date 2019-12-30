@@ -24,17 +24,18 @@ namespace Lobster
 		}
 		m_components.clear();
 		// Delete all childrens
-		for (GameObject* child : m_children) 
-		{
-			child->Destroy();
-		}
+		// Note: no need for explicit release of memory due to smart pointers
+		//for (GameObject* child : m_children) 
+		//{
+		//	child->Destroy();
+		//}
 		m_children.clear();
     }
 
 	void GameObject::Destroy()
 	{
 		if (m_parent) {
-			auto index = std::find(m_parent->m_children.begin(), m_parent->m_children.end(), this);
+			auto index = std::find(m_parent->m_children.begin(), m_parent->m_children.end(), std::shared_ptr<GameObject>(this));
 			if (index == m_parent->m_children.end()) {
 				throw std::runtime_error("Attempting to destroy an invalid GameObject");
 				return;
@@ -59,7 +60,7 @@ namespace Lobster
         }
 
 		// Update all children
-		for (GameObject* child : m_children) {
+		for (auto child : m_children) {
 			child->OnUpdate(deltaTime);
 		}
     }
@@ -122,6 +123,8 @@ namespace Lobster
 		//	They shall be used for selecting objects on scene (by ray-casting)
 		//	Therefore, "Add Rigidbody" here will just enable the object instead of creating it;
 		//	"Add Collider" here will do the same for the first collider.
+
+		// Note: this part will be moved to ImGuiProperties::Show()
 		PhysicsComponent* physics = GetComponent<PhysicsComponent>();
 		if (!physics || !physics->IsEnabled()) {
 			if (ImGui::Button("Add Rigidbody")) {
@@ -209,7 +212,7 @@ namespace Lobster
 	GameObject * GameObject::AddChild(GameObject * child)
 	{
 		child->m_parent = this;
-		m_children.push_back(child);
+		m_children.emplace_back(child);
 		return this;
 	}
 
@@ -232,6 +235,14 @@ namespace Lobster
 		delete comp;
 	}
 
+
+	bool GameObject::Intersects(GameObject* other) {
+		PhysicsComponent* physics = GetComponent<PhysicsComponent>();
+		PhysicsComponent* otherPhysics = other->GetComponent<PhysicsComponent>();
+
+		return physics && physics->IsEnabled() && otherPhysics && otherPhysics->IsEnabled() && physics->Intersects(otherPhysics);
+	}
+
 	void GameObject::OnCollide(GameObject* other) {
 		LOG("{} collided with {}", GetName(), other->GetName());
 	}
@@ -249,6 +260,7 @@ namespace Lobster
 	}
 
 	bool GameObject::IsOverlap(GameObject* other) {
-		return true;
+		//	Check if object given is in m_collided.
+		return (std::find(m_collided.begin(), m_collided.end(), other) != m_collided.end());
 	}
 }

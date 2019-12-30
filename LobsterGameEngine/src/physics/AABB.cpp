@@ -111,22 +111,33 @@ namespace Lobster
 
 	bool AABB::Intersects(glm::vec3 pos, glm::vec3 dir, float& t)
 	{
-		glm::vec3 epsilon(0.01, 0.01, 0.1);
-		glm::vec3 dist = Center - pos;
-		float len = glm::length(dir);
-		float distlen = glm::length(dist);
-		glm::vec3 closeVec = glm::dot(glm::normalize(dist), glm::normalize(dir)) * distlen * dir - dist;
-		glm::vec3 closePt = Center + closeVec;
-		glm::vec3 gmax = Center + Max + epsilon;
-		glm::vec3 gmin = Center + Min - epsilon;
-		//LOG("{} {} {}, {} {} {}", gmax.x, gmax.y, gmax.z, gmin.x, gmin.y, gmin.z);
-		if (closePt.x < gmax.x && closePt.y < gmax.y && closePt.z < gmax.z &&
-			closePt.x > gmin.x && closePt.y > gmin.y && closePt.z > gmin.z) {
-			t = distlen;
-			return true;
-		}		
+		static glm::vec3 epsilon(0.001, 0.001, 0.001);
+		const static glm::vec3 normals[] = {
+			glm::vec3(1, 0, 0), glm::vec3(-1, 0, 0), glm::vec3(0, 1, 0),
+			glm::vec3(0, -1, 0), glm::vec3(0, 0, 1), glm::vec3(0, 0, -1)
+		};
+		const glm::vec3 centers[] = {
+			glm::vec3(Center.x + Max.x, Center.y, Center.z), glm::vec3(Center.x + Min.x, Center.y, Center.z),
+			glm::vec3(Center.x, Center.y + Max.y, Center.z), glm::vec3(Center.x, Center.y + Min.y, Center.z),
+			glm::vec3(Center.x, Center.y, Center.z + Max.z), glm::vec3(Center.x, Center.y, Center.z + Min.z)
+		};
+		glm::vec3 gMin = Center + Min - epsilon; glm::vec3 gMax = Center + Max + epsilon;
+		for (int i = 0; i < 6; i++) {
+			float denom = glm::dot(normals[i], dir);
+			if (abs(denom) > 0.0001f) {
+				float rt = glm::dot(centers[i] - pos, normals[i]) / denom;
+				// extent check
+				glm::vec3 pt = rt * dir + pos;
+				if (pt.x > gMin.x && pt.y > gMin.y && pt.z > gMin.z &&
+					pt.x < gMax.x && pt.y < gMax.y && pt.z < gMax.z) {
+					t = rt;
+					return true;
+				}				
+			}				
+		}
 		return false;
 	}
+
 
 	//	Set extra = 0: Only set debug data.
 	//	Set extra = 1: Set initial.
