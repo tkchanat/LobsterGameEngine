@@ -1,9 +1,9 @@
 #pragma once
+#include "objects/GameObject.h"
 
 namespace Lobster
 {
-    
-    class GameObject;
+
     class CameraComponent;
 	class TextureCube;
 	class LightComponent;

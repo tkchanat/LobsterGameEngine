@@ -31,7 +31,7 @@ namespace Lobster
 				ImGui::EndPopup();
 			}
 		}
-		void ShowChildren(std::vector<GameObject*>& children) {
+		void ShowChildren(const std::vector<GameObject*>& children) {
 			for (int i = 0; i < children.size(); ++i) {
 				GameObject* gameObject = children[i];
 

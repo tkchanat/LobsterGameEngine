@@ -22,7 +22,9 @@ namespace Lobster
     
     Application* Application::m_instance = nullptr;
     
-    Application::Application()
+    Application::Application() :
+        m_scene(nullptr),
+        m_renderer(nullptr)
     {
         //  Don't touch here, please do all initialization work in Initialize() function
         if(m_instance)
@@ -95,11 +97,11 @@ namespace Lobster
 		Timer loadTimer;
 		OpenScene("");
 
-		ThreadPool::Enqueue([]() {
-			// This job should be running in a separate thread without blocking the main thread
-			Sleep(10000); // sleep for 10 seconds
-			LOG("ThreadPool is working! :D");
-		});
+//		ThreadPool::Enqueue([]() {
+//			// This job should be running in a separate thread without blocking the main thread
+//			Sleep(10000); // sleep for 10 seconds
+//			LOG("ThreadPool is working! :D");
+//		});
 
 
 		GameObject* barrel = new GameObject("barrel");

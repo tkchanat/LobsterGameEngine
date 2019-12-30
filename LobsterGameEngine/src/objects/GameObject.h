@@ -5,7 +5,7 @@
 #include "components/ComponentCollection.h"
 #include "system/filesystem.h"
 
-#include "graphics/Scene.h"
+//#include "graphics/Scene.h"
 #include "physics/PhysicsComponentCollection.h"
 
 namespace Lobster

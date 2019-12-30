@@ -1,13 +1,13 @@
 #pragma once
 #include "Component.h"
 #include "graphics/VertexArray.h"
+#include "graphics/Material.h"
 #include "physics/AABB.h"
 #include "system/FileSystem.h"
 
 namespace Lobster
 {
     class CameraComponent;
-    class Material;
     
 	//	This class encapsulates all the geometric data for a model / mesh.
 	//	When this component is enabled, the renderer will automatically render this mesh.
