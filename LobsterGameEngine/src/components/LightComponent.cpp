@@ -64,6 +64,23 @@ namespace Lobster
 		}
 	}
 
+    void LightComponent::Serialize(cereal::JSONOutputArchive& oarchive)
+    {
+        LOG("Serializing LightComponent");
+        oarchive(*this);
+    }
+
+    void LightComponent::Deserialize(cereal::JSONInputArchive& iarchive)
+    {
+        LOG("Deserializing LightComponent");
+        try {
+            iarchive(*this);
+        }
+        catch (std::exception e) {
+            LOG("Deserializing LightComponent failed. Reason: {}", e.what());
+        }
+    }
+
 	// =======================================================
 	// LightLibrary
 	// =======================================================

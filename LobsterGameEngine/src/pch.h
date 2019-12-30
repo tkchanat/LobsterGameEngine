@@ -51,7 +51,6 @@
 #include <nlohmann/json.hpp>
 
 //  Custom includes
-#include "typedefs.h"
 #include "events/EventCollection.h"
 #include "events/EventDispatcher.h"
 #include "imgui/ImGuiConsole.h"
@@ -60,12 +59,33 @@
 #include "system/Timer.h"
 #include "system/ThreadPool.h"
 #include "system/Profiler.h"
-#include "utils/JsonFile.h"
 #include "utils/StringOps.h"
 
 //  Custom Defines
 #define MAX_TEXTURE_UNIT 16
 #define MAX_UNIFORM_BUFFER 16
+typedef unsigned int uint;
+typedef unsigned char byte;
 
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)
+
+namespace glm
+{
+    template<typename Archive> void serialize(Archive& archive, glm::vec2& v2)
+    {
+        archive(v2.x, v2.y);
+    }
+    template<typename Archive> void serialize(Archive& archive, glm::vec3& v3)
+    {
+        archive(v3.x, v3.y, v3.z);
+    }
+    template<typename Archive> void serialize(Archive& archive, glm::vec4& v4)
+    {
+        archive(v4.x, v4.y, v4.z, v4.w);
+    }
+    template<typename Archive> void serialize(Archive& archive, glm::quat& quat)
+    {
+        archive(quat.x, quat.y, quat.z, quat.w);
+    }
+}

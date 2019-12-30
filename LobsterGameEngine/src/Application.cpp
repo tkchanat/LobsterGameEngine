@@ -60,7 +60,12 @@ namespace Lobster
 		LOG("Working Directory: " + m_fileSystem->GetCurrentWorkingDirectory());
 
 		// Read from JSON
-		JsonFile config("../config.json");
+        struct {
+            int width = 1280;
+            int height = 760;
+            std::string title = "Lobster Engine";
+            bool vsync = true;
+        } config;
 
 		// Independent system initialization
 		ThreadPool::Initialize(16);
@@ -70,18 +75,8 @@ namespace Lobster
 		EventQueue::Initialize();
 		Input::Initialize();
 
-		// A default value for config.window
-		// Do default config.window assignment here.
-		std::string windowDefault("{"
-			"\"width\": 1280,"
-			"\"height\" : 760,"
-			"\"title\" : \"Lobster Engine\","
-			"\"icon\" : \"../lobster.png\","
-			"\"vsync\" : true"
-		"}");
-
 		// OpenGL dependent system initialization (Window class create OpenGL context)
-		m_window = new Window(config.getJsonValue("window", windowDefault));
+		m_window = new Window(config.width, config.height, config.title, config.vsync);
 		TextureLibrary::Initialize();
 		ShaderLibrary::Initialize();
 		MaterialLibrary::Initialize();
@@ -273,6 +268,7 @@ namespace Lobster
 	{
 		if (m_scene) {
 			delete m_scene;
+            EditorLayer::s_selectedGameObject = nullptr;
 		}
 		m_scene = new Scene(scenePath);
 	}
