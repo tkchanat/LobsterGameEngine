@@ -40,8 +40,7 @@ namespace Lobster
 				return;
 			}
 			m_parent->m_children.erase(index);
-		}
-		this->~GameObject();
+        }
 	}
     
     void GameObject::OnUpdate(double deltaTime)

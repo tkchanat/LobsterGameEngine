@@ -23,7 +23,7 @@ namespace Lobster
 	// Static initialization
 	uint EditorLayer::s_dockspace_id = 0; 
 	GameObject* EditorLayer::s_selectedGameObject = nullptr;
-	std::list<GizmosCommand> ImGuiScene::m_gizmosQueue;
+	std::queue<GizmosCommand> ImGuiScene::m_gizmosQueue;
 	SSFLog ImGuiConsole::log;
 
 	EditorLayer::EditorLayer() :
