@@ -38,11 +38,18 @@ namespace Lobster {
 		glm::vec3 m_prevAngularPos;
 		glm::vec3 m_newLinearVelocity;
 
+		//	Used to store when is the last collsion.
+		int lastCollision = 0;
+
 		//	Damping factors. 0 means no damping.
 		float m_linearDamping = 1.0f;
 		float m_angularDamping = 0.0f;
 
 		//	Coefficients of restitution. 0 means not bouncing, 1 means most elastic.
 		float m_restitution = 0.0f;
+
+		void Travel(float time, glm::vec3 linearAccel);
+		void UndoTravel(float time, glm::vec3 linearAccel);
+		std::vector<GameObject*> m_lastCollided;
 	};
 }
