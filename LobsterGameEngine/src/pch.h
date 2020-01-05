@@ -66,6 +66,8 @@
 //  Custom Defines
 #define MAX_TEXTURE_UNIT 16
 #define MAX_UNIFORM_BUFFER 16
+#define MAX_BONES 64
+#define MAX_BONE_INFLUENCE 4
 
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)

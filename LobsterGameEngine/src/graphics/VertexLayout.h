@@ -39,7 +39,7 @@ namespace Lobster {
         void Unbind() const;
         
         template<typename T>
-		void Add(const char* name, uint count, uint offset = 0, bool normalized = false);
+		void Add(const char* name, uint count);
 	};
     
 }

@@ -44,6 +44,7 @@ namespace Lobster
         void SetUniform(const char* name, const glm::vec3& data);
 		void SetUniform(const char* name, const glm::vec4& data);
         void SetUniform(const char* name, const glm::mat4& data);
+		void SetUniform(const char* name, size_t count, const glm::mat4* data);
 		void SetTexture2D(uint slot, void* texture2D);
 		void SetTextureCube(uint slot, void* textureCube);
 		size_t GetUniformBufferSize() const;

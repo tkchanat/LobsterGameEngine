@@ -81,9 +81,18 @@ namespace Lobster
 			Shader* useShader = command.UseMaterial->GetShader();
 			useShader = (useShader && useShader->CompileSuccess()) ? useShader : ShaderLibrary::Use("shaders/SolidColor.glsl");
 			useShader->Bind();
+			// Vertex shader uniforms
 			useShader->SetUniform("sys_world", command.UseWorldTransform);
 			useShader->SetUniform("sys_view", camera->GetViewMatrix());
 			useShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
+			if (command.UseBoneTransforms) {
+				useShader->SetUniform("sys_bones[0]", MAX_BONES, command.UseBoneTransforms);
+				useShader->SetUniform("sys_animate", true);
+			}
+			else {
+				useShader->SetUniform("sys_animate", false);
+			}
+			// Fragment shader uniforms
 			useShader->SetUniform("sys_cameraPosition", camera->GetPosition());
 			useShader->SetTextureCube(8, m_activeSceneEnvironment.Skybox->GetIrradiance());
 			useShader->SetTextureCube(9, m_activeSceneEnvironment.Skybox->GetPrefilter());

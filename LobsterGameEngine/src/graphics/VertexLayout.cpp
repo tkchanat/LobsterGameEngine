@@ -38,16 +38,16 @@ namespace Lobster {
 	}
 
     template<>
-    void VertexLayout::Add<float>(const char* name, uint count, uint offset, bool normalized)
+    void VertexLayout::Add<float>(const char* name, uint count)
     {
-        m_layout.emplace_back(name, sizeof(float), GL_FLOAT, normalized, count, offset);
+        m_layout.emplace_back(name, sizeof(float), GL_FLOAT, false, count, m_stride);
         m_stride += sizeof(float) * count;
     }
     
     template<>
-    void VertexLayout::Add<uint>(const char* name, uint count, uint offset, bool normalized)
+    void VertexLayout::Add<uint>(const char* name, uint count)
     {
-        m_layout.emplace_back(name, sizeof(uint), GL_UNSIGNED_INT, normalized, count, offset);
+        m_layout.emplace_back(name, sizeof(uint), GL_UNSIGNED_INT, false, count, m_stride);
         m_stride += sizeof(uint) * count;
     }
     

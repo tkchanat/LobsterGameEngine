@@ -3,7 +3,7 @@
         "height": 760,
         "icon": "../lobster.png",
         "title": "Lobster Engine",
-        "vsync": true,
+        "vsync": false,
         "width": 1280
     }
 }

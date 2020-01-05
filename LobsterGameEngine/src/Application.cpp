@@ -102,14 +102,15 @@ namespace Lobster
 		});
 
 
-		GameObject* barrel = new GameObject("barrel");
-		barrel->AddComponent(new MeshComponent(FileSystem::Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat"));
-		//barrel->AddComponent(new AABB());
-		//barrel->AddComponent(new Rigidbody());
-		barrel->transform.Translate(0, 2, 0);
-		barrel->AddChild(new GameObject("child 1"));
-		barrel->AddChild(new GameObject("child 2"));
-		m_scene->AddGameObject(barrel);
+		GameObject* dance = new GameObject("dance");
+		dance->AddComponent(new MeshComponent(FileSystem::Path("meshes/dance.fbx").c_str()));
+		//dance->AddComponent(new AABB());
+		//dance->AddComponent(new Rigidbody());
+		dance->transform.Translate(0, 0, 0);
+		dance->transform.LocalScale *= 0.025;
+		dance->AddChild(new GameObject("child 1"));
+		dance->AddChild(new GameObject("child 2"));
+		m_scene->AddGameObject(dance);
 
 		//for (int i = 0; i < 5; ++i)
 		//{

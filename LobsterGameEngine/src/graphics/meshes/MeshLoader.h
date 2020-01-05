@@ -1,4 +1,5 @@
 #pragma once
+#include "components/MeshComponent.h"
 
 namespace Lobster
 {
@@ -12,7 +13,7 @@ namespace Lobster
     class MeshLoader
     {
     public:
-        static std::pair<glm::vec3, glm::vec3> Load(const char* path, std::vector<VertexArray*>& vertexArrays, std::vector<Material*>& materialArrays);
+        static MeshInfo Load(const char* path);
     };
     
 }

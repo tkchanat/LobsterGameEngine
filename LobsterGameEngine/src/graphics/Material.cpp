@@ -132,8 +132,9 @@ namespace Lobster
 
 	void Material::OnImGuiRender(int material_id)
 	{
+		ImGui::PushID(material_id);
 		std::string headerLabel = fmt::format("Material{}: {}", b_dirty ? "*" : "", m_name);
-		if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader(headerLabel.c_str()))
 		{
 			// Save material pop up
 			if (ImGui::BeginPopupContextItem())
@@ -166,7 +167,6 @@ namespace Lobster
 				AssignTextureSlot();
 				b_dirty = true;
 			}
-			ImGui::Spacing();
 			// Rendering Mode
 			const char* modes[] = { "Opaque", "Transparent" };
 			ImGui::PushItemWidth(110);
@@ -174,13 +174,11 @@ namespace Lobster
 			ImGui::Combo("Rendering Mode", (int*)&m_mode, modes, IM_ARRAYSIZE(modes));
 			b_dirty |= prev_mode != m_mode;
 			ImGui::PopItemWidth();
-			ImGui::Spacing();
 			// Uniforms
 			auto declaration = m_shader->GetUniformDeclarations();
 			size_t offset = 0;
 			for (auto decl : declaration) {
 				void* data = m_uniformData + offset;
-				ImGui::PushID((decl.Name + std::to_string(material_id)).c_str());
 				switch (decl.Type) {
 				case UniformDeclaration::BOOL:
 					ImGui::Checkbox(decl.Name.c_str(), (bool*)data); break;
@@ -216,12 +214,11 @@ namespace Lobster
 					break;
 				default: break;
 				}
-				ImGui::PopID();
 				b_dirty |= ImGui::IsItemActive();
 				offset += decl.Size();
 			}
-
 		}
+		ImGui::PopID();
 	}
 
 	void Material::SetRawUniform(const char * name, void * data)

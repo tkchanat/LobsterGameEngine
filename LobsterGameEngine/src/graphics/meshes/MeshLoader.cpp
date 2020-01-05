@@ -18,14 +18,14 @@ namespace Lobster
 {
 
 	//  Helper function declaration
-	void processMesh(aiMesh *mesh, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, glm::vec3& min, glm::vec3& max);
-	void processNode(aiNode *node, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, glm::vec3& min, glm::vec3& max);
+	void processMesh(aiMesh *mesh, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, MeshInfo& meshInfo);
+	void processNode(aiNode *node, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, MeshInfo& meshInfo);
 
 	//======================================================
 	//  Static functions
 	//======================================================    
 
-    std::pair<glm::vec3, glm::vec3> MeshLoader::Load(const char* path, std::vector<VertexArray*>& vertexArrays, std::vector<Material*>& materialArrays)
+    MeshInfo MeshLoader::Load(const char* path)
     {
         Assimp::Importer import;
         const aiScene *scene = import.ReadFile(path,
@@ -36,13 +36,16 @@ namespace Lobster
             aiProcess_FlipUVs
         );
         
-        glm::vec3 min(std::numeric_limits<float>::max());
-        glm::vec3 max(-std::numeric_limits<float>::max());
+		// Initialize MeshInfo
+		MeshInfo meshInfo;
+		meshInfo.Bound.first = glm::vec3(std::numeric_limits<float>::max());
+        meshInfo.Bound.second = glm::vec3(-std::numeric_limits<float>::max());
+		bool hasAnimation = scene->mNumAnimations > 0;
         
         if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
             LOG(import.GetErrorString());
-            return { glm::vec3(0, 0, 0), glm::vec3(0, 0, 0) };
+            return meshInfo;
         }
 
 		// group meshes together using same materials
@@ -50,21 +53,24 @@ namespace Lobster
 		std::vector<std::vector<IndexBuffer*>> indexBuffers(scene->mNumMaterials);
 		VertexLayout* layout = new VertexLayout();
 		layout->Add<float>("in_position", 3);
-		layout->Add<float>("in_normal", 3, sizeof(float) * 3);
-		layout->Add<float>("in_texcoord", 2, sizeof(float) * 6);
-		layout->Add<float>("in_tangent", 3, sizeof(float) * 8);
-		layout->Add<float>("in_bitangent", 3, sizeof(float) * 11);
+		layout->Add<float>("in_normal", 3);
+		layout->Add<float>("in_texcoord", 2);
+		layout->Add<float>("in_tangent", 3);
+		layout->Add<float>("in_bitangent", 3);
+		if (hasAnimation) {
+			layout->Add<uint>("in_boneID", 4);
+			layout->Add<float>("in_boneWeight", 4);
+		}
 
-		//INFO("Importing {}", path);
-        processNode(scene->mRootNode, scene, vertexBuffers, indexBuffers, min, max);
+        processNode(scene->mRootNode, scene, vertexBuffers, indexBuffers, meshInfo);
 
-		for (int i = 0; i < scene->mNumMaterials; ++i)
+		for (uint i = 0; i < scene->mNumMaterials; ++i)
 		{
 			// no vertex and index buffers use this material, skip it!
 			if (vertexBuffers[i].empty() || indexBuffers[i].empty()) continue;
 
 			// finalize vertex arrays
-			vertexArrays.push_back(new VertexArray(layout, vertexBuffers[i], indexBuffers[i], PrimitiveType::TRIANGLES));
+			meshInfo.Meshes.push_back(new VertexArray(layout, vertexBuffers[i], indexBuffers[i], PrimitiveType::TRIANGLES));
 
 			// finalize materials
 			aiString materialName;
@@ -77,10 +83,7 @@ namespace Lobster
 			scene->mMaterials[i]->GetTexture(aiTextureType_NORMALS, 0, &normalMap);
 
 			// don't give any material to this mesh, we'll define ours
-			if (materialName == aiString(AI_DEFAULT_MATERIAL_NAME))
-			{
-				continue;
-			}
+			if (materialName == aiString(AI_DEFAULT_MATERIAL_NAME)) continue;
 
 			std::vector<std::string> nameTokens = StringOps::split(path, '/');
 			std::string meshName = StringOps::substr(nameTokens[nameTokens.size() - 1], nullptr, ".");
@@ -88,62 +91,169 @@ namespace Lobster
 			std::string diffuseMapPath = "textures/" + meshName + '/' + std::string(diffuseMap.C_Str());
 			std::string normalMapPath  = "textures/" + meshName + '/' + std::string(normalMap.C_Str());
 			Material* newMaterial = MaterialLibrary::Use(materialPath.c_str());
-			//if (!newMaterial->Exist())
-			//{
-			//	newMaterial->GetUniformBufferData(0)->SetData("DiffuseColor", (void*)&diffuseColor);
-			//	newMaterial->GetUniformBufferData(0)->SetData("SpecularColor", (void*)&specularColor);
-			//	if (diffuseMap.length) {
-			//		newMaterial->SetTextureUnit("DiffuseMap", diffuseMapPath.c_str());
-			//	}
-			//	if (normalMap.length) {
-			//		newMaterial->SetTextureUnit("NormalMap", normalMapPath.c_str());
-			//	}
-			//}
-			
-			materialArrays.push_back(newMaterial);
+			meshInfo.Materials.push_back(newMaterial);
 		}
-        
-        return { min, max };
+
+		// =======================================
+		// Animations
+		if (hasAnimation) {
+			meshInfo.Animations.resize(scene->mNumAnimations);
+			for (uint i = 0; i < scene->mNumAnimations; ++i) {
+				aiAnimation* anim = scene->mAnimations[i];
+				AnimationInfo& animInfo = meshInfo.Animations[i];
+				animInfo.Duration = anim->mDuration;
+				animInfo.TicksPerSecond = anim->mTicksPerSecond;
+				animInfo.Channels.resize(anim->mNumChannels);
+				for (uint j = 0; j < anim->mNumChannels; ++j) {
+					aiNodeAnim* channel = anim->mChannels[j];
+					ChannelInfo& channelInfo = animInfo.Channels[j];
+					channelInfo.Name = channel->mNodeName.data;
+					channelInfo.Position.resize(channel->mNumPositionKeys);
+					channelInfo.Rotation.resize(channel->mNumRotationKeys);
+					channelInfo.Scale.resize(channel->mNumScalingKeys);
+					for (uint k = 0; k < channel->mNumPositionKeys; ++k) {
+						aiVectorKey& positionKey = channel->mPositionKeys[k];
+						channelInfo.Position[k].Time = positionKey.mTime;
+						channelInfo.Position[k].Value = { positionKey.mValue.x, positionKey.mValue.y, positionKey.mValue.z };
+					}
+					for (uint k = 0; k < channel->mNumRotationKeys; ++k) {
+						aiQuatKey& rotationKey = channel->mRotationKeys[k];
+						channelInfo.Rotation[k].Time = rotationKey.mTime;
+						channelInfo.Rotation[k].Value = { rotationKey.mValue.w, rotationKey.mValue.x, rotationKey.mValue.y, rotationKey.mValue.z };
+					}
+					for (uint k = 0; k < channel->mNumScalingKeys; ++k) {
+						aiVectorKey& scaleKey = channel->mScalingKeys[k];
+						channelInfo.Scale[k].Time = scaleKey.mTime;
+						channelInfo.Scale[k].Value = { scaleKey.mValue.x, scaleKey.mValue.y, scaleKey.mValue.z };
+					}
+				}
+			}
+		}
+
+        return meshInfo;
     }
     
 	//======================================================
 	//  Helper functions
 	//======================================================
 
-	void processMesh(aiMesh *mesh, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, glm::vec3& min, glm::vec3& max)
+	const int MAX_BONE_COUNT = 4;
+	struct VertexBoneData {
+		uint IDs[MAX_BONE_COUNT];
+		float Weights[MAX_BONE_COUNT];
+	};
+
+	void processMesh(aiMesh *mesh, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, MeshInfo& meshInfo)
     {
         VertexBuffer* vb = new VertexBuffer();
         IndexBuffer* ib = new IndexBuffer();
 		int stride = 14;
 
-        //	Process vertices
-		const uint numVertices = stride * mesh->mNumVertices;
-        float* vbData = new float[numVertices];    //  Hard-code
+		// Process Bones
+		VertexBoneData* boneData = nullptr;
+		if (mesh->mNumBones > 0) {
+			stride = 22;
+			bool overMaxBoneCount = false;
+			boneData = new VertexBoneData[mesh->mNumVertices];
+			memset(boneData, 0, sizeof(VertexBoneData) * mesh->mNumVertices);
+			constexpr auto glmMatConversion = [](const aiMatrix4x4& from) -> glm::mat4 {
+				glm::mat4 to;
+				to[0][0] = (GLfloat)from.a1; to[0][1] = (GLfloat)from.b1;  to[0][2] = (GLfloat)from.c1; to[0][3] = (GLfloat)from.d1;
+				to[1][0] = (GLfloat)from.a2; to[1][1] = (GLfloat)from.b2;  to[1][2] = (GLfloat)from.c2; to[1][3] = (GLfloat)from.d2;
+				to[2][0] = (GLfloat)from.a3; to[2][1] = (GLfloat)from.b3;  to[2][2] = (GLfloat)from.c3; to[2][3] = (GLfloat)from.d3;
+				to[3][0] = (GLfloat)from.a4; to[3][1] = (GLfloat)from.b4;  to[3][2] = (GLfloat)from.c4; to[3][3] = (GLfloat)from.d4;
+				return to;
+			};
+			for (uint i = 0; i < mesh->mNumBones; ++i) {
+				aiBone* bone = mesh->mBones[i];
+				std::string name = bone->mName.data;
+				if (meshInfo.BoneMap.find(name) == meshInfo.BoneMap.end()) {
+					uint nextBoneID = meshInfo.BoneTransforms.size();
+					meshInfo.BoneMap[name] = nextBoneID; // Populate BoneMap
+					meshInfo.BoneOffsets.push_back(glmMatConversion(bone->mOffsetMatrix)); // Set bone offset
+					meshInfo.BoneTransforms.push_back(glm::mat4(1.0)); // Set default matrix
+				}
+				for (uint j = 0; j < bone->mNumWeights; ++j) {
+					uint id = bone->mWeights[j].mVertexId; // Vertex index
+					float weight = bone->mWeights[j].mWeight; // Weight exerted on vertex
+					uint k = 0;
+					for (; k < MAX_BONE_COUNT; ++k) {
+						if (boneData[id].Weights[k] < 0.1) {
+							boneData[id].IDs[k] = i; // Bone index
+							boneData[id].Weights[k] = weight;
+							break;
+						}
+					}
+					overMaxBoneCount |= k == MAX_BONE_COUNT;
+				}
+			}
+			if (overMaxBoneCount) {
+				WARN("Oops... Max bone influence reached. Animation may seems a little off.");
+			}
+			for (uint i = 0; i < mesh->mNumVertices; ++i) {
+				//LOG("boneData {}: [{},{},{},{}]\t[{},{},{},{}]", i, boneData[i].IDs[0], boneData[i].IDs[1], boneData[i].IDs[2], boneData[i].IDs[3],\
+				//	boneData[i].Weights[0], boneData[i].Weights[1], boneData[i].Weights[2], boneData[i].Weights[3]);
+				float sum = boneData[i].Weights[0] + boneData[i].Weights[1] + boneData[i].Weights[2] + boneData[i].Weights[3];
+				float ratio = 1.f / sum;
+				boneData[i].Weights[0] *= ratio;
+				boneData[i].Weights[1] *= ratio;
+				boneData[i].Weights[2] *= ratio;
+				boneData[i].Weights[3] *= ratio;
+				//LOG("weight sum {}: {}", i, boneData[i].Weights[0] + boneData[i].Weights[1] + boneData[i].Weights[2] + boneData[i].Weights[3]);
+			}
+
+		}
+
+        // Process Vertices
+		struct VertexData {
+			float position[3];
+			float normal[3];
+			float texcoord[2];
+			float tangent[3];
+			float bitangent[3];
+			uint boneId[4];
+			float boneWeight[4];
+		};
+		VertexData* vbData = new VertexData[mesh->mNumVertices];
         for(unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
-			vbData[i * stride + 0] = mesh->mVertices[i].x;
-			vbData[i * stride + 1] = mesh->mVertices[i].y;
-			vbData[i * stride + 2] = mesh->mVertices[i].z;
-			vbData[i * stride + 3] = mesh->mNormals[i].x;
-			vbData[i * stride + 4] = mesh->mNormals[i].y;
-			vbData[i * stride + 5] = mesh->mNormals[i].z;
-			vbData[i * stride + 6] = (mesh->mTextureCoords[0]) ? mesh->mTextureCoords[0][i].x : 0.0f;
-			vbData[i * stride + 7] = (mesh->mTextureCoords[0]) ? mesh->mTextureCoords[0][i].y : 0.0f;
-			vbData[i * stride + 8] = (mesh->mTextureCoords[0]) ? mesh->mTangents[i].x : 0.0f;
-			vbData[i * stride + 9] = (mesh->mTextureCoords[0]) ? mesh->mTangents[i].y : 0.0f;
-			vbData[i * stride + 10] = (mesh->mTextureCoords[0]) ? mesh->mTangents[i].z : 0.0f;
-			vbData[i * stride + 11] = (mesh->mTextureCoords[0]) ? mesh->mBitangents[i].x : 0.0f;
-			vbData[i * stride + 12] = (mesh->mTextureCoords[0]) ? mesh->mBitangents[i].y : 0.0f;
-			vbData[i * stride + 13] = (mesh->mTextureCoords[0]) ? mesh->mBitangents[i].z : 0.0f;
+			vbData[i].position[0] = mesh->mVertices[i].x;
+			vbData[i].position[1] = mesh->mVertices[i].y;
+			vbData[i].position[2] = mesh->mVertices[i].z;
+			vbData[i].normal[0] = mesh->mNormals[i].x;
+			vbData[i].normal[1] = mesh->mNormals[i].y;
+			vbData[i].normal[2] = mesh->mNormals[i].z;
+			vbData[i].texcoord[0] = (mesh->mTextureCoords[0]) ? mesh->mTextureCoords[0][i].x : 0.0f;
+			vbData[i].texcoord[1] = (mesh->mTextureCoords[0]) ? mesh->mTextureCoords[0][i].y : 0.0f;
+			vbData[i].tangent[0] = (mesh->mTextureCoords[0]) ? mesh->mTangents[i].x : 0.0f;
+			vbData[i].tangent[1] = (mesh->mTextureCoords[0]) ? mesh->mTangents[i].y : 0.0f;
+			vbData[i].tangent[2] = (mesh->mTextureCoords[0]) ? mesh->mTangents[i].z : 0.0f;
+			vbData[i].bitangent[0] = (mesh->mTextureCoords[0]) ? mesh->mBitangents[i].x : 0.0f;
+			vbData[i].bitangent[1] = (mesh->mTextureCoords[0]) ? mesh->mBitangents[i].y : 0.0f;
+			vbData[i].bitangent[2] = (mesh->mTextureCoords[0]) ? mesh->mBitangents[i].z : 0.0f;
+			if (mesh->HasBones())
+			{
+				vbData[i].boneId[0] = boneData[i].IDs[0];
+				vbData[i].boneId[1] = boneData[i].IDs[1];
+				vbData[i].boneId[2] = boneData[i].IDs[2];
+				vbData[i].boneId[3] = boneData[i].IDs[3];
+				vbData[i].boneWeight[0] = boneData[i].Weights[0];
+				vbData[i].boneWeight[1] = boneData[i].Weights[1];
+				vbData[i].boneWeight[2] = boneData[i].Weights[2];
+				vbData[i].boneWeight[3] = boneData[i].Weights[3];
+			}
+
 			//INFO("{:.1f}, {:.1f}, {:.1f},    {:.1f}, {:.1f}, {:.1f},    {:.1f}, {:.1f},", vbData[i * 8 + 0], vbData[i * 8 + 1], vbData[i * 8 + 2], vbData[i * 8 + 3], vbData[i * 8 + 4], vbData[i * 8 + 5], vbData[i * 8 + 6], vbData[i * 8 + 7]);
-            min.x = mesh->mVertices[i].x < min.x ? mesh->mVertices[i].x : min.x;
+			glm::vec3& min = meshInfo.Bound.first;
+			glm::vec3& max = meshInfo.Bound.second;
+			min.x = mesh->mVertices[i].x < min.x ? mesh->mVertices[i].x : min.x;
             min.y = mesh->mVertices[i].y < min.y ? mesh->mVertices[i].y : min.y;
             min.z = mesh->mVertices[i].z < min.z ? mesh->mVertices[i].z : min.z;
             max.x = mesh->mVertices[i].x > max.x ? mesh->mVertices[i].x : max.x;
             max.y = mesh->mVertices[i].y > max.y ? mesh->mVertices[i].y : max.y;
             max.z = mesh->mVertices[i].z > max.z ? mesh->mVertices[i].z : max.z;
         }
-        vb->SetData(vbData, numVertices * sizeof(float));
+        vb->SetData(vbData, mesh->mNumVertices * sizeof(VertexData));
         
         //	Process indices
 		const uint numIndices = 3 * mesh->mNumFaces;
@@ -163,6 +273,8 @@ namespace Lobster
 		indexBuffers[mesh->mMaterialIndex].push_back(ib);
 
 		//	Release memory
+		if (boneData) delete[] boneData;
+		boneData = nullptr;
 		if (vbData)	delete[] vbData;
 		vbData = nullptr;
 		if (ibData)	delete[] ibData;
@@ -170,18 +282,18 @@ namespace Lobster
 
     }
     
-    void processNode(aiNode *node, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, glm::vec3& min, glm::vec3& max)
+    void processNode(aiNode *node, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, MeshInfo& meshInfo)
     {
         // process all the node's meshes (if any)
         for(unsigned int i = 0; i < node->mNumMeshes; i++)
         {
             aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-            processMesh(mesh, scene, vertexBuffers, indexBuffers, min, max);
+            processMesh(mesh, scene, vertexBuffers, indexBuffers, meshInfo);
         }
         // then do the same for each of its children
         for(unsigned int i = 0; i < node->mNumChildren; i++)
         {
-            processNode(node->mChildren[i], scene, vertexBuffers, indexBuffers, min, max);
+            processNode(node->mChildren[i], scene, vertexBuffers, indexBuffers, meshInfo);
         }
     }
     
