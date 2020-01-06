@@ -112,7 +112,7 @@ namespace Lobster
 					aiNodeAnim* channel = anim->mChannels[j];
 					ChannelInfo& channelInfo = animInfo.Channels[j];
 					channelInfo.Name = channel->mNodeName.data;
-					uint boneID = meshInfo.BoneMap[channelInfo.Name];
+					int boneID = meshInfo.BoneMap[channelInfo.Name];
 					animInfo.ChannelMap[boneID] = j;
 					channelInfo.Position.resize(channel->mNumPositionKeys);
 					channelInfo.Rotation.resize(channel->mNumRotationKeys);
@@ -143,10 +143,9 @@ namespace Lobster
 	//  Helper functions
 	//======================================================
 
-	const int MAX_BONE_COUNT = 4;
 	struct VertexBoneData {
-		int IDs[MAX_BONE_COUNT];
-		float Weights[MAX_BONE_COUNT];
+		int IDs[MAX_BONE_INFLUENCE];
+		float Weights[MAX_BONE_INFLUENCE];
 	};
 
 	inline glm::mat4 glmMatConversion(const aiMatrix4x4& from) 
@@ -175,25 +174,27 @@ namespace Lobster
 			for (int i = 0; i < mesh->mNumBones; ++i) {
 				aiBone* bone = mesh->mBones[i];
 				std::string name = bone->mName.data;
+				int boneID = meshInfo.BoneTransforms.size();
 				if (meshInfo.BoneMap.find(name) == meshInfo.BoneMap.end()) {
-					int nextBoneID = meshInfo.BoneTransforms.size();
-					meshInfo.BoneMap[name] = nextBoneID; // Populate BoneMap
-					glm::mat4 boneOffset = glmMatConversion(bone->mOffsetMatrix);
-					meshInfo.BoneOffsets.push_back(boneOffset); // Set bone offset
+					meshInfo.BoneMap[name] = boneID; // Populate BoneMap
+					meshInfo.BoneOffsets.push_back(glmMatConversion(bone->mOffsetMatrix)); // Set bone offset
 					meshInfo.BoneTransforms.push_back(glm::mat4(1.0)); // Set default matrix
+				} 
+				else {
+					boneID = meshInfo.BoneMap[name];
 				}
 				for (int j = 0; j < bone->mNumWeights; ++j) {
 					int id = bone->mWeights[j].mVertexId; // Vertex index
 					float weight = bone->mWeights[j].mWeight; // Weight exerted on vertex
 					int k = 0;
-					for (; k < MAX_BONE_COUNT; ++k) {
+					for (; k < MAX_BONE_INFLUENCE; ++k) {
 						if (boneData[id].Weights[k] == 0.0) {
-							boneData[id].IDs[k] = i; // Bone index
+							boneData[id].IDs[k] = boneID; // Bone index
 							boneData[id].Weights[k] = weight;
 							break;
 						}
 					}
-					overMaxBoneCount |= k == MAX_BONE_COUNT;
+					overMaxBoneCount |= k == MAX_BONE_INFLUENCE;
 				}
 			}
 			if (overMaxBoneCount) {
@@ -310,8 +311,9 @@ namespace Lobster
 	{
 		std::string nodeName = node->mName.data;
 		auto it = boneMap.find(nodeName);
-		boneNode.BoneID = it != boneMap.end() ? it->second : -1;
-		boneNode.Matrix = glmMatConversion(node->mTransformation);
+		bool isBone = it != boneMap.end();
+		boneNode.BoneID = isBone ? it->second : -1;
+		boneNode.Matrix = isBone ? glmMatConversion(node->mTransformation) : glm::mat4(1.0);
 
 		// recursively process children bones
 		if (node->mNumChildren == 0) return;
