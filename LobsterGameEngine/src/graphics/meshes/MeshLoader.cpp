@@ -18,8 +18,10 @@ namespace Lobster
 {
 
 	//  Helper function declaration
+
 	void processMesh(aiMesh *mesh, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, MeshInfo& meshInfo);
 	void processNode(aiNode *node, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, MeshInfo& meshInfo);
+	void processBoneNode(aiNode * node, BoneNode& boneNode, const std::unordered_map<std::string, uint>& boneMap);
 
 	//======================================================
 	//  Static functions
@@ -63,6 +65,7 @@ namespace Lobster
 		}
 
         processNode(scene->mRootNode, scene, vertexBuffers, indexBuffers, meshInfo);
+		processBoneNode(scene->mRootNode, meshInfo.RootNode, meshInfo.BoneMap);
 
 		for (uint i = 0; i < scene->mNumMaterials; ++i)
 		{
@@ -101,6 +104,7 @@ namespace Lobster
 			for (uint i = 0; i < scene->mNumAnimations; ++i) {
 				aiAnimation* anim = scene->mAnimations[i];
 				AnimationInfo& animInfo = meshInfo.Animations[i];
+				animInfo.Name = anim->mName.data;
 				animInfo.Duration = anim->mDuration;
 				animInfo.TicksPerSecond = anim->mTicksPerSecond;
 				animInfo.Channels.resize(anim->mNumChannels);
@@ -108,6 +112,8 @@ namespace Lobster
 					aiNodeAnim* channel = anim->mChannels[j];
 					ChannelInfo& channelInfo = animInfo.Channels[j];
 					channelInfo.Name = channel->mNodeName.data;
+					uint boneID = meshInfo.BoneMap[channelInfo.Name];
+					animInfo.ChannelMap[boneID] = j;
 					channelInfo.Position.resize(channel->mNumPositionKeys);
 					channelInfo.Rotation.resize(channel->mNumRotationKeys);
 					channelInfo.Scale.resize(channel->mNumScalingKeys);
@@ -143,6 +149,16 @@ namespace Lobster
 		float Weights[MAX_BONE_COUNT];
 	};
 
+	inline glm::mat4 glmMatConversion(const aiMatrix4x4& from) 
+	{
+		glm::mat4 to = glm::mat4(1.0);
+		to[0][0] = (GLfloat)from.a1; to[0][1] = (GLfloat)from.b1;  to[0][2] = (GLfloat)from.c1; to[0][3] = (GLfloat)from.d1;
+		to[1][0] = (GLfloat)from.a2; to[1][1] = (GLfloat)from.b2;  to[1][2] = (GLfloat)from.c2; to[1][3] = (GLfloat)from.d2;
+		to[2][0] = (GLfloat)from.a3; to[2][1] = (GLfloat)from.b3;  to[2][2] = (GLfloat)from.c3; to[2][3] = (GLfloat)from.d3;
+		to[3][0] = (GLfloat)from.a4; to[3][1] = (GLfloat)from.b4;  to[3][2] = (GLfloat)from.c4; to[3][3] = (GLfloat)from.d4;
+		return to;
+	};
+
 	void processMesh(aiMesh *mesh, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, MeshInfo& meshInfo)
     {
         VertexBuffer* vb = new VertexBuffer();
@@ -156,14 +172,6 @@ namespace Lobster
 			bool overMaxBoneCount = false;
 			boneData = new VertexBoneData[mesh->mNumVertices];
 			memset(boneData, 0, sizeof(VertexBoneData) * mesh->mNumVertices);
-			constexpr auto glmMatConversion = [](const aiMatrix4x4& from) -> glm::mat4 {
-				glm::mat4 to;
-				to[0][0] = (GLfloat)from.a1; to[0][1] = (GLfloat)from.b1;  to[0][2] = (GLfloat)from.c1; to[0][3] = (GLfloat)from.d1;
-				to[1][0] = (GLfloat)from.a2; to[1][1] = (GLfloat)from.b2;  to[1][2] = (GLfloat)from.c2; to[1][3] = (GLfloat)from.d2;
-				to[2][0] = (GLfloat)from.a3; to[2][1] = (GLfloat)from.b3;  to[2][2] = (GLfloat)from.c3; to[2][3] = (GLfloat)from.d3;
-				to[3][0] = (GLfloat)from.a4; to[3][1] = (GLfloat)from.b4;  to[3][2] = (GLfloat)from.c4; to[3][3] = (GLfloat)from.d4;
-				return to;
-			};
 			for (uint i = 0; i < mesh->mNumBones; ++i) {
 				aiBone* bone = mesh->mBones[i];
 				std::string name = bone->mName.data;
@@ -189,17 +197,17 @@ namespace Lobster
 			}
 			if (overMaxBoneCount) {
 				WARN("Oops... Max bone influence reached. Animation may seems a little off.");
-			}
-			for (uint i = 0; i < mesh->mNumVertices; ++i) {
-				//LOG("boneData {}: [{},{},{},{}]\t[{},{},{},{}]", i, boneData[i].IDs[0], boneData[i].IDs[1], boneData[i].IDs[2], boneData[i].IDs[3],\
-				//	boneData[i].Weights[0], boneData[i].Weights[1], boneData[i].Weights[2], boneData[i].Weights[3]);
-				float sum = boneData[i].Weights[0] + boneData[i].Weights[1] + boneData[i].Weights[2] + boneData[i].Weights[3];
-				float ratio = 1.f / sum;
-				boneData[i].Weights[0] *= ratio;
-				boneData[i].Weights[1] *= ratio;
-				boneData[i].Weights[2] *= ratio;
-				boneData[i].Weights[3] *= ratio;
-				//LOG("weight sum {}: {}", i, boneData[i].Weights[0] + boneData[i].Weights[1] + boneData[i].Weights[2] + boneData[i].Weights[3]);
+				for (uint i = 0; i < mesh->mNumVertices; ++i) {
+					//LOG("boneData {}: [{},{},{},{}]\t[{},{},{},{}]", i, boneData[i].IDs[0], boneData[i].IDs[1], boneData[i].IDs[2], boneData[i].IDs[3],\
+					//	boneData[i].Weights[0], boneData[i].Weights[1], boneData[i].Weights[2], boneData[i].Weights[3]);
+					float sum = boneData[i].Weights[0] + boneData[i].Weights[1] + boneData[i].Weights[2] + boneData[i].Weights[3];
+					float ratio = 1.f / sum;
+					boneData[i].Weights[0] *= ratio;
+					boneData[i].Weights[1] *= ratio;
+					boneData[i].Weights[2] *= ratio;
+					boneData[i].Weights[3] *= ratio;
+					//LOG("weight sum {}: {}", i, boneData[i].Weights[0] + boneData[i].Weights[1] + boneData[i].Weights[2] + boneData[i].Weights[3]);
+				}
 			}
 
 		}
@@ -297,4 +305,18 @@ namespace Lobster
         }
     }
     
+	void processBoneNode(aiNode * node, BoneNode& boneNode, const std::unordered_map<std::string, uint>& boneMap)
+	{
+		std::string nodeName = node->mName.data;
+		auto it = boneMap.find(nodeName);
+		boneNode.BoneID = it != boneMap.end() ? it->second : -1;
+		boneNode.Matrix = glmMatConversion(node->mTransformation);
+
+		// recursively process children bones
+		if (node->mNumChildren == 0) return;
+		boneNode.Children.resize(node->mNumChildren);
+		for (int i = 0; i < node->mNumChildren; ++i) {
+			processBoneNode(node->mChildren[i], boneNode.Children[i], boneMap);
+		}
+	}
 }

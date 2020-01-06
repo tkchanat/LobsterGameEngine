@@ -39,7 +39,7 @@ namespace Lobster
 		void SetUniform(const char* name, UniformDeclaration::DataType type, byte* data);
 		void SetUniform(const char* name, int data);
 		void SetUniform(const char* name, float data);
-		void SetUniform(const char* name, const bool& data);
+		void SetUniform(const char* name, bool data);
 		void SetUniform(const char* name, const glm::vec2& data);
         void SetUniform(const char* name, const glm::vec3& data);
 		void SetUniform(const char* name, const glm::vec4& data);

@@ -17,7 +17,7 @@ void main()
 	// calculate bone influence
 	mat4 BoneMatrix = mat4(1.0);
 	if(sys_animate) {
-		BoneMatrix  = sys_bones[in_boneId[0]] * in_boneWeight[0];
+		BoneMatrix = sys_bones[in_boneId[0]] * in_boneWeight[0];
 		BoneMatrix += sys_bones[in_boneId[1]] * in_boneWeight[1];
 		BoneMatrix += sys_bones[in_boneId[2]] * in_boneWeight[2];
 		BoneMatrix += sys_bones[in_boneId[3]] * in_boneWeight[3];

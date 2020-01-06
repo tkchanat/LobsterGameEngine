@@ -15,6 +15,7 @@ namespace Lobster
 	struct ChannelInfo;
 	struct AnimationInfo;
 	struct BoneNode {
+		uint BoneID;
 		std::vector<BoneNode> Children;
 		glm::mat4 Matrix;
 	};
@@ -44,6 +45,7 @@ namespace Lobster
 		bool b_animated;
 		double m_animationTime;
 		float m_timeMultiplier;
+		int m_currentAnimation;
     public:
         MeshComponent(const char* meshPath, const char* materialPath = "materials/default.mat");
         MeshComponent(VertexArray* mesh, const char* materialPath = "materials/default.mat");
@@ -54,8 +56,7 @@ namespace Lobster
 		virtual void OnImGuiRender() override;
 		inline std::pair<glm::vec3, glm::vec3> GetBound() const { return m_meshInfo.Bound; }
 	private:
-		void UpdateBoneTransforms();
-		void ReadNodeHierarchy(const BoneNode& node, const glm::mat4& parentTransform);
+		void UpdateBoneTransforms(const BoneNode & node, const glm::mat4 & parentTransform, const glm::mat4& globalInverseTransform);
     };
 
 	// =============================================
@@ -79,8 +80,10 @@ namespace Lobster
 		std::vector<ScaleKey> Scale;
 	};
 	struct AnimationInfo {
+		std::string Name;
 		double Duration;
 		double TicksPerSecond;
+		std::unordered_map<uint, uint> ChannelMap; // BoneID to ChannelID
 		std::vector<ChannelInfo> Channels;
 	};
     
