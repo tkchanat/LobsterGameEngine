@@ -179,6 +179,18 @@ namespace Lobster
 		}
 	}
 
+	void GameObject::OnSimulationBegin() {
+		for (Component* component : m_components) {
+			component->OnSimulationBegin();
+		}
+	}
+
+	void GameObject::OnSimulationEnd() {
+		for (Component* component : m_components) {
+			component->OnSimulationEnd();
+		}
+	}
+
 	GameObject * GameObject::AddComponent(Component * component)
 	{
 		//  TODO:

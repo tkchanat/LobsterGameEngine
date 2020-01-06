@@ -11,10 +11,15 @@ namespace Lobster
 	class EditorLayer;
 	class FileSystem;
 	class UndoSystem;
+
+	enum ApplicationMode {
+		EDITOR, SIMULATION, GAME
+	};
     
     class Application
     {
     private:
+		static ApplicationMode mode;	// application mode (editor, simulation, game)
         static Application* m_instance;
         Window* m_window;
         Renderer* m_renderer;
@@ -29,7 +34,7 @@ namespace Lobster
 		EditorLayer* m_editorLayer; // depends on GUILayer
 		GUILayer* m_GUILayer;
 		void FixedUpdate(double deltaTime);
-		void VariableUpdate(double deltaTime);
+		void VariableUpdate(double deltaTime);		
 
     public:
         Application();
@@ -40,7 +45,10 @@ namespace Lobster
         inline Window* GetWindow() { return m_window; }
         inline glm::ivec2 GetWindowSize() { return m_window->GetSize(); }
         inline float GetWindowAspectRatio() { return (float)m_window->GetSize().x / (float)m_window->GetSize().y; }
-        inline static Application* GetInstance() { return m_instance; }		
+        inline static Application* GetInstance() { return m_instance; }	
+		// Can interchange between editor mode and simulation mode
+		static void SwitchMode(ApplicationMode mode);
+		inline static ApplicationMode GetMode() { return mode; }
     };
     
 }

@@ -12,11 +12,13 @@ namespace Lobster
 	class ImGuiScene;
 	class ImGuiDemoWindow;
 	class ImGuiComponent;
+	class ImGuiGame;
 
 	class EditorLayer : public Layer
 	{
 	public:
 		static GameObject* s_selectedGameObject;
+		static ImGuiID centerID;
 	private:
 		static uint s_dockspace_id;
 		ImGuiMenuBar* m_menuBar;

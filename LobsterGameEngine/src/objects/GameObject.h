@@ -50,6 +50,9 @@ namespace Lobster
         void OnUpdate(double deltaTime);
 		//	To update ImGui components that describes this game object's attributes
 		virtual void OnImGuiRender();
+		virtual void OnSimulationBegin();
+		virtual void OnSimulationEnd();
+
 		GameObject* AddComponent(Component* component);
 		GameObject* AddChild(GameObject* child);
 		template<typename T> T* GetComponent();
