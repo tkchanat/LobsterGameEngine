@@ -15,7 +15,7 @@ namespace Lobster
 	struct ChannelInfo;
 	struct AnimationInfo;
 	struct BoneNode {
-		uint BoneID;
+		int BoneID;
 		std::vector<BoneNode> Children;
 		glm::mat4 Matrix;
 	};
@@ -83,7 +83,7 @@ namespace Lobster
 		std::string Name;
 		double Duration;
 		double TicksPerSecond;
-		std::unordered_map<uint, uint> ChannelMap; // BoneID to ChannelID
+		std::unordered_map<int, uint> ChannelMap; // BoneID to ChannelID
 		std::vector<ChannelInfo> Channels;
 	};
     

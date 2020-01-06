@@ -60,7 +60,7 @@ namespace Lobster
 		layout->Add<float>("in_tangent", 3);
 		layout->Add<float>("in_bitangent", 3);
 		if (hasAnimation) {
-			layout->Add<uint>("in_boneID", 4);
+			layout->Add<int>("in_boneID", 4);
 			layout->Add<float>("in_boneWeight", 4);
 		}
 
@@ -145,7 +145,7 @@ namespace Lobster
 
 	const int MAX_BONE_COUNT = 4;
 	struct VertexBoneData {
-		uint IDs[MAX_BONE_COUNT];
+		int IDs[MAX_BONE_COUNT];
 		float Weights[MAX_BONE_COUNT];
 	};
 
@@ -172,21 +172,22 @@ namespace Lobster
 			bool overMaxBoneCount = false;
 			boneData = new VertexBoneData[mesh->mNumVertices];
 			memset(boneData, 0, sizeof(VertexBoneData) * mesh->mNumVertices);
-			for (uint i = 0; i < mesh->mNumBones; ++i) {
+			for (int i = 0; i < mesh->mNumBones; ++i) {
 				aiBone* bone = mesh->mBones[i];
 				std::string name = bone->mName.data;
 				if (meshInfo.BoneMap.find(name) == meshInfo.BoneMap.end()) {
-					uint nextBoneID = meshInfo.BoneTransforms.size();
+					int nextBoneID = meshInfo.BoneTransforms.size();
 					meshInfo.BoneMap[name] = nextBoneID; // Populate BoneMap
-					meshInfo.BoneOffsets.push_back(glmMatConversion(bone->mOffsetMatrix)); // Set bone offset
+					glm::mat4 boneOffset = glmMatConversion(bone->mOffsetMatrix);
+					meshInfo.BoneOffsets.push_back(boneOffset); // Set bone offset
 					meshInfo.BoneTransforms.push_back(glm::mat4(1.0)); // Set default matrix
 				}
-				for (uint j = 0; j < bone->mNumWeights; ++j) {
-					uint id = bone->mWeights[j].mVertexId; // Vertex index
+				for (int j = 0; j < bone->mNumWeights; ++j) {
+					int id = bone->mWeights[j].mVertexId; // Vertex index
 					float weight = bone->mWeights[j].mWeight; // Weight exerted on vertex
-					uint k = 0;
+					int k = 0;
 					for (; k < MAX_BONE_COUNT; ++k) {
-						if (boneData[id].Weights[k] < 0.1) {
+						if (boneData[id].Weights[k] == 0.0) {
 							boneData[id].IDs[k] = i; // Bone index
 							boneData[id].Weights[k] = weight;
 							break;
@@ -219,7 +220,7 @@ namespace Lobster
 			float texcoord[2];
 			float tangent[3];
 			float bitangent[3];
-			uint boneId[4];
+			int boneId[4];
 			float boneWeight[4];
 		};
 		VertexData* vbData = new VertexData[mesh->mNumVertices];

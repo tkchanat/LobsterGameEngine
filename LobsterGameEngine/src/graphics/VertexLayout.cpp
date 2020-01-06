@@ -17,7 +17,10 @@ namespace Lobster {
         for (uint i = 0; i < m_layout.size(); ++i)
         {
             const LayoutElement& element = m_layout[i];
-            glVertexAttribPointer(i, element.count, element.type, element.normalized, m_stride, (void*)element.offset);
+			if(element.type == GL_UNSIGNED_INT || element.type == GL_INT)
+				glVertexAttribIPointer(i, element.count, element.type, m_stride, (void*)element.offset);
+			else
+				glVertexAttribPointer(i, element.count, element.type, element.normalized, m_stride, (void*)element.offset);
             glEnableVertexAttribArray(i);
         }
     }
@@ -43,6 +46,13 @@ namespace Lobster {
         m_layout.emplace_back(name, sizeof(float), GL_FLOAT, false, count, m_stride);
         m_stride += sizeof(float) * count;
     }
+
+	template<>
+	void VertexLayout::Add<int>(const char* name, uint count)
+	{
+		m_layout.emplace_back(name, sizeof(int), GL_INT, false, count, m_stride);
+		m_stride += sizeof(int) * count;
+	}
     
     template<>
     void VertexLayout::Add<uint>(const char* name, uint count)

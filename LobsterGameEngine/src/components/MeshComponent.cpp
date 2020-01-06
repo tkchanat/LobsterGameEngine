@@ -65,9 +65,9 @@ namespace Lobster
 		{
 			float ticksPerSecond = m_meshInfo.Animations[m_currentAnimation].TicksPerSecond;
 			m_animationTime += (deltaTime / 1000.0) * ticksPerSecond * m_timeMultiplier;
-			m_animationTime = std::fmod(m_animationTime, m_meshInfo.Animations[0].Duration);
+			m_animationTime = std::fmod(m_animationTime, m_meshInfo.Animations[m_currentAnimation].Duration);
 			const glm::mat4& transform = m_meshInfo.RootNode.Matrix;
-			UpdateBoneTransforms(m_meshInfo.RootNode, transform, glm::inverse(transform));
+			UpdateBoneTransforms(m_meshInfo.RootNode, glm::mat4(1.0), glm::inverse(transform));
 		}
 
 		// Submit render command
@@ -99,7 +99,7 @@ namespace Lobster
 				if (ImGui::TreeNode(label.c_str()))
 				{
 					for (const auto& pair : m_meshInfo.BoneMap) {
-						ImGui::BulletText(pair.first.c_str());
+						ImGui::BulletText("[%d] %s", pair.second, pair.first.c_str());
 					}
 					ImGui::TreePop();
 				}
@@ -122,11 +122,11 @@ namespace Lobster
 
 	void MeshComponent::UpdateBoneTransforms(const BoneNode& node, const glm::mat4& parentTransform, const glm::mat4& globalInverseTransform)
 	{
-		uint boneID = node.BoneID;
+		int boneID = node.BoneID;
 		glm::mat4 nodeTransform = node.Matrix;
 		// interpolate between keys
 		const AnimationInfo& anim = m_meshInfo.Animations[m_currentAnimation];
-		auto it = anim.ChannelMap.find(node.BoneID);
+		auto it = anim.ChannelMap.find(boneID);
 		if (it != anim.ChannelMap.end()) {
 			const ChannelInfo& channel = anim.Channels[it->second];
 			// position

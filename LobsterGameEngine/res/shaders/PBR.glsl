@@ -4,7 +4,7 @@ layout (location = 1) in vec3 in_normal;
 layout (location = 2) in vec2 in_texcoord;
 layout (location = 3) in vec3 in_tangent;
 layout (location = 4) in vec3 in_bitangent;
-layout (location = 5) in uvec4 in_boneId;
+layout (location = 5) in ivec4 in_boneId;
 layout (location = 6) in vec4 in_boneWeight;
 
 out vec3 frag_position;
