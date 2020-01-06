@@ -18,7 +18,7 @@ namespace Lobster {
 	}
 
 	void Rigidbody::OnAttach() {
-		AABB* boundingBox = new AABB(this, Transform(), false);
+		AABB* boundingBox = new AABB(this, Transform());
 		std::pair<glm::vec3, glm::vec3> pair = gameObject->GetBound();
 		boundingBox->Min = pair.first;
 		boundingBox->Max = pair.second;
@@ -140,10 +140,8 @@ namespace Lobster {
 		for (GameObject* c : colliding) {
 			if (std::find(collided.begin(), collided.end(), c) == collided.end()) {
 				gameObject->OnEnter(c);
-				c->OnEnter(gameObject);
 
 				gameObject->OnCollide(c);
-				c->OnCollide(gameObject);
 			}
 		}
 
@@ -151,11 +149,9 @@ namespace Lobster {
 		for (GameObject* c : collided) {
 			if (std::find(colliding.begin(), colliding.end(), c) == colliding.end()) {
 				gameObject->OnLeave(c);
-				c->OnLeave(gameObject);
 			}
 			else {
 				gameObject->OnOverlap(c);
-				c->OnOverlap(gameObject);
 			}
 		}
 
