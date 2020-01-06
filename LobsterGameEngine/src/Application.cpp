@@ -5,6 +5,7 @@
 
 //  Placeholder
 #include "audio/AudioSystem.h"
+#include "components/AudioComponent.h"
 #include "components/ComponentCollection.h"
 #include "events/EventDispatcher.h"
 #include "events/EventQueue.h"
@@ -20,8 +21,14 @@
 namespace Lobster
 {
     
-    Application* Application::m_instance = nullptr;
-    
+    Application* Application::m_instance = nullptr;	
+
+#ifdef LOBSTER_BUILD_DEBUG
+	ApplicationMode Application::mode = EDITOR;
+#elif LOBSTER_BUILD_RELEASE
+	ApplicationMode Application::mode = GAME;
+#endif	
+
     Application::Application()
     {
         //  Don't touch here, please do all initialization work in Initialize() function
@@ -104,6 +111,7 @@ namespace Lobster
 
 		GameObject* barrel = new GameObject("barrel");
 		barrel->AddComponent(new MeshComponent(FileSystem::Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat"));
+		barrel->AddComponent(new AudioSource());
 		//barrel->AddComponent(new AABB());
 		//barrel->AddComponent(new Rigidbody());
 		barrel->transform.Translate(0, 2, 0);
@@ -121,6 +129,7 @@ namespace Lobster
 
 		GameObject* camera = new GameObject("Main Camera");
 		camera->AddComponent(new CameraComponent(ProjectionType::PERSPECTIVE));
+		camera->AddComponent(new AudioListener());
 		camera->transform.Translate(0, 2, 10);
 		m_scene->AddGameObject(camera);
 
@@ -132,11 +141,9 @@ namespace Lobster
         //GameObject* sibenik = (new GameObject("sibenik"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/sibenik.obj").c_str(), "materials/sibenik.mat");
 		LOG("Model loading spent {} ms", loadTimer.GetElapsedTime());
 
-#ifdef LOBSTER_BUILD_DEBUG
 		// Push layers to layer stack
 		m_GUILayer = new GUILayer();
 		m_editorLayer = new EditorLayer(m_scene, m_renderer);
-#endif
     }
 
 	// Updates subsystem chronologically in a fixed timestep, i.e. order does matter
@@ -152,10 +159,12 @@ namespace Lobster
 		// Scene fixed update
 
 		//=========================================================
-		// Physics update
-		Timer physicsTimer;
-		m_scene->OnPhysicsUpdate(deltaTime);
-		Profiler::SubmitData("Physics Update Time", physicsTimer.GetElapsedTime());
+		// Physics update, not running in editor mode
+		if (mode != EDITOR) {
+			Timer physicsTimer;
+			m_scene->OnPhysicsUpdate(deltaTime);
+			Profiler::SubmitData("Physics Update Time", physicsTimer.GetElapsedTime());
+		}		
 	}
 
 	// Updates subsystem chronologically as much as possible, i.e. order does matter
@@ -260,6 +269,17 @@ namespace Lobster
 
 			frames++;
 			Profiler::SubmitData("Frame Time", frameTime.GetElapsedTime());
+		}
+	}
+
+	void Application::SwitchMode(ApplicationMode mode) {
+		m_instance->mode = mode;
+		// TODO switch tab
+		if (mode == EDITOR) {
+
+		}
+		else if (mode == SIMULATION) {
+
 		}
 	}
 

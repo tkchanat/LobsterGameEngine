@@ -32,15 +32,6 @@ namespace Lobster
 			}
 		}
 
-		// Configuring Listener
-		// TODO: create an AudioListen class in one of two ways,
-		// 1) make it as a component and attach the listener to a GameObject
-		// 2) assume all cameras are listeners, no need to make it into a component
-		ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
-		alListener3f(AL_POSITION, 0, 0, 1.0f);
-		alListener3f(AL_VELOCITY, 0, 0, 0);
-		alListenerfv(AL_ORIENTATION, listenerOri);
-
 		INFO("AudioSystem initialized!");
 	}
 
@@ -67,22 +58,25 @@ namespace Lobster
 		s_instance = new AudioSystem();
 	}
 
-	void AudioSystem::AddAudioClip(const char* file, AudioType type) {
+	AudioClip* AudioSystem::AddAudioClip(const char* file, AudioType type) {
 		// TODO base on type, classify into different loading method
 		// load the file
 		ALsizei size, freq;
 		ALenum format;
 		ALvoid *data;
 		LoadWAVFile(file, &format, &data, &size, &freq);
-		// if loaded successfully, create AudioClip
+		// TODO check if loaded successfully
 		AudioClip* ac = new AudioClip(fs::path(file).filename().string().c_str());
 		ac->BindBuffer(format, data, size, freq);
 		s_instance->m_audioClips.push_back(ac);
+		return ac;
 	}
 
-	void AudioSystem::RemoveAudioClip(AudioClip* target) {		
-		std::remove(s_instance->m_audioClips.begin(), s_instance->m_audioClips.end(), target);
-		s_instance->m_audioClips.pop_back();
+	void AudioSystem::RemoveAudioClip(AudioClip* target) {	
+		if (!target) return;
+		auto it = std::remove(s_instance->m_audioClips.begin(), s_instance->m_audioClips.end(), target);
+		s_instance->m_audioClips.erase(it, s_instance->m_audioClips.end());
+		delete target;
 	}
 
 	void AudioSystem::RemoveAudioClip(std::string name) {
@@ -113,6 +107,20 @@ namespace Lobster
 
 	std::vector<AudioClip*>& AudioSystem::GetAudioList() {
 		return s_instance->m_audioClips;
+	}
+
+	void AudioSystem::SetRolloffType(VolumeRolloff type) {
+		switch (type) {
+		case LINEAR:
+			alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+			break;
+		case INVERSE_SQUARE:
+			alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
+			break;
+		case EXPONENTIAL:
+			alDistanceModel(AL_EXPONENT_DISTANCE_CLAMPED);
+			break;
+		}
 	}
 
 	void AudioSystem::LoadWAVFile(const char * path, ALsizei * format, ALvoid ** data, ALsizei * size, ALsizei * freq)

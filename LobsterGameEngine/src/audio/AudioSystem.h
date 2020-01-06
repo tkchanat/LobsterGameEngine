@@ -10,6 +10,8 @@ namespace Lobster
 		UNKNOWN, WAV, OGG, MP3, AUDIOTYPE_SIZE
 	};
 
+	enum VolumeRolloff { LINEAR, INVERSE_SQUARE, EXPONENTIAL };
+
 	class AudioSystem
 	{
 	private:
@@ -22,9 +24,10 @@ namespace Lobster
 		static void Initialize();
 		static void ListAllDevices(const ALCchar* devices);
 		static std::vector<AudioClip*>& GetAudioList();
-		static void AddAudioClip(const char* file, AudioType type = AudioType::UNKNOWN);
+		static AudioClip* AddAudioClip(const char* file, AudioType type = AudioType::UNKNOWN);
 		static void RemoveAudioClip(AudioClip* target);
 		static void RemoveAudioClip(std::string name);
+		static void SetRolloffType(VolumeRolloff type);
 		
 	private:
 		AudioSystem();
