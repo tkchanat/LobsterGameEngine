@@ -67,6 +67,7 @@ namespace Lobster
 
 				if (g1->Intersects(g2.get())) {
 					g1->HasCollided(g2.get());
+					g2->HasCollided(g1.get());
 				}
 				j++;
 			}
@@ -77,6 +78,11 @@ namespace Lobster
 		//	Time to update the physics. 
 		for (PhysicsComponent* physicsObj : physics) {
 			physicsObj->OnPhysicsLateUpdate(deltaTime);
+		}
+
+		//	And eventually update the collision frame records.
+		for (auto g1 : m_gameObjects) {
+			g1->frameElapse();
 		}
 	}
 

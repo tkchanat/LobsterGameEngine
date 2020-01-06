@@ -30,7 +30,7 @@ namespace Lobster {
 
 	void Rigidbody::OnImGuiRender() {
 		bool statement;
-		
+
 		if (statement) {
 			if (ImGui::CollapsingHeader("PhysicsComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
 				ImGui::Checkbox("Enabled?", &m_enabled);
@@ -66,30 +66,58 @@ namespace Lobster {
 		m_prevLinearPos = transform->WorldPosition;
 		m_prevAngularPos = transform->WorldEulerAngles;
 
+		//	Compute acceleration due to gravity.
+		glm::vec3 linearAccel = m_acceleration + (m_simulate ? GRAVITY : glm::vec3(0, 0, 0));
+
+		//	Determine if we need to update position or velocity for each direction.
+
+		for (int i = 0; i < 3; i++) {
+			if (m_newLinearVelocity[i] * m_velocity[i] < 0.0f && m_newLinearVelocity[i] + m_velocity[i] < 0.01f) {
+				m_velocity[i] = 0.0f;
+				m_newLinearVelocity[i] = 0.0f;
+				linearAccel[i] = 0.0f;
+				lastCollision = 0;
+			}
+			else {
+				lastCollision++;
+			}
+		}
+
 		//	Copy velocity details from previous collision, if there's any.
 		if (glm::length(m_newLinearVelocity) > 0) {
 			m_velocity = m_newLinearVelocity;
 			m_newLinearVelocity = glm::vec3(0, 0, 0);
 		}
 
-		glm::vec3 linearAccel = m_acceleration + (m_simulate ? GRAVITY : glm::vec3(0, 0, 0));
 		//	Only update if simulation is enabled.
 		if (m_simulate) {
-			transform->WorldPosition += m_velocity * time + 0.5f * linearAccel * time;
-			m_velocity += linearAccel * time;
-			//	TODO: Damping algorithm
-			m_velocity *= (100.0f - m_linearDamping) / 100.0f;
 
-			transform->WorldEulerAngles += m_angularVelocity * time + 0.5f * m_angularAcceleration * time;
-			m_angularVelocity += m_angularAcceleration * time;
-			//	TODO: Damping algorithm
-			m_angularVelocity *= (100.0f - m_angularDamping) / 100.0f;
+			Travel(time, linearAccel);
 
 			for (Collider* collider : m_colliders) {
 				if (collider->IsEnabled()) {
 					collider->OnUpdate(deltaTime);
 				}
 			}
+
+			if (lastCollision > 5) return;
+
+			for (GameObject* collided : gameObject->GetLastCollided()) {
+				PhysicsComponent* physics = collided->GetComponent<PhysicsComponent>();
+				if (Intersects(physics)) {
+					UndoTravel(time, linearAccel);
+
+					for (Collider* collider : m_colliders) {
+						if (collider->IsEnabled()) {
+							collider->OnUpdate(deltaTime);
+						}
+					}
+
+					lastCollision = 0;
+					break;
+				}
+			}
+			//}
 		}
 	}
 
@@ -101,6 +129,12 @@ namespace Lobster {
 		//	Compare the list with that of the previous physics update.
 		//	Call the corresponding functions.
 		std::vector<GameObject*> collided = gameObject->GetCollided();
+
+		//	Copy vector of most recently collided GameObject.
+		m_lastCollided.empty();
+		if (colliding.size() > 0) {
+			m_lastCollided = colliding;
+		}
 
 		//	If previous frame has no collision, call the two functions.
 		for (GameObject* c : colliding) {
@@ -126,7 +160,7 @@ namespace Lobster {
 		}
 
 		//	At last, update m_colliding and m_collided.
-		gameObject->frameElapse();
+		//gameObject->frameElapse();
 
 		//	Update collision if this object is of block type.
 		if (GetPhysicsType() != 0) return;
@@ -170,5 +204,29 @@ namespace Lobster {
 			transform->WorldPosition = m_prevLinearPos;
 			physicsObj->transform->WorldPosition = physicsObj->m_prevLinearPos;
 		}
+	}
+
+	void Rigidbody::Travel(float time, glm::vec3 linearAccel) {
+		transform->WorldPosition += m_velocity * time + 0.5f * linearAccel * time;
+		m_velocity += linearAccel * time;
+		//	TODO: Damping algorithm
+		m_velocity *= (100.0f - m_linearDamping) / 100.0f;
+
+		transform->WorldEulerAngles += m_angularVelocity * time + 0.5f * m_angularAcceleration * time;
+		m_angularVelocity += m_angularAcceleration * time;
+		//	TODO: Damping algorithm
+		m_angularVelocity *= (100.0f - m_angularDamping) / 100.0f;
+	}
+
+	void Rigidbody::UndoTravel(float time, glm::vec3 linearAccel) {
+		//	TODO: Damping algorithm
+		m_angularVelocity /= (100.0f - m_angularDamping) / 100.0f;
+		m_angularVelocity -= m_angularAcceleration * time;
+		transform->WorldEulerAngles -= m_angularVelocity * time + 0.5f * m_angularAcceleration * time;
+		
+		//	TODO: Damping algorithm
+		m_velocity /= (100.0f - m_linearDamping) / 100.0f;
+		m_velocity -= linearAccel * time;
+		transform->WorldPosition -= m_velocity * time + 0.5f * linearAccel * time;
 	}
 }

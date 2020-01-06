@@ -38,6 +38,8 @@ namespace Lobster
 		std::vector<GameObject*> m_colliding;
 		//	Stores the collided objects at the previous frame. Updates over time.
 		std::vector<GameObject*> m_collided;
+		//	Stores the most recent colliding objects.
+		std::vector<GameObject*> m_lastCollided;
 
 		template<typename T, typename ...Args> Component* CreateComponent(Args&&... args);
 
@@ -67,7 +69,9 @@ namespace Lobster
 		inline void HasCollided(GameObject* other) { m_colliding.push_back(other); }
 		inline std::vector<GameObject*> GetCollided() const { return m_collided; }
 		inline std::vector<GameObject*> GetColliding() const { return m_colliding; }
+		inline std::vector<GameObject*> GetLastCollided() const { return m_lastCollided; }
 		inline void frameElapse() {
+			if (m_colliding.size() > 0) m_lastCollided = m_colliding;
 			m_collided = m_colliding;
 			m_colliding.clear();
 		}
