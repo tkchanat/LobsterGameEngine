@@ -74,8 +74,6 @@ namespace Lobster {
 
 			return IsEnclosed(p1[0], p1[1], p2) && IsEnclosed(p1[0], p1[3], p2) && IsEnclosed(p1[0], p1[4], p2)
 				&& IsEnclosed(p2[0], p2[1], p1) && IsEnclosed(p2[0], p2[3], p1) && IsEnclosed(p2[0], p2[4], p1);
-
-			//return false;
 		}
 		return false;
 	}
@@ -104,14 +102,6 @@ namespace Lobster {
 		float p1_min = glm::dot(o1_min, projection);
 		float p1_max = glm::dot(o1_max, projection);
 
-		LOG("P1 min - {}, P1 max - {}, P2 min - {}, P2 max - {}", p1_min, p1_max, p2_min, p2_max);
 		return p1_min <= p2_max && p2_min <= p1_max;
-
-		/*float l1_min = glm::dot(o1_min, projection);
-		float l1_max = glm::dot(o1_max, projection);
-		float l2_min = glm::dot(o2_min, projection);
-		float l2_max = glm::dot(o2_max, projection);
-
-		return l1_min <= l2_max && l2_min <= l1_max;*/
 	}
 }

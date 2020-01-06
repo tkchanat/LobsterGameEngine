@@ -132,10 +132,10 @@ namespace Lobster
 			}
 		} else {
 			if (ImGui::Button("Add Collider")) {
-				AABB* aabb = new AABB(physics);
-				aabb->SetOwner(this);
-				aabb->SetOwnerTransform(&transform);
-				physics->AddCollider(aabb);
+				BoxCollider* box = new BoxCollider(physics);
+				box->SetOwner(this);
+				box->SetOwnerTransform(&transform);
+				physics->AddCollider(box);
 			}
 		}
 
