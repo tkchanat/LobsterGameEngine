@@ -50,7 +50,6 @@ typedef unsigned char byte;
 #include <glm/gtx/quaternion.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <nlohmann/json.hpp>
 
 //  Custom includes
 #include "events/EventCollection.h"

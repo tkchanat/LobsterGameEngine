@@ -49,33 +49,46 @@ namespace Lobster
     }
 
 	void Scene::OnPhysicsUpdate(double deltaTime) {
-		//	First perform physics update.
+		//	First perform physics position update.
+		for (auto gameObj : m_gameObjects) {
+			PhysicsComponent* physicsObj = gameObj->GetComponent<PhysicsComponent>();
+			if (physicsObj && physicsObj->IsEnabled()) physicsObj->OnPhysicsUpdate(deltaTime);
+		}
 		//	TODO: Some type of structure to record which pair of game objects / colliders intersected.
 
-		std::vector<Collider*> colliders;
-		for (GameObject* gameObject : m_gameObjects) {
-			//	TODO: Physics Update
-			Rigidbody* rigidbody = gameObject->GetComponent<Rigidbody>();
-			if (!rigidbody || !rigidbody->IsEnabled()) continue;
-			for (Collider* collider : rigidbody->GetColliders()) {
-				if (collider->IsEnabled() && collider->GetPhysics()->GetPhysicsType() != 2)
-					colliders.push_back(collider);
-			}
-		}
+		//	Next, find the list of colliders and objects with physics component.
+		//	This is done by finding all active rigidbody components.
+		std::vector<PhysicsComponent*> physics;
 
-		//	Next, do collision check on all physics components we extracted.
-		//	Currently, we adapted a naive approach of comparing all pairs of AABB.
 		int i = 0;
-		for (Collider* c1 : colliders) {
+		for (auto g1 : m_gameObjects) {
+			if (!(g1->GetComponent<PhysicsComponent>())) continue;
+			
+			physics.push_back(g1->GetComponent<PhysicsComponent>());
+
 			int j = 0;
-			for (Collider* c2 : colliders) {
+			for (auto g2 : m_gameObjects) {
 				if (i <= j) break;
-				//	TODO: Actually use the computed result here instead of printing.
-				bool intersect = c1->Intersects(c2) && (c1->GetPhysics() != c2->GetPhysics());
-				if (intersect) LOG("{} intersects with {} (Type: {})", c1->GetPhysics()->GetOwner()->GetName(), c2->GetPhysics()->GetOwner()->GetName(), PhysicsComponent::PhysicsType[std::max(c1->GetPhysics()->GetPhysicsType(), c2->GetPhysics()->GetPhysicsType())]);
+				if (!(g2->GetComponent<PhysicsComponent>())) continue;
+
+				if (g1->Intersects(g2)) {
+					g1->HasCollided(g2);
+					g2->HasCollided(g1);
+				}
 				j++;
 			}
 			i++;
+		}
+
+		//	Finally, after detecting all collision on this frame -
+		//	Time to update the physics. 
+		for (PhysicsComponent* physicsObj : physics) {
+			physicsObj->OnPhysicsLateUpdate(deltaTime);
+		}
+
+		//	And eventually update the collision frame records.
+		for (auto g1 : m_gameObjects) {
+			g1->frameElapse();
 		}
 	}
 

@@ -128,7 +128,10 @@ namespace Lobster
 			}
 		} else {
 			if (ImGui::Button("Add Collider")) {
-				physics->AddCollider(new AABB(physics));
+				BoxCollider* box = new BoxCollider(physics);
+				box->SetOwner(this);
+				box->SetOwnerTransform(&transform);
+				physics->AddCollider(box);
 			}
 		}
 
@@ -189,6 +192,18 @@ namespace Lobster
 		}
 	}
 
+	void GameObject::OnSimulationBegin() {
+		for (Component* component : m_components) {
+			component->OnSimulationBegin();
+		}
+	}
+
+	void GameObject::OnSimulationEnd() {
+		for (Component* component : m_components) {
+			component->OnSimulationEnd();
+		}
+	}
+
 	GameObject * GameObject::AddComponent(Component * component)
 	{
 		//  TODO:
@@ -213,12 +228,6 @@ namespace Lobster
 
 		component->SetOwner(this);
 		component->SetOwnerTransform(&transform);
-
-		/*if (dynamic_cast<Collider*>(component)) {
-			Rigidbody* rigidbody = GetComponent<Rigidbody>();
-			rigidbody->AddCollider(dynamic_cast<Collider*>(component));
-			return this;
-		}*/
 
 		m_components.push_back(component);		
 		component->OnAttach();
@@ -249,5 +258,34 @@ namespace Lobster
 		}
 
 		delete comp;
+	}
+
+
+	bool GameObject::Intersects(GameObject* other) {
+		PhysicsComponent* physics = GetComponent<PhysicsComponent>();
+		PhysicsComponent* otherPhysics = other->GetComponent<PhysicsComponent>();
+
+		return physics && physics->IsEnabled() && otherPhysics && otherPhysics->IsEnabled() && physics->Intersects(otherPhysics);
+	}
+
+	void GameObject::OnCollide(GameObject* other) {
+		LOG("{} collided with {}", GetName(), other->GetName());
+	}
+
+	void GameObject::OnEnter(GameObject* other) {
+		LOG("{} and {} entered each other", GetName(), other->GetName());
+	}
+
+	void GameObject::OnOverlap(GameObject* other) {
+		LOG("{} and {} is overlapping each other", GetName(), other->GetName());
+	}
+
+	void GameObject::OnLeave(GameObject* other) {
+		LOG("{} and {} left each other", GetName(), other->GetName());
+	}
+
+	bool GameObject::IsOverlap(GameObject* other) {
+		//	Check if object given is in m_collided.
+		return (std::find(m_collided.begin(), m_collided.end(), other) != m_collided.end());
 	}
 }

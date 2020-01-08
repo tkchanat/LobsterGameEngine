@@ -75,6 +75,7 @@ namespace Lobster
 		m_menuBar->Show(&show_menuBar); // Menu bar
 		m_properties->Show(&show_properties); // Properties
 		m_scene->Show(&show_scene); // Scene
+		//m_gameView->Show(&show_gameView); // Game View (note the boolean is a static member)
 		m_toolbar->Show(&show_toolbar); // Toolbar
 	}
 
@@ -144,6 +145,7 @@ namespace Lobster
 		// ============================================================================ //
 		// Naming scheme: dock_<left><right><top><bottom>, 0 = leftmost, w/h(10) = rightmost/downmost
 		ImGuiID dock_0w01, dock_0w1h, dock_070h, dock_7w0h, dock_0708, dock_078h, dock_0318, dock_3718, dock_0314, dock_0348;
+		centerID = dock_3718;
 		// Disable tab bar for custom toolbar
 		ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.06f, &dock_0w01, &dock_0w1h);
 		ImGui::DockBuilderGetNode(dock_0w01)->LocalFlags |= ImGuiDockNodeFlags_AutoHideTabBar;
@@ -152,7 +154,8 @@ namespace Lobster
 		ImGui::DockBuilderSplitNode(dock_0708, ImGuiDir_Left, 0.3f, &dock_0318, &dock_3718);
 		ImGui::DockBuilderSplitNode(dock_0318, ImGuiDir_Up, 0.4f, &dock_0314, &dock_0348);
 		ImGui::DockBuilderDockWindow("Toolbar", dock_0w01);
-		ImGui::DockBuilderDockWindow("Scene", dock_3718);
+		//ImGui::DockBuilderDockWindow("Game", dock_3718);
+		ImGui::DockBuilderDockWindow("Scene", dock_3718);		
 		ImGui::DockBuilderDockWindow("Assets", dock_078h);
 		ImGui::DockBuilderDockWindow("Console", dock_078h);
 		ImGui::DockBuilderDockWindow("Hierarchy", dock_0314);
@@ -161,4 +164,5 @@ namespace Lobster
 		ImGui::DockBuilderFinish(s_dockspace_id);
 	}
 
+	ImGuiID EditorLayer::centerID = 0;
 }

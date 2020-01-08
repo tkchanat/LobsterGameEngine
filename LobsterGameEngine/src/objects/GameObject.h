@@ -33,6 +33,13 @@ namespace Lobster
 		//	Transform object to store previous state of game object prior to change.
 		Transform m_transPrev;
 
+		//	Stores the collided objects right now. Clears at each frame.
+		std::vector<GameObject*> m_colliding;
+		//	Stores the collided objects at the previous frame. Updates over time.
+		std::vector<GameObject*> m_collided;
+		//	Stores the most recent colliding objects.
+		std::vector<GameObject*> m_lastCollided;
+
 		template<typename T, typename ...Args> Component* CreateComponent(Args&&... args);
 
     public:
@@ -40,9 +47,12 @@ namespace Lobster
         ~GameObject(); // TODO: private the destructor, forcing users to call Destroy() instead
 		void Destroy();
         void OnUpdate(double deltaTime);
-		void OnImGuiRender();
 		void Serialize(cereal::JSONOutputArchive& oarchive);
 		void Deserialize(cereal::JSONInputArchive& iarchive);
+		//	To update ImGui components that describes this game object's attributes
+		virtual void OnImGuiRender();
+		virtual void OnSimulationBegin();
+		virtual void OnSimulationEnd();
 		GameObject* AddComponent(Component* component);
 		GameObject* AddChild(GameObject* child);
 		template<typename T> T* GetComponent();
@@ -54,6 +64,27 @@ namespace Lobster
 		inline size_t GetChildrenCount() const { return m_children.size(); }
 		//	RemoveComponent removes the component in vector and deletes comp afterwards.
 		void RemoveComponent(Component* comp);
+
+		bool Intersects(GameObject* other);
+		//	Functions to register collision or intersection of components.
+		inline void HasCollided(GameObject* other) { m_colliding.push_back(other); }
+		inline std::vector<GameObject*> GetCollided() const { return m_collided; }
+		inline std::vector<GameObject*> GetColliding() const { return m_colliding; }
+		inline std::vector<GameObject*> GetLastCollided() const { return m_lastCollided; }
+		inline void frameElapse() {
+			if (m_colliding.size() > 0) m_lastCollided = m_colliding;
+			m_collided = m_colliding;
+			m_colliding.clear();
+		}
+
+
+		//	Functions for scripting. Called by physics component.
+		void OnCollide(GameObject* other);
+		void OnEnter(GameObject* other);
+		void OnOverlap(GameObject* other);
+		void OnLeave(GameObject* other);
+		bool IsOverlap(GameObject* other);
+
 	private:
 		friend class cereal::access;
 		template <class Archive>

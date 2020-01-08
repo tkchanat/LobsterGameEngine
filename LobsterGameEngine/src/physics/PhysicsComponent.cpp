@@ -9,6 +9,16 @@ namespace Lobster {
 	const char* PhysicsComponent::PhysicsBodyTypes[] = { "Rigid body", "Non-rigid body" };
 	const char* PhysicsComponent::PhysicsType[] = { "Block", "Overlap", "Ignore" };
 
+	bool PhysicsComponent::Intersects(PhysicsComponent* other) {
+		for (Collider* c1 : m_colliders) {
+			if (c1->IsEnabled() == false) continue;
+			for (Collider* c2 : other->m_colliders) {
+				if (c2->IsEnabled() && c1->Intersects(c2)) return true;
+			}
+		}
+		return false;
+	}
+
 	void PhysicsComponent::RemoveCollider(Collider* collider) {
 		int i = 0;
 		for (Collider* c : m_colliders) {

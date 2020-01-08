@@ -73,7 +73,7 @@ namespace Lobster
 				{
 					b_showProfiler = !b_showProfiler;
 				}
-			}));
+			}));			
 		}
 		
 		inline CameraComponent* GetCamera() { return m_editorCamera->GetComponent<CameraComponent>(); }
