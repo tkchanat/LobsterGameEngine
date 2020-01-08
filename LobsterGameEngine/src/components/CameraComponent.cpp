@@ -89,13 +89,13 @@ namespace Lobster
 
 	void CameraComponent::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
-		LOG("Serializing CameraComponent");
+		//LOG("Serializing CameraComponent");
 		oarchive(*this);
 	}
 
 	void CameraComponent::Deserialize(cereal::JSONInputArchive & iarchive)
 	{
-		LOG("Deserializing CameraComponent");
+		//LOG("Deserializing CameraComponent");
 		try {
 			iarchive(*this);
 			float aspectRatio = Application::GetInstance()->GetWindowAspectRatio();

@@ -32,7 +32,7 @@ namespace Lobster
 		float m_debugTranslatedData[24]; // raw translated (for once) vertices position
     public:
         AABB(PhysicsComponent* physics, Transform transform = Transform(), bool draw = true);
-
+		virtual ~AABB() override;
 		void SetOwner(GameObject* owner);
 
 		void OnUpdate(double deltaTime) override;

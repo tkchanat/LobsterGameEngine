@@ -86,13 +86,13 @@ namespace Lobster
 
 	void MeshComponent::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
-		LOG("Serializing MeshComponent {}", m_meshPath);
+		//LOG("Serializing MeshComponent {}", m_meshPath);
 		oarchive(*this);
 	}
 
 	void MeshComponent::Deserialize(cereal::JSONInputArchive & iarchive)
 	{
-		LOG("Deserializing MeshComponent {}", m_meshPath);
+		//LOG("Deserializing MeshComponent {}", m_meshPath);
 		try {
 			iarchive(*this);
 			LoadFromFile(m_meshPath.c_str(), nullptr);

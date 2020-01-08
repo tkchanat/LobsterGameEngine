@@ -1,6 +1,8 @@
 #pragma once
 //	This is the precompiled header file (pch.h).
 //	If you aren't familiar with PCHs, I suggest you to check out: https://www.youtube.com/watch?v=eSI4wctZUto
+typedef unsigned int uint;
+typedef unsigned char byte;
 
 //  Standard includes
 #include <condition_variable>
@@ -64,8 +66,6 @@
 //  Custom Defines
 #define MAX_TEXTURE_UNIT 16
 #define MAX_UNIFORM_BUFFER 16
-typedef unsigned int uint;
-typedef unsigned char byte;
 
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)

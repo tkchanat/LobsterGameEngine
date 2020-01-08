@@ -53,6 +53,15 @@ namespace Lobster
         m_debugMesh = new VertexArray(layout, vb, ib, PrimitiveType::LINES);
     }
 
+	AABB::~AABB()
+	{
+		if (m_debugMaterial) delete m_debugMaterial;
+		if (m_debugMesh) delete m_debugMesh;
+		m_debugMaterial = nullptr;
+		m_debugMesh = nullptr;
+		m_debugVertexBuffer = nullptr;
+	}
+
 	void AABB::SetOwner(GameObject* owner) {
 		//gameObject = owner;
 		std::pair<glm::vec3, glm::vec3> pair = owner->GetBound();

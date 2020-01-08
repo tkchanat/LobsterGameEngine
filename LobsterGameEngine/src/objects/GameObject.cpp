@@ -18,17 +18,15 @@ namespace Lobster
     GameObject::~GameObject()
     {
 		// Delete all enabled components
-		for (Component* component : m_components)
-		{
+		for (Component* component : m_components) {
 			delete component;
+			component = nullptr;
 		}
-		m_components.clear();
-		// Delete all childrens
-		for (GameObject* child : m_children) 
-		{
-			child->Destroy();
+		// Delete all children
+		for (GameObject* child : m_children) {
+			delete child;
+			child = nullptr;
 		}
-		m_children.clear();
     }
 
 	void GameObject::Destroy()
@@ -176,13 +174,13 @@ namespace Lobster
 
 	void GameObject::Serialize(cereal::JSONOutputArchive& oarchive)
 	{
-		LOG("Serializing GameObject {}", m_name);
+		//LOG("Serializing GameObject {}", m_name);
 		oarchive(*this);
 	}
 
 	void GameObject::Deserialize(cereal::JSONInputArchive& iarchive)
 	{
-		LOG("Deserializing GameObject {}", m_name);
+		//LOG("Deserializing GameObject {}", m_name);
 		try {
 			iarchive(*this);
 		}

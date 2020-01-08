@@ -215,7 +215,6 @@ namespace Lobster
 		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 		Shader* prefilterShader = ShaderLibrary::Use("shaders/PrefilterConvolution.glsl");
-		VertexArray* cube = MeshFactory::Cube();
 		prefilterShader->Bind();
 		prefilterShader->SetUniform("environmentMap", 0);
 		prefilterShader->SetUniform("captureProjection", captureProjection);

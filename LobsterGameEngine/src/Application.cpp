@@ -134,6 +134,12 @@ namespace Lobster
 		m_GUILayer = new GUILayer();
 		m_editorLayer = new EditorLayer();
 #endif
+		EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {
+			if (e->Key == GLFW_KEY_O)
+			{
+				OpenScene("scenes/test.lobster");
+			}
+		}));
     }
 
 	// Updates subsystem chronologically in a fixed timestep, i.e. order does matter

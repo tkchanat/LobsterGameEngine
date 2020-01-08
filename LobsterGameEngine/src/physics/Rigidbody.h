@@ -8,10 +8,8 @@ namespace Lobster {
 	public:
 		static const glm::vec3 GRAVITY;
 
-		Rigidbody() :
-			m_velocity(glm::vec3(0, 0, 0)),
-			m_acceleration(glm::vec3(0, 0, 0))
-		{}
+		Rigidbody() : m_velocity(glm::vec3(0, 0, 0)), m_acceleration(glm::vec3(0, 0, 0)) {}
+		virtual ~Rigidbody() override {}
 
 		void OnAttach() override;
 		void OnUpdate(double deltaTime) override;

@@ -9,13 +9,13 @@ namespace Lobster {
 		static const char* PhysicsBodyTypes[];
 		const static char* PhysicsType[];
 
-		~PhysicsComponent() {
-			delete m_boundingBox;
+		virtual ~PhysicsComponent() override {
+			if(m_boundingBox) delete m_boundingBox;
 			m_boundingBox = nullptr;
 			for (Collider* collider : m_colliders) {
-				delete collider;
+				if(collider) delete collider;
+				collider = nullptr;
 			}
-			m_colliders.clear();
 		}
 
 		void AddCollider(Collider* collider) {
