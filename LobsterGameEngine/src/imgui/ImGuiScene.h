@@ -34,10 +34,7 @@ namespace Lobster
 		ImGuizmo::MODE m_mode = ImGuizmo::LOCAL;
 		glm::vec3 m_originalScale;
 		// Custom gizmos
-		static std::list<GizmosCommand> m_gizmosQueue;
-		// not the owner of these objects, don't delete
-		Scene* m_scene;
-		Renderer* m_renderer;
+		static std::queue<GizmosCommand> m_gizmosQueue;
 		// camera staring point
 		glm::vec3 at = glm::vec3(0, 0, 0);
 		// grid line
@@ -53,10 +50,8 @@ namespace Lobster
 		// transform object storing previous state of the game object prior to move
 		Transform m_transform;
 	public:
-		explicit ImGuiScene(Scene* scene, Renderer* renderer) :
+		explicit ImGuiScene() :
 			m_editorCamera(nullptr),
-			m_scene(scene),
-			m_renderer(renderer),
 			b_showGrid(true),
 			m_gridColor(glm::vec4(1.0)),
 			m_gridMaterial(nullptr),
@@ -82,7 +77,7 @@ namespace Lobster
 		}
 		
 		inline CameraComponent* GetCamera() { return m_editorCamera->GetComponent<CameraComponent>(); }
-		inline static void SubmitGizmos(GizmosCommand command) { m_gizmosQueue.push_back(command); }
+		static void SubmitGizmos(GizmosCommand command) { m_gizmosQueue.push(command); }
 
 		// Check if moues is inside the "scene" window 
 		bool insideWindow(const ImVec2& mouse, const ImVec2& pos, const ImVec2& size) {
@@ -94,13 +89,9 @@ namespace Lobster
 		~ImGuiScene()
 		{
 			if (m_editorCamera) delete m_editorCamera;
-			if (m_scene) delete m_scene;
-			if (m_renderer) delete m_renderer;
 			if (m_gridMaterial) delete m_gridMaterial;
 			if (m_gridVertexArray) delete m_gridVertexArray;
 			m_editorCamera = nullptr;
-			m_scene = nullptr;
-			m_renderer = nullptr;
 			m_gridMaterial = nullptr;
 			m_gridVertexArray = nullptr;
 		}
@@ -139,10 +130,10 @@ namespace Lobster
 		}
 
 		void SelectObject(glm::vec3 pos, glm::vec3 dir) {
-			auto gameObjects = m_scene->GetGameObjects();
-			GameObject* nearestGameObject = nullptr;
-			float tmin = 9999999.f;
-			for (auto gameObject : gameObjects) {
+			const std::vector<GameObject*>& gameObjects = GetScene()->GetGameObjects();
+			GameObject* nearestGameObject = nullptr; 
+			float tmin = 9999999.f;			
+			for (GameObject* gameObject : gameObjects) {
 				PhysicsComponent* physics = gameObject->GetComponent<PhysicsComponent>();
 				if (!physics) continue;
 
@@ -152,12 +143,15 @@ namespace Lobster
 					bool hit = component->Intersects(pos, dir, t);
 					if (hit && t < tmin) {
 						tmin = t;
-						nearestGameObject = gameObject.get();
-					}
+						nearestGameObject = gameObject;
+					}					
 				}
-			}
+			}	
 			// check gizmos
-			for (const GizmosCommand& cm : m_gizmosQueue) {
+            while(!m_gizmosQueue.empty())
+            {
+                const GizmosCommand& cm = m_gizmosQueue.front();
+                m_gizmosQueue.pop();
 				glm::vec3 dist = cm.position - pos;
 				float len = glm::length(dir);
 				float distlen = glm::length(dist);
@@ -343,14 +337,17 @@ namespace Lobster
 				// get view and projection matrix
 				CameraComponent* editorCamera = m_editorCamera->GetComponent<CameraComponent>();
 				glm::mat4 viewProjectionMatrix = editorCamera->GetProjectionMatrix() * editorCamera->GetViewMatrix();
-				for (std::list<GizmosCommand>::iterator it = m_gizmosQueue.begin(); it != m_gizmosQueue.end(); ++it)
+                int i = 0;
+                while(!m_gizmosQueue.empty())
 				{
-					GizmosCommand& command = *it;
+					GizmosCommand command = m_gizmosQueue.front();
+                    m_gizmosQueue.pop();
 					// select texture and specify world position
 					void* customGizmo = TextureLibrary::Use(command.texture.c_str())->Get();
 					glm::vec4 pos = viewProjectionMatrix * glm::vec4(command.position, 1);
 					ImVec2 size = command.size;
-					m_gizmosQueue.pop_front(); // already extract all data, remove from queue
+                    i++;
+                    
 					if (pos.w <= 0.0) continue;
 					constexpr auto remap = [](float value, float start1, float stop1, float start2, float stop2) {
 						return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));

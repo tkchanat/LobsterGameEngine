@@ -25,21 +25,23 @@ namespace Lobster
 	uint EditorLayer::s_dockspace_id = 0; 
 	GameObject* EditorLayer::s_selectedGameObject = nullptr;
 	ImGuiUIEditor* EditorLayer::s_uiEditor = nullptr;
-	std::list<GizmosCommand> ImGuiScene::m_gizmosQueue;
+	std::queue<GizmosCommand> ImGuiScene::m_gizmosQueue;
 	SSFLog ImGuiConsole::log;
 
-	EditorLayer::EditorLayer(Scene* scene, Renderer* renderer) :
+	EditorLayer::EditorLayer() :
 		Layer("Game Layer"),
-		m_assets(new ImGuiAssets(scene)),
+		m_assets(new ImGuiAssets()),
 		m_console(new ImGuiConsole()),
 		m_demoWindow(new ImGuiDemoWindow()),
-		m_hierarchy(new ImGuiHierarchy(scene)),
-		m_menuBar(new ImGuiMenuBar(scene)),
+		m_hierarchy(new ImGuiHierarchy()),
+		m_menuBar(new ImGuiMenuBar()),
 		m_properties(new ImGuiProperties()),
-		m_scene(new ImGuiScene(scene, renderer)),		
-		m_toolbar(new ImGuiToolbar(scene, renderer))
+		m_scene(new ImGuiScene()),		
+		m_toolbar(new ImGuiToolbar())
 	{
 		s_uiEditor = new ImGuiUIEditor(); // created but not shown
+		// configure imgui io setting
+		ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 	}
 
 	EditorLayer::~EditorLayer()

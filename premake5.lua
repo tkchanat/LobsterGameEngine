@@ -189,7 +189,8 @@ project "LobsterGameEngine"
 		"%{prj.location}/vendor/imguizmo",
 		"%{prj.location}/vendor/json/include",
 		"%{prj.location}/vendor/spdlog/include",
-		"%{prj.location}/vendor/openal/include"
+		"%{prj.location}/vendor/openal/include",
+		"%{prj.location}/vendor/freetype2/include"
 	}
 
 	filter "system:windows"
@@ -208,7 +209,8 @@ project "LobsterGameEngine"
 			"ImGuizmo",
 			"GLAD",
 			"opengl32",
-			"OpenAL32"
+			"OpenAL32",
+			"freetype2"
 		}
 
 		prebuildcommands {
@@ -231,7 +233,9 @@ project "LobsterGameEngine"
 			"ImGui",
 			"ImGuizmo",
 			"GLAD",
+			"freetype2",
 			"Cocoa.framework",
+			"OpenAL.framework",
 			"OpenGL.framework",
 			"IOKit.framework",
 			"CoreVideo.framework"

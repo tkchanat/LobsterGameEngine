@@ -25,14 +25,19 @@ namespace Lobster {
 		Sprite2D(const char* path, float winW, float winH, float mouseX = 0.5f, float mouseY = 0.5f);
 		~Sprite2D();
 		inline ImTextureID GetTexID() const { return tex->Get(); }
-		inline int GetZIndex() const { return z; }		
+		inline int GetZIndex() const { return z; }
 
 		void SetZIndex(uint z);
-		void Clip();	// adjust x, y into reasonable range			
+		void Clip();	// adjust x, y into reasonable range
 		void ImGuiMenu(GameUI* ui, ImVec2 winSize);
 		void Draw();
 
 		static bool Compare(Sprite2D* s1, Sprite2D* s2);
+	};
+
+	class TextSprite2D : public Sprite2D {
+		static FT_Library library;
+		static FT_Face face;
 	};
 
 }

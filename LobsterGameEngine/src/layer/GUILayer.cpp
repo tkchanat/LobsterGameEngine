@@ -36,6 +36,7 @@ namespace Lobster
         glm::ivec2 size = Application::GetInstance()->GetWindowSize();
 		io.DisplaySize = ImVec2((float)size.x, (float)size.y);
 
+		ImGui::EndFrame();
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

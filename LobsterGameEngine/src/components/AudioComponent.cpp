@@ -6,7 +6,9 @@ namespace Lobster {
 	// ========= Members of AudioSource ==========
 	std::vector<AudioSource*> AudioSource::sourceList = std::vector<AudioSource*>();
 
-	AudioSource::AudioSource() {
+	AudioSource::AudioSource() : 
+		Component(AUDIO_SOURCE_COMPONENT) 
+	{
 		// append itself to sourceList
 		sourceList.push_back(this);
 	}
@@ -104,7 +106,9 @@ namespace Lobster {
 	}
 
 	// ========= Members of AudioListener ==========
-	AudioListener::AudioListener() {
+	AudioListener::AudioListener() :
+		Component(AUDIO_LISTENER_COMPONENT)
+	{
 
 	}
 

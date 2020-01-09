@@ -8,6 +8,7 @@ namespace Lobster
 {
 
 	LightComponent::LightComponent(LightType type) :
+		Component(LIGHT_COMPONENT),
 		m_type(DIRECTIONAL_LIGHT),
 		m_color(glm::vec3(1)),
 		m_intensity(1),
@@ -22,9 +23,12 @@ namespace Lobster
 
 	void LightComponent::OnAttach()
 	{
-		Rigidbody* rigidbody = new Rigidbody();
-		rigidbody->SetEnabled(false);
-		gameObject->AddComponent(rigidbody);
+		this->transform->WorldPosition = glm::vec3(0, 2, 3);
+		LightLibrary::AddLight(this, GetType());
+
+		PhysicsComponent* physics = new Rigidbody();
+		physics->SetEnabled(false);
+		gameObject->AddComponent(physics);
 	}
 
 	void LightComponent::OnUpdate(double deltaTime)
@@ -60,6 +64,23 @@ namespace Lobster
 			ImGui::SliderFloat("Intensity", &m_intensity, 0.f, 1.f);
 		}
 	}
+
+    void LightComponent::Serialize(cereal::JSONOutputArchive& oarchive)
+    {
+        //LOG("Serializing LightComponent");
+        oarchive(*this);
+    }
+
+    void LightComponent::Deserialize(cereal::JSONInputArchive& iarchive)
+    {
+        //LOG("Deserializing LightComponent");
+        try {
+            iarchive(*this);
+        }
+        catch (std::exception e) {
+            LOG("Deserializing LightComponent failed. Reason: {}", e.what());
+        }
+    }
 
 	// =======================================================
 	// LightLibrary

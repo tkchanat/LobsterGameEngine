@@ -4,6 +4,10 @@
 
 namespace Lobster {
 
+	// ============================================================
+	// Sprite2D
+	// ============================================================
+
 	int Sprite2D::zCnt = 1;
 
 	Sprite2D::Sprite2D(const char* path, float winW, float winH, float mouseX, float mouseY) :
@@ -121,4 +125,13 @@ namespace Lobster {
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 5);
 		glDisableVertexAttribArray(0);
 	}
+
+	// ============================================================
+	// TextSprite2D
+	// ============================================================
+
+	FT_Library TextSprite2D::library = FT_Library();
+	FT_Face TextSprite2D::face = FT_Face();
+
+	
 }

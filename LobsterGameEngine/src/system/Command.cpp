@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "system/Command.h"
+#include "objects/GameObject.h"
 
 namespace Lobster {
 	TransformCommand::TransformCommand(GameObject* object, Transform t_original, Transform t_new) :
