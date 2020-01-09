@@ -12,6 +12,7 @@ namespace Lobster
 		static VertexArray* Plane();
 		static VertexArray* Sphere(float radius, int du, int dv);
 		static VertexArray* Grid(int row, int col);
+		static VertexArray* Sprite();
     };
     
 }

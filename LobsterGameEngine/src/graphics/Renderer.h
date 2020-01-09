@@ -18,6 +18,15 @@ namespace Lobster
 		RenderCommand() { memset(this, 0, sizeof(RenderCommand)); }
 	};
 
+	struct RenderOverlayCommand
+	{
+		Texture2D* UseTexture;
+		float x, y;
+		float w, h;
+		int z;
+		RenderOverlayCommand() { memset(this, 0, sizeof(RenderOverlayCommand)); }
+	};
+
 	struct SceneEnvironment
 	{
 		TextureCube* Skybox;
@@ -75,12 +84,16 @@ namespace Lobster
 		// skybox resources
 		VertexArray* m_skyboxMesh;
 		Shader* m_skyboxShader;
+		// sprite resources
+		VertexArray* m_spriteMesh;
+		Shader* m_spriteShader;
 
 		// renderer resources
 		static Renderer* s_instance;
 		SceneEnvironment m_activeSceneEnvironment;
 		std::list<RenderCommand> m_opaqueQueue;
 		std::list<RenderCommand> m_transparentQueue;
+		std::list<RenderOverlayCommand> m_overlayQueue;
     public:
         Renderer();
         ~Renderer();
@@ -91,6 +104,7 @@ namespace Lobster
 		// RenderCommand & RenderQueue
 		static void BeginScene(TextureCube* skybox);
 		static void Submit(RenderCommand command);
+		static void Submit(RenderOverlayCommand ocommand);
 		static void EndScene();
 		static void ClearAllQueues();
 	private:

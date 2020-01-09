@@ -19,7 +19,7 @@ namespace Lobster
 		case ComponentType::PHYSICS_COMPONENT:
 			return nullptr; //new Rigidbody();
 		case ComponentType::CAMERA_COMPONENT:
-			return new CameraComponent(ProjectionType::PERSPECTIVE);
+			return new CameraComponent();
 		case ComponentType::LIGHT_COMPONENT:
 			return new LightComponent(LightType::DIRECTIONAL_LIGHT);
 		case ComponentType::AUDIO_SOURCE_COMPONENT:
