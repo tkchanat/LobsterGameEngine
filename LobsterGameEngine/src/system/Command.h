@@ -2,10 +2,13 @@
 #include <string>
 #include <glm/glm.hpp>
 #include "components/Component.h"
-#include "objects/GameObject.h"
+//#include "objects/GameObject.h"
 #include "objects/Transform.h"
 
 namespace Lobster {
+
+    class GameObject;
+
 	class Command {
 	public:
 		//	We will execute a command with the given details.

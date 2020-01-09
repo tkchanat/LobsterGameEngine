@@ -9,13 +9,14 @@ namespace Lobster {
 		static const char* PhysicsBodyTypes[];
 		const static char* PhysicsType[];
 
-		~PhysicsComponent() {
-			delete m_boundingBox;
+		PhysicsComponent() : Component(PHYSICS_COMPONENT) {}
+		virtual ~PhysicsComponent() override {
+			if(m_boundingBox) delete m_boundingBox;
 			m_boundingBox = nullptr;
 			for (Collider* collider : m_colliders) {
-				delete collider;
+				if(collider) delete collider;
+				collider = nullptr;
 			}
-			m_colliders.clear();
 		}
 
 		void AddCollider(Collider* collider) {
@@ -25,6 +26,8 @@ namespace Lobster {
 		inline std::vector<Collider*> GetColliders() const { return m_colliders; }
 
 		bool Intersects(PhysicsComponent* other);
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 		virtual void OnPhysicsUpdate(double deltaTime) = 0;
 		virtual void OnPhysicsLateUpdate(double deltaTime) = 0;
 
@@ -46,5 +49,15 @@ namespace Lobster {
 
 		//	Initialized to be of bound type.
 		int m_physicsType = 0;
+	private:
+		friend class cereal::access;
+		template <class Archive>
+		void save(Archive & ar) const
+		{
+		}
+		template <class Archive>
+		void load(Archive & ar)
+		{
+		}
 	};
 }

@@ -15,9 +15,7 @@ namespace Lobster
 		std::string subdirSelected = "meshes"; // by default
 		std::string pathSelected;
 		ImGui::FileBrowser fileDialog;
-		Scene* scene;
 	public:
-		ImGuiAssets(Scene* scene) : ImGuiComponent(), scene(scene) {}
 		void ConfirmDeleteDialog() {
 			ImGui::SetNextWindowSize(ImVec2(400, 120));
 			if (ImGui::BeginPopupModal("Confirm Delete"))
@@ -158,7 +156,7 @@ namespace Lobster
 				if (ImGui::Button("Add")) {
 					ImGui::OpenPopup("Name Game Object");
 				}
-				NewNameDialog(scene, path);
+				NewNameDialog(GetScene(), path);
 				ImGui::SameLine();
 				if (ImGui::Button("Delete")) {
 					ImGui::OpenPopup("Confirm Delete");

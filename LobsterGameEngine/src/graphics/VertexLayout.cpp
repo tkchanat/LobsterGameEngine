@@ -10,6 +10,7 @@ namespace Lobster {
     
     VertexLayout::~VertexLayout()
     {
+		m_layout.clear();
     }
     
     void VertexLayout::Bind() const

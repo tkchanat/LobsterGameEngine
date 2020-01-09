@@ -1,9 +1,9 @@
 #pragma once
+#include "objects/GameObject.h"
 
 namespace Lobster
 {
-    
-    class GameObject;
+
     class CameraComponent;
 	class TextureCube;
 	class LightComponent;
@@ -15,24 +15,46 @@ namespace Lobster
     {
 		friend class ImGuiHierarchy;
     private:
-        CameraComponent* m_activeCamera; // non-removable main camera
 		TextureCube* m_skybox;
-		std::vector<std::shared_ptr<GameObject>> m_gameObjects;
-		std::vector<LightComponent*> m_lights;
+        std::vector<GameObject*> m_gameObjects;
+		std::string m_name;
     public:
-        Scene();
+        Scene(const char* scenePath);
         ~Scene();
         void OnUpdate(double deltaTime);
 		void OnPhysicsUpdate(double deltaTime);
-		char* Serialize() const;
-		void Deserialize(const char* serial);
+		std::stringstream Serialize();
+		void Deserialize(std::stringstream& ss);
         Scene* AddGameObject(GameObject* gameObject);
 		Scene* RemoveGameObject(std::string name);
 		Scene* RemoveGameObject(GameObject* gameObject);
-		const std::vector<std::shared_ptr<GameObject>>& GetGameObjects();
+		const std::vector<GameObject*>& GetGameObjects();
+		GameObject* GetGameObject(GameObject* gameObject);
 		bool IsObjectNameDuplicated(std::string name, std::string except = "");
-		inline void SetActiveCamera(CameraComponent* camera) { m_activeCamera = camera; }
-        inline CameraComponent* GetActiveCamera() const { return m_activeCamera; }
+	private:
+		friend class cereal::access;
+		template <class Archive>
+		void save(Archive & ar) const
+		{
+			std::vector<std::string> childrenNames;
+			for (auto child : m_gameObjects) childrenNames.push_back(child->GetName());
+			ar(childrenNames);
+
+			for (auto gameObject : m_gameObjects) {
+				gameObject->Serialize(ar);
+			}
+		}
+		template <class Archive>
+		void load(Archive & ar)
+		{
+			std::vector<std::string> childrenNames;
+			ar(childrenNames);
+			for (auto name : childrenNames) AddGameObject(new GameObject(name.c_str()));
+
+			for (auto gameObject : m_gameObjects) {
+				gameObject->Deserialize(ar);
+			}
+		}
     };
     
 }

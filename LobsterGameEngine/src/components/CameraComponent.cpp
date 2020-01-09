@@ -7,8 +7,11 @@
 
 namespace Lobster
 {
+
+	CameraComponent* CameraComponent::s_activeCamera = nullptr;
     
     CameraComponent::CameraComponent(ProjectionType type) :
+		Component(CAMERA_COMPONENT),
         m_fieldOfView(45.0f),
         m_nearPlane(0.1f),
         m_farPlane(100.0f),
@@ -25,6 +28,12 @@ namespace Lobster
     
     CameraComponent::~CameraComponent()
     {
+		// unhook active camera
+		if (s_activeCamera == this) {
+			s_activeCamera = nullptr;
+		}
+
+		// release memory
 		if (m_frameBuffer) delete m_frameBuffer;
 		m_frameBuffer = nullptr;
     }
@@ -55,9 +64,16 @@ namespace Lobster
 
 	void CameraComponent::OnAttach()
 	{
-		Rigidbody* rigidbody = new Rigidbody();
-		rigidbody->SetEnabled(false);
-		gameObject->AddComponent(rigidbody);
+		if (s_activeCamera) {
+			WARN("The scene already has an active camera, ignoring this camera...");
+		}
+		else {
+			s_activeCamera = this;
+		}
+
+		PhysicsComponent* physics = new Rigidbody();
+		physics->SetEnabled(false);
+		gameObject->AddComponent(physics);
 	}
 
 	void CameraComponent::OnImGuiRender()
@@ -69,6 +85,25 @@ namespace Lobster
 			void* image = m_frameBuffer->Get();
 			ImGui::Text("Camera Preview");
 			ImGui::Image(image, ImVec2(window_size.x, window_size.x / m_frameBuffer->GetAspectRatio()), ImVec2(0, 1), ImVec2(1, 0));
+		}
+	}
+
+	void CameraComponent::Serialize(cereal::JSONOutputArchive & oarchive)
+	{
+		//LOG("Serializing CameraComponent");
+		oarchive(*this);
+	}
+
+	void CameraComponent::Deserialize(cereal::JSONInputArchive & iarchive)
+	{
+		//LOG("Deserializing CameraComponent");
+		try {
+			iarchive(*this);
+			float aspectRatio = Application::GetInstance()->GetWindowAspectRatio();
+			ResizeProjection(aspectRatio);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing CameraComponent failed");
 		}
 	}
 
