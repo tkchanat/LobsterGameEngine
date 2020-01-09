@@ -59,7 +59,7 @@ namespace Lobster
 			b_showProfiler(true)
 		{
 			m_editorCamera = new GameObject("EditorCamera");
-			m_editorCamera->AddComponent(new CameraComponent(ProjectionType::PERSPECTIVE));
+			m_editorCamera->AddComponent(new CameraComponent());
 			m_editorCamera->transform.Translate(10, 8, 10);
 			m_editorCamera->transform.LookAt(glm::vec3(0, 0, 0));
 
@@ -190,7 +190,7 @@ namespace Lobster
 
 			// draw scene
 			CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
-			camera->ResizeProjection(window_size.x / window_size.y);
+			camera->ResizeProjection(window_size.x, window_size.y);
 			void* image = camera->GetFrameBuffer()->Get();
 			ImGui::GetWindowDrawList()->AddImage(image, ImVec2(window_pos.x, window_pos.y), ImVec2(window_pos.x + window_size.x, window_pos.y + window_size.y), ImVec2(0, 1), ImVec2(1, 0));						
 						

@@ -125,7 +125,7 @@ namespace Lobster
 		//}
 
 		GameObject* camera = new GameObject("Main Camera");
-		camera->AddComponent(new CameraComponent(ProjectionType::PERSPECTIVE));
+		camera->AddComponent(new CameraComponent());
 		camera->AddComponent(new AudioListener());
 		camera->transform.Translate(0, 2, 10);
 		m_scene->AddGameObject(camera);
@@ -201,7 +201,14 @@ namespace Lobster
 		// Scene update
 		Timer sceneUpdateTimer;
 		m_scene->OnUpdate(deltaTime);	// update game scene
-		//m_layerStack.OnUpdate(deltaTime);
+		RenderOverlayCommand ocommand;
+		ocommand.UseTexture = TextureLibrary::Use("textures/ui/light.png");
+		ocommand.x = 200.0f;
+		ocommand.y = 300.0f;
+		ocommand.w = 64.0f;
+		ocommand.h = 64.0f;
+		ocommand.z = 1;
+		Renderer::Submit(ocommand);
 		Profiler::SubmitData("Scene Update Time", sceneUpdateTimer.GetElapsedTime());
 
 		//=========================================================

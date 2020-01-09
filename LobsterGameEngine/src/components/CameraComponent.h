@@ -9,14 +9,6 @@ namespace Lobster
 
 	class FrameBuffer;
     
-	//	This enum class is for configuring the projection type when constructing a CameraComponent class.
-	//	It is only visible if you include CameraComponent.h or ComponentCollection.h
-    enum class ProjectionType : uint
-    {
-        PERSPECTIVE,
-        ORTHOGONAL
-    };
-    
 	//	This class is for attaching a static viewing camera to a game object.
 	//	User can customize the field of view (FOV), near and far plane, as well as the projection type of the camera (TODO: setter and getter functions).
 	//	Note:	At the moment, we only allow one scene to have at most one main camera.
@@ -28,9 +20,9 @@ namespace Lobster
         float m_fieldOfView;
         float m_nearPlane;
         float m_farPlane;
-        ProjectionType m_type;
         glm::mat4 m_viewMatrix;
         glm::mat4 m_projectionMatrix;
+		glm::mat4 m_orthoMatrix;
 		FrameBuffer* m_frameBuffer;
 		bool b_uiEditor = false;
 		GameUI* gameUI = nullptr;
@@ -39,9 +31,9 @@ namespace Lobster
 		static CameraComponent* s_activeCamera;
 
     public:
-        CameraComponent(ProjectionType type);
+        CameraComponent();
         ~CameraComponent();
-		void ResizeProjection(float aspectRatio);
+		void ResizeProjection(float width, float height);
 		virtual void OnAttach() override;
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
@@ -50,6 +42,7 @@ namespace Lobster
 		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 		glm::mat4 GetViewMatrix() const;
         inline glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
+		inline glm::mat4 GetOrthoMatrix() const { return m_orthoMatrix; }
 		inline glm::vec3 GetPosition() const { return Component::transform->WorldPosition; }
 		inline FrameBuffer* GetFrameBuffer() { return m_frameBuffer; }
 		static inline CameraComponent* GetActiveCamera() { return s_activeCamera; }
