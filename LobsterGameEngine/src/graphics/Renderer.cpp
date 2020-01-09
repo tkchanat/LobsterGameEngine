@@ -30,6 +30,9 @@ namespace Lobster
 		m_skyboxShader = ShaderLibrary::Use("shaders/Skybox.glsl");
 		m_skyboxMesh = MeshFactory::Cube();
 
+		m_spriteShader = ShaderLibrary::Use("shaders/Sprite.glsl");
+		m_spriteMesh = MeshFactory::Sprite();
+
 		s_instance = this;
     }
     
@@ -142,6 +145,19 @@ namespace Lobster
 		Renderer::DrawQueue(camera, m_transparentQueue);
 		Renderer::SetAlphaBlend(false);
 		// Overlay
+		m_spriteShader->Bind();
+		for (std::list<RenderOverlayCommand>::iterator it = m_overlayQueue.begin(); it != m_overlayQueue.end(); ++it)
+		{
+			RenderOverlayCommand& command = *it;
+			m_spriteShader->SetTexture2D(0, command.UseTexture->Get());
+			glm::mat4 world = glm::mat4(1.0);
+			world = glm::translate(world, glm::vec3(command.x, command.y, command.z));
+			world = glm::scale(world, glm::vec3(command.w, command.h, 1.0f));
+
+			m_spriteShader->SetUniform("sys_world", world);
+			m_spriteShader->SetUniform("sys_projection", camera->GetOrthoMatrix());
+			m_spriteMesh->Draw();
+		}
 
 		// Unset renderer configurations
 		Renderer::SetFaceCulling(false);
@@ -185,6 +201,11 @@ namespace Lobster
 		}
 	}
 
+	void Renderer::Submit(RenderOverlayCommand ocommand)
+	{
+		s_instance->m_overlayQueue.push_back(ocommand);
+	}
+
 	void Renderer::EndScene()
 	{
 		// do all batching and sorting job here
@@ -195,6 +216,7 @@ namespace Lobster
 		// remove all previous render commands
 		s_instance->m_opaqueQueue.clear();
 		s_instance->m_transparentQueue.clear();
+		s_instance->m_overlayQueue.clear();
 	}
 
 }

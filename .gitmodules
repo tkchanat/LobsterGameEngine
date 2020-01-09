@@ -13,9 +13,6 @@
 [submodule "LobsterGameEngine/vendor/spdlog"]
 	path = LobsterGameEngine/vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "LobsterGameEngine/vendor/json"]
-	path = LobsterGameEngine/vendor/json
-	url = https://github.com/nlohmann/json.git
 [submodule "LobsterGameEngine/vendor/cereal"]
 	path = LobsterGameEngine/vendor/cereal
 	url = https://github.com/USCiLab/cereal.git

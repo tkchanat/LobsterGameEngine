@@ -7,8 +7,7 @@
 namespace Lobster
 {
     
-    Scene::Scene() :
-		m_activeCamera(nullptr),
+    Scene::Scene(const char * scenePath) :
 		m_skybox(nullptr)
     {
 		// hard-coded skybox
@@ -20,22 +19,29 @@ namespace Lobster
 			"textures/skybox/pz.png",
 			"textures/skybox/nz.png"
 		);
+
+		// If scenePath is set, load and deserialize scene data
+		if (scenePath[0] != '\0') {
+			std::stringstream ss = FileSystem::ReadStringStream(FileSystem::Path(scenePath).c_str());
+			Deserialize(ss);
+		}
     }
-    
-    Scene::~Scene()
+
+	Scene::~Scene()
     {
-		// Note: no need for explicit release of memory due to smart pointers
-		//for (GameObject* gameObject : m_gameObjects)
-		//{
-		//	if(gameObject)	delete gameObject;
-		//	gameObject = nullptr;
-		//}
+		for (GameObject* gameObject : m_gameObjects)
+		{
+			if(gameObject)	delete gameObject;
+			gameObject = nullptr;
+		}
+		if (m_skybox) delete m_skybox;
+		m_skybox = nullptr;
     }
     
     void Scene::OnUpdate(double deltaTime)
     {
 		Renderer::BeginScene(m_skybox);
-        for(auto gameObject : m_gameObjects)
+        for(GameObject* gameObject : m_gameObjects)
         {
             gameObject->OnUpdate(deltaTime);
         }
@@ -52,22 +58,25 @@ namespace Lobster
 
 		//	Next, find the list of colliders and objects with physics component.
 		//	This is done by finding all active rigidbody components.
-		std::vector<PhysicsComponent*> physics;
+		//std::vector<PhysicsComponent*> physics;
 
+		/**
+		 * Key: now every GameObject has PhysicsComponent. Just iterate every GameObjects.
+		 */
 		int i = 0;
 		for (auto g1 : m_gameObjects) {
-			if (!(g1->GetComponent<PhysicsComponent>())) continue;
+			//if (!(g1->GetComponent<PhysicsComponent>())) continue;
 			
-			physics.push_back(g1->GetComponent<PhysicsComponent>());
+			//physics.push_back(g1->GetComponent<PhysicsComponent>());
 
 			int j = 0;
 			for (auto g2 : m_gameObjects) {
 				if (i <= j) break;
-				if (!(g2->GetComponent<PhysicsComponent>())) continue;
+				//if (!(g2->GetComponent<PhysicsComponent>())) continue;
 
-				if (g1->Intersects(g2.get())) {
-					g1->HasCollided(g2.get());
-					g2->HasCollided(g1.get());
+				if (g1->Intersects(g2)) {
+					g1->HasCollided(g2);
+					g2->HasCollided(g1);
 				}
 				j++;
 			}
@@ -76,7 +85,10 @@ namespace Lobster
 
 		//	Finally, after detecting all collision on this frame -
 		//	Time to update the physics. 
-		for (PhysicsComponent* physicsObj : physics) {
+		//for (PhysicsComponent* physicsObj : physics) {
+		for(auto go : m_gameObjects) {
+			PhysicsComponent* physicsObj = go->GetComponent<PhysicsComponent>();
+			if (!physicsObj) continue;
 			physicsObj->OnPhysicsLateUpdate(deltaTime);
 		}
 
@@ -86,53 +98,31 @@ namespace Lobster
 		}
 	}
 
-	//	TODO: @Yuki the starting point of the serialize function is here.
-	//	You might need to create Serialize() and Deserialize() function for each member in Scene.
-	//	You may want to debug by testing Serialize upon adding a game object.
-	//	Simply copy this line and paste in AddGameObject function below:
-	//	LOG("Serialization test result: {}", Serialize());
-	//	
-	//	TODO 2: Delete the TODO for this and the next function after completion :3
-
-	//	Binary serialization of scene to prepare for saving.
-	char* Scene::Serialize() const {
-		//	1. Serialize header for scene
-
-		//	2. Serialize content for scene, might involve recursive calls inside each member.
-
-		//	3. Join each serialization result.
-		//	A starting point could be creating a long-enough char *,
-		//	then copy / concat using strcpy() and strcat() one-by-one.
-
-		//	4. Return the result (and replace this dummy statement)
-		return "Hello World!";
+	std::stringstream Scene::Serialize() {
+		//LOG("Serializing Scene");
+		std::stringstream ss;
+		{
+			cereal::JSONOutputArchive oarchive(ss);
+			oarchive(*this);
+		}
+		INFO("Scene saved!");
+		return ss;
 	}
 
-	//	TODO: Deserialization testing a bit more difficult.
-	//	Suggest to try after completing scene saving through serialization.
-	void Scene::Deserialize(const char* serial) {
-		//	1. Deserialize and assignment in Scene.
-
-		//	2. Recurive call to assignment members
+	void Scene::Deserialize(std::stringstream& ss) {
+		//LOG("Deserializing Scene");
+		cereal::JSONInputArchive iarchive(ss);
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing Scene {} failed");
+		}
 	}
     
     Scene* Scene::AddGameObject(GameObject* gameObject)
     {
-        CameraComponent* camera = gameObject->GetComponent<CameraComponent>();
-        if (camera) {
-            if(m_activeCamera == nullptr)
-				SetActiveCamera(camera);  //  Assign this to be main camera
-            else
-                LOG("Main camera for this scene has already been assigned. Ignoring this new camera...");
-        }
-
-		LightComponent* light = gameObject->GetComponent<LightComponent>();
-		if (light) {
-			LightLibrary::AddLight(light, light->GetType());
-		}
-        
-        m_gameObjects.emplace_back(gameObject);
-
+        m_gameObjects.push_back(gameObject);
         return this;
     }
 
@@ -149,7 +139,7 @@ namespace Lobster
 
 	Scene* Scene::RemoveGameObject(GameObject* gameObject) {
 		if (!gameObject) return this;
-		auto index = std::find(m_gameObjects.begin(), m_gameObjects.end(), std::shared_ptr<GameObject>(gameObject));
+		auto index = std::find(m_gameObjects.begin(), m_gameObjects.end(), gameObject);
 		if (index != m_gameObjects.end()) {
 			m_gameObjects.erase(index);
 			delete gameObject;
@@ -159,8 +149,19 @@ namespace Lobster
 	}
 
 	// Deprecated
-	const std::vector<std::shared_ptr<GameObject>>& Scene::GetGameObjects() {
+	const std::vector<GameObject*>& Scene::GetGameObjects() {
 		return m_gameObjects;
+	}
+
+	GameObject * Scene::GetGameObject(GameObject * gameObject)
+	{
+		std::stack<GameObject*> parents;
+		GameObject* parent = gameObject->GetParent();
+		while (parent != nullptr) {
+			parents.push(parent);
+			parent = parent->GetParent();
+		}
+		return nullptr;
 	}
     
 	bool Scene::IsObjectNameDuplicated(std::string name, std::string except) {

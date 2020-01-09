@@ -219,6 +219,13 @@ uniform sampler2D sys_brdfLUTMap;)");
 		//glUniform3fv(location, 1, glm::value_ptr(data));
 	}
 
+	void Shader::SetUniform(const char * name, const glm::ivec2 & data)
+	{
+		int location = glGetUniformLocation(m_id, name);
+		if (location == -1) return;
+		glUniform2iv(location, 1, glm::value_ptr(data));
+	}
+
 	void Shader::SetUniform(const char * name, const glm::vec2 & data)
 	{
 		int location = glGetUniformLocation(m_id, name);

@@ -22,6 +22,7 @@ namespace Lobster {
 		{
 
 		}
+		virtual ~Collider() {}
 
 		virtual void DebugDraw() = 0;
 		//virtual bool Intersects(Collider* collider) = 0;

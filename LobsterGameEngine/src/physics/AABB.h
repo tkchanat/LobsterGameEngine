@@ -27,7 +27,7 @@ namespace Lobster
 		float m_debugInitialData[24]; // raw initial vertices position
     public:
         AABB(PhysicsComponent* physics, Transform transform = Transform());
-
+		virtual ~AABB() override;
 		void SetOwner(GameObject* owner) override;
 		void OnUpdate(double deltaTime) override;
 		virtual void DebugDraw() override;

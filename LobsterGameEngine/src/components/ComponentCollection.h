@@ -6,6 +6,7 @@
 #include "MeshComponent.h"
 #include "CameraComponent.h"
 #include "LightComponent.h"
+#include "AudioComponent.h"
 
 //	User components (a.k.a user scripts)
 #include "scripts/FirstPersonController.h"

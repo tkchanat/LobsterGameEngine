@@ -19,6 +19,21 @@ namespace Lobster {
 		return false;
 	}
 
+	void PhysicsComponent::Serialize(cereal::JSONOutputArchive & oarchive)
+	{
+		oarchive(*this);
+	}
+
+	void PhysicsComponent::Deserialize(cereal::JSONInputArchive & iarchive)
+	{
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing PhysicsComponent failed. Reason: {}", e.what());
+		}
+	}
+
 	void PhysicsComponent::RemoveCollider(Collider* collider) {
 		int i = 0;
 		for (Collider* c : m_colliders) {

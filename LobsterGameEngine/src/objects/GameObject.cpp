@@ -18,31 +18,27 @@ namespace Lobster
     GameObject::~GameObject()
     {
 		// Delete all enabled components
-		for (Component* component : m_components)
-		{
+		for (Component* component : m_components) {
 			delete component;
+			component = nullptr;
 		}
-		m_components.clear();
-		// Delete all childrens
-		// Note: no need for explicit release of memory due to smart pointers
-		//for (GameObject* child : m_children) 
-		//{
-		//	child->Destroy();
-		//}
-		m_children.clear();
+		// Delete all children
+		for (GameObject* child : m_children) {
+			delete child;
+			child = nullptr;
+		}
     }
 
 	void GameObject::Destroy()
 	{
 		if (m_parent) {
-			auto index = std::find(m_parent->m_children.begin(), m_parent->m_children.end(), std::shared_ptr<GameObject>(this));
+			auto index = std::find(m_parent->m_children.begin(), m_parent->m_children.end(), this);
 			if (index == m_parent->m_children.end()) {
 				throw std::runtime_error("Attempting to destroy an invalid GameObject");
 				return;
 			}
 			m_parent->m_children.erase(index);
-		}
-		this->~GameObject();
+        }
 	}
     
     void GameObject::OnUpdate(double deltaTime)
@@ -60,7 +56,7 @@ namespace Lobster
         }
 
 		// Update all children
-		for (auto child : m_children) {
+		for (GameObject* child : m_children) {
 			child->OnUpdate(deltaTime);
 		}
     }
@@ -179,6 +175,23 @@ namespace Lobster
 		}
 	}
 
+	void GameObject::Serialize(cereal::JSONOutputArchive& oarchive)
+	{
+		//LOG("Serializing GameObject {}", m_name);
+		oarchive(*this);
+	}
+
+	void GameObject::Deserialize(cereal::JSONInputArchive& iarchive)
+	{
+		//LOG("Deserializing GameObject {}", m_name);
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing GameObject {} failed. Reason: {}", m_name, e.what());
+		}
+	}
+
 	void GameObject::OnSimulationBegin() {
 		for (Component* component : m_components) {
 			component->OnSimulationBegin();
@@ -224,7 +237,7 @@ namespace Lobster
 	GameObject * GameObject::AddChild(GameObject * child)
 	{
 		child->m_parent = this;
-		m_children.emplace_back(child);
+		m_children.push_back(child);
 		return this;
 	}
 

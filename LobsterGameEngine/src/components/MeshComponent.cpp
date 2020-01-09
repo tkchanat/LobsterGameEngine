@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "objects/GameObject.h"
+#include "physics/AABB.h"
 #include "physics/Rigidbody.h"
 #include "MeshComponent.h"
 #include "system/FileSystem.h"
@@ -12,46 +13,53 @@ namespace Lobster
 {
     
 	MeshComponent::MeshComponent(const char* meshPath, const char* materialPath) :
+		Component(MESH_COMPONENT),
 		m_meshPath(meshPath)
     {
 		//	Clone the resource by file system before loading
 		FileSystem::GetInstance()->addResource(meshPath);
-		// import mesh and load defined materials from model file
-		auto minMax = MeshLoader::Load(meshPath, m_meshes, m_materials);
-		bounds = { minMax.first, minMax.second };
-		// if no materials are defined, use material of our own
-		if(m_materials.empty()) m_materials.push_back(MaterialLibrary::Use(materialPath));
+		LoadFromFile(meshPath, materialPath);
     }
 
 	MeshComponent::MeshComponent(VertexArray * mesh, const char * materialPath) :
+		Component(MESH_COMPONENT),
 		m_meshPath("")
 	{
 		m_meshes.push_back(mesh);
-		m_materials.push_back(MaterialLibrary::Use(materialPath));
+		m_materials.push_back(materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault());
 		//	TODO remove this hard code part
 		bounds = { glm::vec3(0, 0, 0), glm::vec3(0.01, 0.01, 0.01) };
 	}
 
 	MeshComponent::MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char * materialPath) :
+		Component(MESH_COMPONENT),
 		m_meshPath("")
 	{
 		m_meshes.push_back(mesh);
-		m_materials.push_back(MaterialLibrary::Use(materialPath));
+		m_materials.push_back(materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault());
 		bounds = { min, max };
+	}
+
+	void MeshComponent::LoadFromFile(const char * meshPath, const char * materialPath)
+	{
+		// import mesh and load defined materials from model file
+		auto minMax = MeshLoader::Load(meshPath, m_meshes, m_materials);
+		bounds = { minMax.first, minMax.second };
+		// if no materials are defined, use material of our own
+		if (m_materials.empty()) m_materials.push_back((materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault()));
 	}
     
     MeshComponent::~MeshComponent()
     {
         //	Release memory
 		for (VertexArray* va : m_meshes) if(va) delete va;
-		memset(m_meshes.data(), 0, sizeof(VertexArray*) * m_meshes.size());
     }
     
 	void MeshComponent::OnAttach()
 	{
-		Rigidbody* rigidbody = new Rigidbody();
-		rigidbody->SetEnabled(false);
-		gameObject->AddComponent(rigidbody);
+		PhysicsComponent* physics = new Rigidbody();
+		physics->SetEnabled(false);
+		gameObject->AddComponent(physics);
 	}
 
 	void MeshComponent::OnUpdate(double deltaTime)
@@ -77,6 +85,24 @@ namespace Lobster
 				m_materials[i]->OnImGuiRender(i);
 				ImGui::Unindent();
 			}
+		}
+	}
+
+	void MeshComponent::Serialize(cereal::JSONOutputArchive & oarchive)
+	{
+		//LOG("Serializing MeshComponent {}", m_meshPath);
+		oarchive(*this);
+	}
+
+	void MeshComponent::Deserialize(cereal::JSONInputArchive & iarchive)
+	{
+		//LOG("Deserializing MeshComponent {}", m_meshPath);
+		try {
+			iarchive(*this);
+			LoadFromFile(m_meshPath.c_str(), nullptr);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing MeshComponent {} failed. Reason: {}", m_meshPath, e.what());
 		}
 	}
 }
