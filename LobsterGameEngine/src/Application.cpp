@@ -144,6 +144,9 @@ namespace Lobster
 		// Push layers to layer stack
 		m_GUILayer = new GUILayer();
 		m_editorLayer = new EditorLayer(m_scene, m_renderer);
+
+		// configure imgui io setting
+		ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
     }
 
 	// Updates subsystem chronologically in a fixed timestep, i.e. order does matter

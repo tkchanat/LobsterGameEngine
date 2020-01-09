@@ -4,10 +4,11 @@
 #include "imgui/ImGuiScene.h"
 #include "graphics/FrameBuffer.h"
 #include "physics/Rigidbody.h"
+#include "imgui/ImGuiUIEditor.h"
 
 namespace Lobster
 {
-    
+
     CameraComponent::CameraComponent(ProjectionType type) :
         m_fieldOfView(45.0f),
         m_nearPlane(0.1f),
@@ -64,12 +65,40 @@ namespace Lobster
 	{
 		if (ImGui::CollapsingHeader("CameraComponent", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			// draw UI on frame buffer
+			DrawUI();
 			// draw camera preview
-			ImVec2 window_size = ImGui::GetItemRectSize();
+			ImVec2 window_size = ImGui::GetItemRectSize();			
 			void* image = m_frameBuffer->Get();
-			ImGui::Text("Camera Preview");
+			ImGui::Text("Camera Preview");			
 			ImGui::Image(image, ImVec2(window_size.x, window_size.x / m_frameBuffer->GetAspectRatio()), ImVec2(0, 1), ImVec2(1, 0));
+			
+			if (ImGui::Button("Edit UI")) {
+				if (!gameUI) {
+					gameUI = new GameUI();
+				}
+				b_uiEditor = true;
+			}
+			// show the UI editor
+			if (b_uiEditor) {
+				ImGuiUIEditor* editor = EditorLayer::GetUIEditor();
+				editor->SetUI(gameUI);
+				editor->Show(&b_uiEditor);
+			}
 		}
+	}
+
+	void CameraComponent::DrawUI() {
+		if (!gameUI) return;
+		m_frameBuffer->Bind();
+		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
+			sprite->Draw();
+		}
+		m_frameBuffer->Unbind();
+	}
+
+	void CameraComponent::OnSimulationBegin() {
+		
 	}
 
 	glm::mat4 CameraComponent::GetViewMatrix() const

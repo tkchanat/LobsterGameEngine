@@ -113,7 +113,6 @@ namespace Lobster
 				if(show_about) m_about->Show(&show_about);
 				ImGui::EndMenuBar();
 			}
-			ImGui::End();
 		}
 	};
 

@@ -190,5 +190,15 @@ namespace Lobster
 
 			ImGui::End();
 		}
+
+		static std::vector<std::string> ListResources(std::string subdirToList) {
+			std::vector<std::string> list;
+			fs::path subdir = FileSystem::GetCurrentWorkingDirectory() / fs::path(subdirToList);
+			for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {
+				if (dirEntry.is_directory()) continue;
+				list.push_back(dirEntry.path().filename().string());
+			}
+			return list;
+		}
 	};
 }

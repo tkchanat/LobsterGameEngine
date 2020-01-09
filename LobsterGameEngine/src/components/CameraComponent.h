@@ -2,6 +2,7 @@
 
 #include "Component.h"
 #include "objects/Transform.h"
+#include "graphics/2D/GameUI.h"
 
 namespace Lobster
 {
@@ -31,6 +32,10 @@ namespace Lobster
         glm::mat4 m_viewMatrix;
         glm::mat4 m_projectionMatrix;
 		FrameBuffer* m_frameBuffer;
+		bool b_uiEditor = false;
+		GameUI* gameUI = nullptr;
+
+		void DrawUI();
     public:
         CameraComponent(ProjectionType type);
         ~CameraComponent();
@@ -38,6 +43,7 @@ namespace Lobster
 		virtual void OnAttach() override;
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
+		virtual void OnSimulationBegin() override;
 		glm::mat4 GetViewMatrix() const;
         inline glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 		inline glm::vec3 GetPosition() const { return Component::transform->WorldPosition; }

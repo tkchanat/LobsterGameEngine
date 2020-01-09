@@ -14,11 +14,13 @@ namespace Lobster
 	public:
 		virtual ~Texture() {}
 		virtual void* Get() const = 0;
+		inline int GetWidth() { return m_width; }
+		inline int GetHeight() { return m_height; }
 	protected:
 		Texture() : m_width(1), m_height(1), m_channelCount(4), b_loadSuccess(false) {}
 	};
 
-	class Texture2D : Texture
+	class Texture2D : public Texture
 	{
 		friend class TextureLibrary;
 	private:
