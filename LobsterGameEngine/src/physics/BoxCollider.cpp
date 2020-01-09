@@ -53,7 +53,9 @@ namespace Lobster {
 	}
 
 	void BoxCollider::OnUpdate(double deltaTime) {
-		//	First update Center from transform
+		//	First update the matrices.
+		//	Both matrices has to be updated here for physics calculation.
+		transform->UpdateMatrix();
 		m_transform.UpdateMatrix();
 		UpdateRotation();
 	}
