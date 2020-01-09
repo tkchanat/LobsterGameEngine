@@ -90,7 +90,8 @@ namespace Lobster
 		template <class Archive>
 		void save(Archive & ar) const
 		{
-			// mark down all children name
+			// =============================================
+			// record all children name
 			std::vector<std::string> childrenNames;
 			for (auto child : m_children) childrenNames.push_back(child->GetName());
 			ar(childrenNames);
@@ -99,11 +100,16 @@ namespace Lobster
 				child->Serialize(ar);
 			}
 
-			// then deserialize this GameObject's properties
-			std::vector<std::string> componentNames;
-			for (auto component : m_components) componentNames.push_back(typeid(*component).name());
-			ar(componentNames);
+			// =============================================
+			// then serialize this GameObject's properties
 
+			// transform
+			ar(transform);
+			// components
+			std::vector<ComponentType> componentTypes;
+			for (auto component : m_components) componentTypes.push_back(component->GetType());
+			ar(componentTypes);
+			// subsequence components
 			for (auto component : m_components) {
 				component->Serialize(ar);
 			}
@@ -121,12 +127,20 @@ namespace Lobster
 				child->Deserialize(ar);
 			}
 
-			std::vector<std::string> componentNames;
-			ar(componentNames);
-			for (auto name : componentNames) AddComponent(CreateComponentFromTypeName(name, ar));
-
-			for (auto component : m_components) {
+			// =============================================
+			// then deserialize this GameObject's properties
+			// transform 
+			ar(transform);
+			// components
+			std::vector<ComponentType> componentTypes;
+			std::vector<Component*> uninitializedComponents;
+			ar(componentTypes);
+			for (ComponentType type : componentTypes) uninitializedComponents.push_back(CreateComponentFromType(type));
+			// initialize subsequence components and append to game object
+			for (Component* component : uninitializedComponents) {
+				if (!component) continue;
 				component->Deserialize(ar);
+				AddComponent(component);
 			}
 		}
     };

@@ -20,7 +20,7 @@ namespace Lobster
 		std::string m_meshPath;
 		std::pair<glm::vec3, glm::vec3> bounds;
     public:
-		MeshComponent() = default;
+		MeshComponent() : Component(MESH_COMPONENT) {}
         MeshComponent(const char* meshPath, const char* materialPath = nullptr);
         MeshComponent(VertexArray* mesh, const char* materialPath = nullptr);
 		MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char* materialPath = nullptr);

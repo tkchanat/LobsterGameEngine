@@ -13,7 +13,7 @@ namespace Lobster
     class Script : public Component
     {
     public:
-        Script() = default;
+		Script() : Component(SCRIPT_COMPONENT) {}
         ~Script() = default;
         virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender() = 0;

@@ -8,6 +8,7 @@ namespace Lobster
 {
 
 	LightComponent::LightComponent(LightType type) :
+		Component(LIGHT_COMPONENT),
 		m_type(DIRECTIONAL_LIGHT),
 		m_color(glm::vec3(1)),
 		m_intensity(1),
@@ -25,9 +26,9 @@ namespace Lobster
 		this->transform->WorldPosition = glm::vec3(0, 2, 3);
 		LightLibrary::AddLight(this, GetType());
 
-		Rigidbody* rigidbody = new Rigidbody();
-		rigidbody->SetEnabled(false);
-		gameObject->AddComponent(rigidbody);
+		PhysicsComponent* physics = new Rigidbody();
+		physics->SetEnabled(false);
+		gameObject->AddComponent(physics);
 	}
 
 	void LightComponent::OnUpdate(double deltaTime)

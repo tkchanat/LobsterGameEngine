@@ -58,18 +58,21 @@ namespace Lobster
 
 		//	Next, find the list of colliders and objects with physics component.
 		//	This is done by finding all active rigidbody components.
-		std::vector<PhysicsComponent*> physics;
+		//std::vector<PhysicsComponent*> physics;
 
+		/**
+		 * Key: now every GameObject has PhysicsComponent. Just iterate every GameObjects.
+		 */
 		int i = 0;
 		for (auto g1 : m_gameObjects) {
-			if (!(g1->GetComponent<PhysicsComponent>())) continue;
+			//if (!(g1->GetComponent<PhysicsComponent>())) continue;
 			
-			physics.push_back(g1->GetComponent<PhysicsComponent>());
+			//physics.push_back(g1->GetComponent<PhysicsComponent>());
 
 			int j = 0;
 			for (auto g2 : m_gameObjects) {
 				if (i <= j) break;
-				if (!(g2->GetComponent<PhysicsComponent>())) continue;
+				//if (!(g2->GetComponent<PhysicsComponent>())) continue;
 
 				if (g1->Intersects(g2)) {
 					g1->HasCollided(g2);
@@ -82,7 +85,10 @@ namespace Lobster
 
 		//	Finally, after detecting all collision on this frame -
 		//	Time to update the physics. 
-		for (PhysicsComponent* physicsObj : physics) {
+		//for (PhysicsComponent* physicsObj : physics) {
+		for(auto go : m_gameObjects) {
+			PhysicsComponent* physicsObj = go->GetComponent<PhysicsComponent>();
+			if (!physicsObj) continue;
 			physicsObj->OnPhysicsLateUpdate(deltaTime);
 		}
 

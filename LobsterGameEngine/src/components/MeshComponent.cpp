@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "objects/GameObject.h"
+#include "physics/AABB.h"
 #include "physics/Rigidbody.h"
 #include "MeshComponent.h"
 #include "system/FileSystem.h"
@@ -12,6 +13,7 @@ namespace Lobster
 {
     
 	MeshComponent::MeshComponent(const char* meshPath, const char* materialPath) :
+		Component(MESH_COMPONENT),
 		m_meshPath(meshPath)
     {
 		//	Clone the resource by file system before loading
@@ -20,6 +22,7 @@ namespace Lobster
     }
 
 	MeshComponent::MeshComponent(VertexArray * mesh, const char * materialPath) :
+		Component(MESH_COMPONENT),
 		m_meshPath("")
 	{
 		m_meshes.push_back(mesh);
@@ -29,6 +32,7 @@ namespace Lobster
 	}
 
 	MeshComponent::MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char * materialPath) :
+		Component(MESH_COMPONENT),
 		m_meshPath("")
 	{
 		m_meshes.push_back(mesh);
@@ -53,9 +57,9 @@ namespace Lobster
     
 	void MeshComponent::OnAttach()
 	{
-		Rigidbody* rigidbody = new Rigidbody();
-		rigidbody->SetEnabled(false);
-		gameObject->AddComponent(rigidbody);
+		PhysicsComponent* physics = new Rigidbody();
+		physics->SetEnabled(false);
+		gameObject->AddComponent(physics);
 	}
 
 	void MeshComponent::OnUpdate(double deltaTime)

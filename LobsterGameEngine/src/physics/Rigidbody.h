@@ -16,8 +16,11 @@ namespace Lobster {
 			m_prevLinearPos(glm::vec3(0, 0, 0)),
 			m_prevAngularPos(glm::vec3(0, 0, 0)),
 			m_newLinearVelocity(glm::vec3(0, 0, 0))
-		{}
-		virtual ~Rigidbody() override {}
+		{
+		}
+		virtual ~Rigidbody() override {
+			m_lastCollided.clear();
+		}
 
 		void OnAttach() override;
 		void OnUpdate(double deltaTime) override;

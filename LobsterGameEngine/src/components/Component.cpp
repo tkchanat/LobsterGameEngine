@@ -10,24 +10,27 @@ namespace Lobster
 		gameObject->RemoveComponent(comp);
 	}
 
-	Component* CreateComponentFromTypeName(const std::string& typeName, cereal::JSONInputArchive& iarchive)
+	Component* CreateComponentFromType(const ComponentType& type)
 	{
-		if (typeName == "class Lobster::MeshComponent" || typeName == "N7Lobster13MeshComponentE") {
+		switch (type)
+		{
+		case ComponentType::MESH_COMPONENT:
 			return new MeshComponent();
-		}
-		else if (typeName == "class Lobster::Rigidbody" || typeName == "N7Lobster9RigidbodyE") {
-			return new Rigidbody();
-		}
-		else if (typeName == "class Lobster::CameraComponent" || typeName == "N7Lobster15CameraComponentE") {
+		case ComponentType::PHYSICS_COMPONENT:
+			return nullptr; //new Rigidbody();
+		case ComponentType::CAMERA_COMPONENT:
 			return new CameraComponent(ProjectionType::PERSPECTIVE);
-		}
-		else if (typeName == "class Lobster::LightComponent" || typeName == "N7Lobster14LightComponentE") {
+		case ComponentType::LIGHT_COMPONENT:
 			return new LightComponent(LightType::DIRECTIONAL_LIGHT);
+		case ComponentType::AUDIO_SOURCE_COMPONENT:
+			return new AudioSource();
+		case ComponentType::AUDIO_LISTENER_COMPONENT:
+			return new AudioListener();
+		default:
+			assert(false && "Please register your own typeName-to-component conversion here!");
+			break;
 		}
-		else {
-			throw std::runtime_error("Please register your own typeName-to-component conversion (" + typeName + ")");
-			return nullptr;
-		}
+		return nullptr;
 	}
 
 }

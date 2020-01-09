@@ -85,6 +85,6 @@ namespace glm
     }
     template<typename Archive> void serialize(Archive& archive, glm::quat& quat)
     {
-        archive(quat.x, quat.y, quat.z, quat.w);
+        archive(quat.w, quat.x, quat.y, quat.z);
     }
 }

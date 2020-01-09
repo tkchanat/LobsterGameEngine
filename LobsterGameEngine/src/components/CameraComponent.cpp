@@ -11,6 +11,7 @@ namespace Lobster
 	CameraComponent* CameraComponent::s_activeCamera = nullptr;
     
     CameraComponent::CameraComponent(ProjectionType type) :
+		Component(CAMERA_COMPONENT),
         m_fieldOfView(45.0f),
         m_nearPlane(0.1f),
         m_farPlane(100.0f),
@@ -70,9 +71,9 @@ namespace Lobster
 			s_activeCamera = this;
 		}
 
-		Rigidbody* rigidbody = new Rigidbody();
-		rigidbody->SetEnabled(false);
-		gameObject->AddComponent(rigidbody);
+		PhysicsComponent* physics = new Rigidbody();
+		physics->SetEnabled(false);
+		gameObject->AddComponent(physics);
 	}
 
 	void CameraComponent::OnImGuiRender()
