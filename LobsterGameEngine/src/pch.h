@@ -65,6 +65,8 @@ typedef unsigned char byte;
 //  Custom Defines
 #define MAX_TEXTURE_UNIT 16
 #define MAX_UNIFORM_BUFFER 16
+#define MAX_DIRECTIONAL_LIGHTS 4
+#define MAX_POINT_LIGHTS 64
 
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)

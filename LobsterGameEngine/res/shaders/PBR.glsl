@@ -75,37 +75,66 @@ vec3 FresnelRoughness(vec3 f0, float cosTheta, float roughness)
     return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec3 Lighting(vec3 f0, vec3 view, vec3 albedo, vec3 normal, float roughness, float metallic)
+vec3 DirectionalLighting(DirectionalLight light, vec3 f0, vec3 view, vec3 albedo, vec3 normal, float roughness, float metallic)
 {
 	vec3 n = normal;
 	vec3 v = view;
 
 	vec3 result = vec3(0.0);
-	for(int i = 0; i < Lights.directionalLightCount; ++i)
-	{
-		vec3 l = normalize(Lights.directionalLights[i].direction);
-		vec3 h = normalize(v + l);
-		float cosLi = max(dot(n, l), 0.0);
-		float cosLh = max(dot(n, h), 0.0);
-		float nv = max(dot(n, v), 0.0);
+	vec3 l = normalize(light.direction);
+	vec3 h = normalize(v + l);
+	float cosLi = max(dot(n, l), 0.0);
+	float cosLh = max(dot(n, h), 0.0);
+	float nv = max(dot(n, v), 0.0);
 
-		// Radiance
-		float distance = length(Lights.directionalLights[i].direction - frag_position);
-		float attenuation = 1.0 / (distance * distance);
-		vec3 radiance = vec3(Lights.directionalLights[i].color);// * attenuation;
+	// Radiance
+	float distance = length(light.direction - frag_position);
+	float attenuation = 1.0 / (distance * distance);
+	vec3 radiance = vec3(light.color);// * attenuation;
 
-		// BRDF
-		vec3 F = Fresnel(f0, max(dot(n, v), 0.0));
-		float D = Distribution(cosLh, roughness);
-		float G = Geometry(cosLi, nv, roughness);
-		vec3 specular = (F * D * G) / max(4.0 * nv * cosLi, EPSILON);
+	// BRDF
+	vec3 F = Fresnel(f0, max(dot(n, v), 0.0));
+	float D = Distribution(cosLh, roughness);
+	float G = Geometry(cosLi, nv, roughness);
+	vec3 specular = (F * D * G) / max(4.0 * nv * cosLi, EPSILON);
 
-		// Energy conservation
-		vec3 kD = (1.0 - F) * (1.0 - metallic);
-		vec3 diffuse = kD * albedo;
-		
-		result += (diffuse + specular) * radiance * cosLi;
-	}
+	// Energy conservation
+	vec3 kD = (1.0 - F) * (1.0 - metallic);
+	vec3 diffuse = kD * albedo;
+	
+	result += (diffuse + specular) * radiance * cosLi;
+	return result;
+}
+
+vec3 PointLighting(PointLight light, vec3 f0, vec3 view, vec3 albedo, vec3 normal, float roughness, float metallic)
+{
+	vec3 n = normal;
+	vec3 v = view;
+
+	vec3 result = vec3(0.0);
+	vec3 l = normalize(light.position - frag_position);
+	vec3 h = normalize(v + l);
+	float cosLi = max(dot(n, l), 0.0);
+	float cosLh = max(dot(n, h), 0.0);
+	float nv = max(dot(n, v), 0.0);
+
+	// Radiance
+	float distance = length(light.position - frag_position);
+	float quadratic_attenuation = (light.attenuation + 0.05) * distance * distance;
+	float attenuation = 1.0 / quadratic_attenuation;
+	vec3 radiance = vec3(light.color) * attenuation;
+
+	// BRDF
+	vec3 F = Fresnel(f0, nv);
+	float D = Distribution(cosLh, roughness);
+	float G = Geometry(cosLi, nv, roughness);
+	vec3 specular = (F * D * G) / max(4.0 * nv * cosLi, EPSILON);
+
+	// Energy conservation
+	vec3 kD = (1.0 - F) * (1.0 - metallic);
+	vec3 diffuse = kD * albedo;
+	
+	result += (diffuse + specular) * radiance * cosLi;
 	return result;
 }
 
@@ -140,7 +169,14 @@ void main()
 	vec3 Lr = 2.0 * max(dot(normal, view), 0.0) * normal - view;
 	vec3 f0 = mix(Fdielectric, albedo, metallic); // Fresnel reflectance
 	
-	vec3 LightContribution = Lighting(f0, view, albedo, normal, roughness, metallic);
+	vec3 LightContribution = vec3(0.0);
+	for(int i = 0; i < Lights.directionalLightCount; ++i) {
+		LightContribution += DirectionalLighting(Lights.directionalLights[i], f0, view, albedo, normal, roughness, metallic);
+	}
+	for(int i = 0; i < Lights.pointLightCount; ++i) {
+		LightContribution += PointLighting(Lights.pointLights[i], f0, view, albedo, normal, roughness, metallic);
+	}
+
 	vec3 IBLContribution = IBL(f0, Lr, view, albedo, normal, roughness, metallic, ambientOcclusion);
 	out_color = vec4(LightContribution + IBLContribution, 1.0);
 } 
