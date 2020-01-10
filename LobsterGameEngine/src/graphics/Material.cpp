@@ -14,22 +14,8 @@ namespace Lobster
 		m_uniformDataSize(0),
 		b_dirty(false)
     {
-		// initialize all material data from binary
-		std::stringstream ss = FileSystem::ReadStringStream(FileSystem::Path(m_name).c_str());
-		bool matFileExist = false;
-		try {
-			cereal::BinaryInputArchive iarchive(ss);
-			iarchive(*this);
-			matFileExist = true;
-		} 
-		catch (std::exception e) {
-			m_shader = ShaderLibrary::Use("shaders/Phong.glsl");
-			LOG("{}", e.what());
-		};
-
-		m_uniformDataSize = m_shader->GetUniformBufferSize();
-		if (m_uniformData == nullptr) m_uniformData = new byte[m_uniformDataSize];
-		if (matFileExist == false) InitializeUniformsFromShader();
+		Deserialize(FileSystem::ReadStringStream(FileSystem::Path(m_name).c_str()));
+		if(m_uniformData == nullptr) InitializeUniformsFromShader();
 		AssignTextureSlot();
     }
 
@@ -94,21 +80,21 @@ namespace Lobster
 
 	void Material::AssignTextureSlot()
 	{
-		// assign each texture into its unique slot
-		m_textures.clear();
+		// reserve texture array
+		int numOfTextures = 0;
 		const std::vector<UniformDeclaration>& declarations = m_shader->GetUniformDeclarations();
+		for (auto decl : declarations) if (decl.Type == UniformDeclaration::SAMPLER2D) numOfTextures++;
+		m_textures.resize(numOfTextures);
+
+		// assign each texture into its unique slot
 		size_t offset = 0;
+		uint slot = 0;
 		for (auto decl : declarations) {
 			if (decl.Type == UniformDeclaration::SAMPLER2D) {
-				uint slot = (uint)m_textures.size();
 				memcpy(m_uniformData + offset, &slot, sizeof(uint));
-				m_textures.push_back(nullptr);
+				slot++;
 			}
 			offset += decl.Size();
-		}
-		_textureNames.resize(m_textures.size());
-		for (int i = 0; i < m_textures.size(); ++i) {
-			m_textures[i] = _textureNames[i].empty() ? nullptr : TextureLibrary::Use(_textureNames[i].c_str());
 		}
 	}
 
@@ -253,16 +239,34 @@ namespace Lobster
 
 	void Material::SaveConfiguration()
 	{
-		for (int i = 0; i < m_textures.size(); ++i) _textureNames[i] = m_textures[i] ? m_textures[i]->GetName() : "";
+		std::stringstream ss = Serialize();
+		FileSystem::WriteStringStream(FileSystem::Path(m_name).c_str(), ss);
 
+		b_dirty = false;
+	}
+
+	std::stringstream Material::Serialize()
+	{
 		std::stringstream ss;
 		{
 			cereal::BinaryOutputArchive oachive(ss);
 			oachive(*this);
 		}
-		FileSystem::WriteStringStream(FileSystem::Path(m_name).c_str(), ss);
+		return ss;
+	}
 
-		b_dirty = false;
+	void Material::Deserialize(std::stringstream ss)
+	{
+		try {
+			cereal::BinaryInputArchive iarchive(ss);
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			m_shader = ShaderLibrary::Use("shaders/Phong.glsl");
+			m_uniformDataSize = m_shader->GetUniformBufferSize();
+			if (m_uniformData == nullptr) m_uniformData = new byte[m_uniformDataSize];
+			WARN("Couldn't load material {}, setting to default. Exception: {}", m_name, e.what());
+		};
 	}
 
 	// =======================================================
@@ -296,6 +300,12 @@ namespace Lobster
 	Material * MaterialLibrary::UseShader(const char * shaderPath)
 	{
 		return new Material(ShaderLibrary::Use(shaderPath));
+	}
+
+	Material * MaterialLibrary::UseDefault()
+	{
+		static Material* defaultMaterial = MaterialLibrary::UseShader("shaders/Phong.glsl");
+		return defaultMaterial;
 	}
 
 	void MaterialLibrary::ResizeUniformBuffer(Shader * shader)

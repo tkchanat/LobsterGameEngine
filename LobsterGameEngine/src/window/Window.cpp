@@ -8,27 +8,11 @@
 namespace Lobster
 {
 
-	Window::Window(JsonFile config) : 
-		m_window(nullptr),
-		m_size(glm::ivec2()),
-		m_frameBufferSize(glm::ivec2()),
-		m_title(""),
-		m_json(config),
-		b_isRunning(false),
-		b_vsync(false)
-	{
-		m_size = m_frameBufferSize = glm::ivec2(m_json.getValue("width", 1280), m_json.getValue("height", 720));
-		m_title = m_json.getValue("title", "Hello Pedro");
-		b_vsync = m_json.getValue("vsync", false);
-		Initialize();
-	}
-
 	Window::Window(int width, int height, std::string title, bool vsync) :
 		m_window(nullptr),
         m_size(glm::ivec2(width, height)),
         m_frameBufferSize(glm::ivec2(width, height)),
         m_title(title),
-		m_json(JsonFile()),
 		b_isRunning(false),
 		b_vsync(vsync)
     {
@@ -84,7 +68,7 @@ namespace Lobster
 		glfwSwapInterval((int)b_vsync);	//	Enable VSync
 
 		GLFWimage image; 
-		std::string iconPath = m_json.getValue("icon", "../icon.png");
+		std::string iconPath = "../icon.png";
 		if (!iconPath.empty())
 		{
 			std::string path = FileSystem::Path(iconPath);

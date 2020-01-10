@@ -232,6 +232,7 @@ project "LobsterGameEngine"
 			"ImGuizmo",
 			"GLAD",
 			"Cocoa.framework",
+			"OpenAL.framework",
 			"OpenGL.framework",
 			"IOKit.framework",
 			"CoreVideo.framework"

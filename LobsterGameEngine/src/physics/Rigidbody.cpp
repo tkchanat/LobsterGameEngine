@@ -18,7 +18,7 @@ namespace Lobster {
 	}
 
 	void Rigidbody::OnAttach() {
-		AABB* boundingBox = new AABB(this, Transform(), false);
+		AABB* boundingBox = new AABB(this, Transform());
 		std::pair<glm::vec3, glm::vec3> pair = gameObject->GetBound();
 		boundingBox->Min = pair.first;
 		boundingBox->Max = pair.second;
@@ -117,7 +117,6 @@ namespace Lobster {
 					break;
 				}
 			}
-			//}
 		}
 	}
 
@@ -140,10 +139,8 @@ namespace Lobster {
 		for (GameObject* c : colliding) {
 			if (std::find(collided.begin(), collided.end(), c) == collided.end()) {
 				gameObject->OnEnter(c);
-				c->OnEnter(gameObject);
 
 				gameObject->OnCollide(c);
-				c->OnCollide(gameObject);
 			}
 		}
 
@@ -151,11 +148,9 @@ namespace Lobster {
 		for (GameObject* c : collided) {
 			if (std::find(colliding.begin(), colliding.end(), c) == colliding.end()) {
 				gameObject->OnLeave(c);
-				c->OnLeave(gameObject);
 			}
 			else {
 				gameObject->OnOverlap(c);
-				c->OnOverlap(gameObject);
 			}
 		}
 
@@ -165,6 +160,7 @@ namespace Lobster {
 		//	Update collision if this object is of block type.
 		if (GetPhysicsType() != 0) return;
 
+		//	Now, resolve collision event between this game object and the other game object (gameObj).
 		for (GameObject* gameObj : colliding) {
 			//	Update this object only if it is also of block type.
 			Rigidbody* physicsObj = gameObj->GetComponent<Rigidbody>();
@@ -172,7 +168,7 @@ namespace Lobster {
 			if (!m_simulate && !(physicsObj->m_simulate)) continue;
 
 			//	1. Compute normal of collision.
-			glm::vec3 normal;
+			/*glm::vec3 normal;
 			glm::vec3 diff = physicsObj->transform->WorldPosition - transform->WorldPosition;
 			if (abs(diff.x) > abs(diff.y) && abs(diff.x) > abs(diff.z)) {
 				normal = glm::vec3(diff.x, 0, 0);
@@ -181,13 +177,61 @@ namespace Lobster {
 			} else {
 				normal = glm::vec3(0, 0, diff.z);
 			}
+			normal = glm::normalize(normal);*/
+
+			//	1. Compute normal of collision.
+			glm::vec3 normal;
+			glm::vec3 diff = physicsObj->transform->WorldPosition - transform->WorldPosition;
+
+			//	Calculate the direction of the bounding box vectors.
+			glm::vec3 xBound = glm::normalize(glm::vec3(1, 0, 0) * glm::conjugate(transform->LocalRotation));
+			glm::vec3 yBound = glm::normalize(glm::vec3(0, 1, 0) * glm::conjugate(transform->LocalRotation));
+			glm::vec3 zBound = glm::normalize(glm::vec3(0, 0, 1) * glm::conjugate(transform->LocalRotation));
+
+			//	Break down the bounding box vectors.
+			glm::vec3 xDiff = glm::dot(diff, xBound) * xBound;
+			glm::vec3 yDiff = glm::dot(diff, yBound) * yBound;
+			glm::vec3 zDiff = glm::dot(diff, zBound) * zBound;
+
+			//	Flip direction of vector if needed.
+			if (glm::length(diff) * glm::length(xBound) / glm::dot(diff, xBound) < 0) xDiff *= -1;
+			if (glm::length(diff) * glm::length(yBound) / glm::dot(diff, yBound) < 0) yDiff *= -1;
+			if (glm::length(diff) * glm::length(zBound) / glm::dot(diff, zBound) < 0) zDiff *= -1;
+
+			if (glm::length(xDiff) > glm::length(yDiff) && glm::length(xDiff) > glm::length(zDiff)) {
+				normal = xDiff;
+			} else if (glm::length(yDiff) > glm::length(xDiff) && glm::length(yDiff) > glm::length(zDiff)) {
+				normal = yDiff;
+			} else {
+				normal = zDiff;
+			}
 			normal = glm::normalize(normal);
 
-			//	2. Compute Impulse. We deferred the step of multiplying a constant to the next step.
+			//	2. Determine if the Center of Mass of the object falls inside the opposing collider.
+			//	First find the orientation and the face of collision.
+
+			//	Find the COM projection into the other object.
+			glm::vec3 normalProjection = glm::translate(m_centerOfMass) * glm::vec4(transform->WorldPosition, 1.0f);
+			normalProjection += glm::dot(diff, normal) * normal;
+			
+			glm::vec3 mappedPosition = glm::inverse(physicsObj->transform->GetMatrix()) * glm::vec4(normalProjection, 1.0f);
+			std::pair<glm::vec3, glm::vec3> pairBound = gameObj->GetBound();
+
+			bool centerOutOfObject = pairBound.first.x > mappedPosition.x || pairBound.second.x < mappedPosition.x
+				|| pairBound.first.y > mappedPosition.y || pairBound.second.y < mappedPosition.y
+				|| pairBound.first.z > mappedPosition.z || pairBound.second.z < mappedPosition.z;
+
+			//	Handle angular velocity for object losing balance.
+
+			if (centerOutOfObject && m_simulate) {
+				LOG("{} Lost balance!", GetOwner()->GetName());
+			}
+
+			//	3. Compute Impulse. We deferred the step of multiplying a constant to the next step.
 			glm::vec3 impulse = -m_mass * physicsObj->m_mass * normal * glm::dot(normal, m_velocity - physicsObj->m_velocity);
 			impulse /= (m_mass + physicsObj->m_mass);
 
-			//	3. Update velocity.
+			//	4. Update velocity.
 			//	Different impulse and speed depending on whether the two objects simulate physics.
 			if (!m_simulate) {
 				impulse *= (1 + physicsObj->m_restitution);
@@ -200,7 +244,7 @@ namespace Lobster {
 				physicsObj->m_newLinearVelocity -= impulse * (1 + physicsObj->m_restitution) / physicsObj->m_mass;
 			}
 
-			//	4. Update position to that before collision.
+			//	5. Update position to that before collision.
 			transform->WorldPosition = m_prevLinearPos;
 			physicsObj->transform->WorldPosition = physicsObj->m_prevLinearPos;
 		}
@@ -212,17 +256,20 @@ namespace Lobster {
 		//	TODO: Damping algorithm
 		m_velocity *= (100.0f - m_linearDamping) / 100.0f;
 
-		transform->WorldEulerAngles += m_angularVelocity * time + 0.5f * m_angularAcceleration * time;
+		transform->LocalEulerAngles += m_angularVelocity * time + 0.5f * m_angularAcceleration * time;
 		m_angularVelocity += m_angularAcceleration * time;
 		//	TODO: Damping algorithm
 		m_angularVelocity *= (100.0f - m_angularDamping) / 100.0f;
+
+
+		//LOG("Velocity ({}, {}, {})", m_velocity.x, m_velocity.y, m_velocity.z);
 	}
 
 	void Rigidbody::UndoTravel(float time, glm::vec3 linearAccel) {
 		//	TODO: Damping algorithm
 		m_angularVelocity /= (100.0f - m_angularDamping) / 100.0f;
 		m_angularVelocity -= m_angularAcceleration * time;
-		transform->WorldEulerAngles -= m_angularVelocity * time + 0.5f * m_angularAcceleration * time;
+		transform->LocalEulerAngles -= m_angularVelocity * time + 0.5f * m_angularAcceleration * time;
 		
 		//	TODO: Damping algorithm
 		m_velocity /= (100.0f - m_linearDamping) / 100.0f;

@@ -30,6 +30,19 @@ namespace Lobster
 		inline glm::vec3 Right() const { return LocalRotation * glm::vec3(1, 0, 0); }
 		inline glm::vec3 Up() const { return LocalRotation * glm::vec3(0, 1, 0); }
 		inline glm::vec3 Forward() const { return LocalRotation * glm::vec3(0, 0, 1); }
+	private:
+		friend class cereal::access;
+		template <class Archive>
+		void serialize(Archive & ar)
+		{
+			ar(WorldPosition);
+			ar(WorldRotation);
+			ar(WorldEulerAngles);
+			ar(LocalEulerAngles);
+			ar(LocalPosition);
+			ar(LocalRotation);
+			ar(LocalScale);
+		}
 	};
     
 }

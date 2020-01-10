@@ -5,6 +5,7 @@
 
 //  Placeholder
 #include "audio/AudioSystem.h"
+#include "components/AudioComponent.h"
 #include "components/ComponentCollection.h"
 #include "events/EventDispatcher.h"
 #include "events/EventQueue.h"
@@ -20,9 +21,17 @@
 namespace Lobster
 {
     
-    Application* Application::m_instance = nullptr;
-    
-    Application::Application()
+    Application* Application::m_instance = nullptr;	
+
+#ifdef LOBSTER_BUILD_DEBUG
+	ApplicationMode Application::mode = EDITOR;
+#elif LOBSTER_BUILD_RELEASE
+	ApplicationMode Application::mode = GAME;
+#endif	
+
+    Application::Application() : 
+		m_scene(nullptr),
+		m_renderer(nullptr)
     {
         //  Don't touch here, please do all initialization work in Initialize() function
         if(m_instance)
@@ -58,7 +67,12 @@ namespace Lobster
 		LOG("Working Directory: " + m_fileSystem->GetCurrentWorkingDirectory());
 
 		// Read from JSON
-		JsonFile config("../config.json");
+        struct {
+            int width = 1280;
+            int height = 760;
+            std::string title = "Lobster Engine";
+            bool vsync = true;
+        } config;
 
 		// Independent system initialization
 		ThreadPool::Initialize(16);
@@ -68,18 +82,8 @@ namespace Lobster
 		EventQueue::Initialize();
 		Input::Initialize();
 
-		// A default value for config.window
-		// Do default config.window assignment here.
-		std::string windowDefault("{"
-			"\"width\": 1280,"
-			"\"height\" : 760,"
-			"\"title\" : \"Lobster Engine\","
-			"\"icon\" : \"../lobster.png\","
-			"\"vsync\" : true"
-		"}");
-
 		// OpenGL dependent system initialization (Window class create OpenGL context)
-		m_window = new Window(config.getJsonValue("window", windowDefault));
+		m_window = new Window(config.width, config.height, config.title, config.vsync);
 		TextureLibrary::Initialize();
 		ShaderLibrary::Initialize();
 		MaterialLibrary::Initialize();
@@ -93,24 +97,30 @@ namespace Lobster
 
         //  Initialize GameObjects
 		Timer loadTimer;
-        m_scene = new Scene();
+		OpenScene("");
 
-		ThreadPool::Enqueue([]() {
-			// This job should be running in a separate thread without blocking the main thread
-			Sleep(10000); // sleep for 10 seconds
-			LOG("ThreadPool is working! :D");
-		});
-
+//		ThreadPool::Enqueue([]() {
+//			// This job should be running in a separate thread without blocking the main thread
+//			Sleep(10000); // sleep for 10 seconds
+//			LOG("ThreadPool is working! :D");
+//		});
 
 		GameObject* dance = new GameObject("dance");
 		dance->AddComponent(new MeshComponent(FileSystem::Path("meshes/dance.fbx").c_str()));
-		//dance->AddComponent(new AABB());
-		//dance->AddComponent(new Rigidbody());
-		dance->transform.Translate(0, 0, 0);
 		dance->transform.LocalScale *= 0.025;
 		dance->AddChild(new GameObject("child 1"));
 		dance->AddChild(new GameObject("child 2"));
 		m_scene->AddGameObject(dance);
+
+// 		GameObject* barrel = new GameObject("barrel");
+// 		barrel->AddComponent(new MeshComponent(FileSystem::Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat"));
+// 		barrel->AddComponent(new AudioSource());
+// 		//barrel->AddComponent(new AABB());
+// 		//barrel->AddComponent(new Rigidbody());
+// 		//barrel->transform.Translate(0, 2, 0);
+// 		barrel->AddChild(new GameObject("child 1"));
+// 		barrel->AddChild(new GameObject("child 2"));
+// 		m_scene->AddGameObject(barrel);
 
 		//for (int i = 0; i < 5; ++i)
 		//{
@@ -121,23 +131,30 @@ namespace Lobster
 		//}
 
 		GameObject* camera = new GameObject("Main Camera");
-		camera->AddComponent(new CameraComponent(ProjectionType::PERSPECTIVE));
+		camera->AddComponent(new CameraComponent());
+		camera->AddComponent(new AudioListener());
 		camera->transform.Translate(0, 2, 10);
 		m_scene->AddGameObject(camera);
 
 		GameObject* light = new GameObject("Directional Light");
 		light->AddComponent(new LightComponent(LightType::DIRECTIONAL_LIGHT));
-		light->transform.Translate(0, 2, 3);
+		//light->transform.Translate(0, 2, 3);
 		m_scene->AddGameObject(light);
 
         //GameObject* sibenik = (new GameObject("sibenik"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/sibenik.obj").c_str(), "materials/sibenik.mat");
 		LOG("Model loading spent {} ms", loadTimer.GetElapsedTime());
 
-#ifdef LOBSTER_BUILD_DEBUG
 		// Push layers to layer stack
+#ifdef LOBSTER_BUILD_DEBUG
 		m_GUILayer = new GUILayer();
-		m_editorLayer = new EditorLayer(m_scene, m_renderer);
+		m_editorLayer = new EditorLayer();
 #endif
+		EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {
+			if (e->Key == GLFW_KEY_O)
+			{
+				OpenScene("scenes/test.lobster");
+			}
+		}));
     }
 
 	// Updates subsystem chronologically in a fixed timestep, i.e. order does matter
@@ -153,10 +170,12 @@ namespace Lobster
 		// Scene fixed update
 
 		//=========================================================
-		// Physics update
-		Timer physicsTimer;
-		m_scene->OnPhysicsUpdate(deltaTime);
-		Profiler::SubmitData("Physics Update Time", physicsTimer.GetElapsedTime());
+		// Physics update, not running in editor mode
+		if (mode != EDITOR) {
+			Timer physicsTimer;
+			m_scene->OnPhysicsUpdate(deltaTime);
+			Profiler::SubmitData("Physics Update Time", physicsTimer.GetElapsedTime());
+		}		
 	}
 
 	// Updates subsystem chronologically as much as possible, i.e. order does matter
@@ -187,7 +206,14 @@ namespace Lobster
 		// Scene update
 		Timer sceneUpdateTimer;
 		m_scene->OnUpdate(deltaTime);	// update game scene
-		//m_layerStack.OnUpdate(deltaTime);
+		RenderOverlayCommand ocommand;
+		ocommand.UseTexture = TextureLibrary::Use("textures/ui/light.png");
+		ocommand.x = 200.0f;
+		ocommand.y = 300.0f;
+		ocommand.w = 64.0f;
+		ocommand.h = 64.0f;
+		ocommand.z = 1;
+		Renderer::Submit(ocommand);
 		Profiler::SubmitData("Scene Update Time", sceneUpdateTimer.GetElapsedTime());
 
 		//=========================================================
@@ -199,7 +225,7 @@ namespace Lobster
 		//=========================================================
 		// Renderer update
 		Timer renderTimer;
-		m_renderer->Render(m_scene->GetActiveCamera());
+		m_renderer->Render(CameraComponent::GetActiveCamera());
 		Profiler::SubmitData("Render Time", renderTimer.GetElapsedTime());
 
 		//=========================================================
@@ -264,8 +290,28 @@ namespace Lobster
 		}
 	}
 
+	void Application::SwitchMode(ApplicationMode mode) {
+		m_instance->mode = mode;
+		// TODO switch tab
+		if (mode == EDITOR) {
+
+		}
+		else if (mode == SIMULATION) {
+
+		}
+	}
+
 	void Application::Shutdown()
 	{
+	}
+
+	void Application::OpenScene(const char* scenePath)
+	{
+		if (m_scene) {
+			delete m_scene;
+            EditorLayer::s_selectedGameObject = nullptr;
+		}
+		m_scene = new Scene(scenePath);
 	}
 
 }

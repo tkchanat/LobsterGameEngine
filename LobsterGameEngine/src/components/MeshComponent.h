@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "graphics/VertexArray.h"
+#include "graphics/Material.h"
 #include "physics/AABB.h"
 #include "system/FileSystem.h"
 
@@ -47,9 +48,11 @@ namespace Lobster
 		float m_timeMultiplier;
 		int m_currentAnimation;
     public:
-        MeshComponent(const char* meshPath, const char* materialPath = "materials/default.mat");
-        MeshComponent(VertexArray* mesh, const char* materialPath = "materials/default.mat");
-		MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char* materialPath = "materials/default.mat");
+		MeshComponent() : Component(MESH_COMPONENT) {}
+        MeshComponent(const char* meshPath, const char* materialPath = nullptr);
+        MeshComponent(VertexArray* mesh, const char* materialPath = nullptr);
+		MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char* materialPath = nullptr);
+		void LoadFromFile(const char* meshPath, const char* materialPath);
         virtual ~MeshComponent() override;
 		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
@@ -57,6 +60,28 @@ namespace Lobster
 		inline std::pair<glm::vec3, glm::vec3> GetBound() const { return m_meshInfo.Bound; }
 	private:
 		void UpdateBoneTransforms(const BoneNode & node, const glm::mat4 & parentTransform, const glm::mat4& globalInverseTransform);
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
+	private:
+		friend class cereal::access;
+		template <class Archive>
+		void save(Archive & ar) const
+		{
+			std::vector<std::string> materialNames;
+			for (auto material : m_meshInfo.Materials)
+				materialNames.push_back(material->GetName());
+
+			ar(m_meshPath);
+			ar(materialNames);
+		}
+		template <class Archive>
+		void load(Archive & ar)
+		{
+			ar(m_meshPath);
+			std::vector<std::string> materialNames;
+			ar(materialNames);
+			for (auto name : materialNames) m_meshInfo.Materials.push_back(MaterialLibrary::Use(name.c_str()));
+		}
     };
 
 	// =============================================

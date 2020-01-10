@@ -1,8 +1,5 @@
 #pragma once
 #include "Component.h"
-#define MAX_DIRECTIONAL_LIGHTS 4
-#define MAX_POINT_LIGHTS 100
-#define MAX_SPOT_LIGHTS 100
 
 namespace Lobster
 {
@@ -10,8 +7,7 @@ namespace Lobster
 	enum LightType : uint
 	{
 		DIRECTIONAL_LIGHT,
-		POINT_LIGHT,
-		SPOT_LIGHT
+		POINT_LIGHT
 	};
 
 	struct ubo_DirectionalLight {
@@ -21,12 +17,18 @@ namespace Lobster
 		float padding;
 	};
 
+	struct ubo_PointLight {
+		glm::vec3 position;
+		float attenuation;
+		glm::vec3 color;
+		float padding;
+	};
+
 	struct ubo_Lights {
 		ubo_DirectionalLight directionalLights[MAX_DIRECTIONAL_LIGHTS];
+		ubo_PointLight pointLights[MAX_POINT_LIGHTS];
 		int directionalLightCount;
 		int pointLightCount;
-		int spotLightCount;
-		int padding;
 	};
 
 	class LightComponent : public Component
@@ -43,15 +45,31 @@ namespace Lobster
 		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
+        virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+        virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 		inline LightType GetType() const{ return m_type; }
+    private:
+        friend class cereal::access;
+        template <class Archive>
+        void save(Archive & ar) const
+        {
+            ar(m_type);
+            ar(m_color);
+        }
+        template <class Archive>
+        void load(Archive & ar)
+        {
+            ar(m_type);
+            ar(m_color);
+        }
 	};
 
 	class LightLibrary
 	{
 	private:
 		uint m_ubo;
-		ubo_DirectionalLight m_directionalLights[MAX_DIRECTIONAL_LIGHTS];
-		size_t m_directionalLightCount = 0;
+		std::list<LightComponent*> m_directionalLights;
+		std::list<LightComponent*> m_pointLights;
 		static LightLibrary* s_instance;
 	public:
 		static void Initialize();

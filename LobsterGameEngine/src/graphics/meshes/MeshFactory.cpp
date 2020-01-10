@@ -253,5 +253,37 @@ namespace Lobster
 		ib.push_back(indexBuffer);		
 		return new VertexArray(layout, vb, ib, PrimitiveType::LINES);
 	}
+
+	VertexArray * MeshFactory::Sprite()
+	{
+		std::vector<VertexBuffer*> vb;
+		std::vector<IndexBuffer*> ib;
+		VertexBuffer* vertexBuffer = new VertexBuffer;
+		IndexBuffer* indexBuffer = new IndexBuffer;
+		VertexLayout* layout = new VertexLayout;
+		layout->Add<float>("in_data", 4);
+
+		float vertices[24] = {
+			// positions   // texcoords
+			0.0f, 1.0f, 0.0f, 1.0f,
+			1.0f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+
+			0.0f, 1.0f, 0.0f, 1.0f,
+			1.0f, 1.0f, 1.0f, 1.0f,
+			1.0f, 0.0f, 1.0f, 0.0f
+		};
+		uint indices[6] = {
+			0, 1, 2,
+			3, 4, 5
+		};
+
+		vertexBuffer->SetData(vertices, sizeof(vertices));
+		indexBuffer->SetData(indices, 6);
+
+		vb.push_back(vertexBuffer);
+		ib.push_back(indexBuffer);
+		return new VertexArray(layout, vb, ib, PrimitiveType::TRIANGLES);
+	}
     
 }

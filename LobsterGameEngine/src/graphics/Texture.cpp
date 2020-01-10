@@ -115,6 +115,11 @@ namespace Lobster
 	TextureCube::~TextureCube()
 	{
 		glDeleteTextures(1, &m_id);
+		glDeleteTextures(1, &m_irradianceId);
+		glDeleteTextures(1, &m_prefilterId);
+		glDeleteTextures(1, &m_brdfId);
+		glDeleteFramebuffers(1, &m_captureFrameBuffer);
+		glDeleteRenderbuffers(1, &m_captureRenderBuffer);
 	}
 
 	bool TextureCube::Load()
@@ -210,7 +215,6 @@ namespace Lobster
 		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 		Shader* prefilterShader = ShaderLibrary::Use("shaders/PrefilterConvolution.glsl");
-		VertexArray* cube = MeshFactory::Cube();
 		prefilterShader->Bind();
 		prefilterShader->SetUniform("environmentMap", 0);
 		prefilterShader->SetUniform("captureProjection", captureProjection);
@@ -247,9 +251,8 @@ namespace Lobster
 
 	void TextureCube::GenerateBRDFMap()
 	{
-		glGenTextures(1, &m_brdfId);
-
 		// pre-allocate enough memory for the LUT texture.
+		glGenTextures(1, &m_brdfId);
 		glBindTexture(GL_TEXTURE_2D, m_brdfId);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
 		// be sure to set wrapping mode to GL_CLAMP_TO_EDGE
@@ -264,10 +267,10 @@ namespace Lobster
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_brdfId, 0);
 
-		Shader* brdfShader = ShaderLibrary::Use("shaders/BRDFConvolution.glsl");
 		GLint originalViewport[4];
 		glGetIntegerv(GL_VIEWPORT, originalViewport);
 		glViewport(0, 0, 512, 512);
+		Shader* brdfShader = ShaderLibrary::Use("shaders/BRDFConvolution.glsl");
 		brdfShader->Bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		s_quad->Draw();

@@ -76,18 +76,24 @@ uniform bool sys_animate = false;)");
 #define PI 3.14159265359
 #define EPSILON 0.0001
 #define MAX_DIRECTIONAL_LIGHTS )" + std::to_string(MAX_DIRECTIONAL_LIGHTS) + R"(
+#define MAX_POINT_LIGHTS )" + std::to_string(MAX_POINT_LIGHTS) + R"(
 struct DirectionalLight {
     vec3 direction;
     float intensity;
     vec3 color;
 	float padding;
 };
+struct PointLight {
+	vec3 position;
+	float attenuation;
+	vec3 color;
+	float padding;
+};
 layout (std140) uniform ubo_Lights {
     DirectionalLight directionalLights[MAX_DIRECTIONAL_LIGHTS];
+	PointLight pointLights[MAX_POINT_LIGHTS];
     int directionalLightCount;
 	int pointLightCount;
-	int spotLightCount;
-	int padding;
 } Lights;
 uniform vec3 sys_cameraPosition;
 uniform samplerCube sys_irradianceMap;
@@ -233,6 +239,13 @@ uniform sampler2D sys_brdfLUTMap;)");
 		int location = glGetUniformLocation(m_id, name);
 		if (location == -1) return;
 		glUniform1i(location, data);
+	}
+
+	void Shader::SetUniform(const char * name, const glm::ivec2 & data)
+	{
+		int location = glGetUniformLocation(m_id, name);
+		if (location == -1) return;
+		glUniform2iv(location, 1, glm::value_ptr(data));
 	}
 
 	void Shader::SetUniform(const char * name, const glm::vec2 & data)

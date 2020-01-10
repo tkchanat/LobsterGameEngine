@@ -40,6 +40,7 @@ namespace Lobster
 		void SetUniform(const char* name, int data);
 		void SetUniform(const char* name, float data);
 		void SetUniform(const char* name, bool data);
+		void SetUniform(const char* name, const glm::ivec2& data);
 		void SetUniform(const char* name, const glm::vec2& data);
         void SetUniform(const char* name, const glm::vec3& data);
 		void SetUniform(const char* name, const glm::vec4& data);
@@ -66,7 +67,6 @@ namespace Lobster
 		static void Initialize();
 		static void LiveReload();
 		static Shader* Use(const char* path);
-		//static void SetBlockBinding(const char* name, int bindingPoint);
 	};
 
     

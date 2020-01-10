@@ -8,6 +8,7 @@ namespace Lobster
 {
 
 	LightComponent::LightComponent(LightType type) :
+		Component(LIGHT_COMPONENT),
 		m_type(DIRECTIONAL_LIGHT),
 		m_color(glm::vec3(1)),
 		m_intensity(1),
@@ -22,9 +23,12 @@ namespace Lobster
 
 	void LightComponent::OnAttach()
 	{
-		Rigidbody* rigidbody = new Rigidbody();
-		rigidbody->SetEnabled(false);
-		gameObject->AddComponent(rigidbody);
+		this->transform->WorldPosition = glm::vec3(0, 2, 3);
+		LightLibrary::AddLight(this, GetType());
+
+		PhysicsComponent* physics = new Rigidbody();
+		physics->SetEnabled(false);
+		gameObject->AddComponent(physics);
 	}
 
 	void LightComponent::OnUpdate(double deltaTime)
@@ -44,7 +48,7 @@ namespace Lobster
 		if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			// Light type
-			const char* types[] = { "Directional", "Point", "Spot" };
+			const char* types[] = { "Directional", "Point" };
 			LightType prev_type = m_type;
 			ImGui::Combo("Type", (int*)&m_type, types, IM_ARRAYSIZE(types));
 			if (prev_type != m_type) {
@@ -60,6 +64,23 @@ namespace Lobster
 			ImGui::SliderFloat("Intensity", &m_intensity, 0.f, 1.f);
 		}
 	}
+
+    void LightComponent::Serialize(cereal::JSONOutputArchive& oarchive)
+    {
+        //LOG("Serializing LightComponent");
+        oarchive(*this);
+    }
+
+    void LightComponent::Deserialize(cereal::JSONInputArchive& iarchive)
+    {
+        //LOG("Deserializing LightComponent");
+        try {
+            iarchive(*this);
+        }
+        catch (std::exception e) {
+            LOG("Deserializing LightComponent failed. Reason: {}", e.what());
+        }
+    }
 
 	// =======================================================
 	// LightLibrary
@@ -87,19 +108,18 @@ namespace Lobster
 		switch (type)
 		{
 		case Lobster::DIRECTIONAL_LIGHT:
-			if (s_instance->m_directionalLightCount + 1 >= MAX_DIRECTIONAL_LIGHTS) {
+			if (s_instance->m_directionalLights.size() + 1 >= MAX_DIRECTIONAL_LIGHTS) {
 				WARN("MAX_DIRECTIONAL_LIGHTS exceeded, this new light will be ignored!");
 				return;
 			}
-			ubo_DirectionalLight ubo;
-			ubo.direction = light->transform->WorldPosition;
-			ubo.intensity = light->m_intensity;
-			ubo.color = light->m_color;
-			s_instance->m_directionalLights[s_instance->m_directionalLightCount++] = ubo;
+			s_instance->m_directionalLights.push_back(light);
 			break;
 		case Lobster::POINT_LIGHT:
-			break;
-		case Lobster::SPOT_LIGHT:
+			if (s_instance->m_pointLights.size() + 1 >= MAX_POINT_LIGHTS) {
+				WARN("MAX_POINT_LIGHTS exceeded, this new light will be ignored!");
+				return;
+			}
+			s_instance->m_pointLights.push_back(light);
 			break;
 		default:
 			break;
@@ -111,12 +131,10 @@ namespace Lobster
 		switch (type)
 		{
 		case Lobster::DIRECTIONAL_LIGHT:
-			if (s_instance->m_directionalLightCount - 1 < 0) return;
-			s_instance->m_directionalLightCount--;
+			s_instance->m_directionalLights.remove(light);
 			break;
 		case Lobster::POINT_LIGHT:
-			break;
-		case Lobster::SPOT_LIGHT:
+			s_instance->m_pointLights.remove(light);
 			break;
 		default:
 			break;
@@ -125,9 +143,35 @@ namespace Lobster
 
 	void LightLibrary::SetUniforms()
 	{
+		ubo_DirectionalLight directionalLightsData[MAX_DIRECTIONAL_LIGHTS];
+		int directionalLightCount = s_instance->m_directionalLights.size();
+		int i = 0; 
+		for (auto dirLight : s_instance->m_directionalLights) {
+			directionalLightsData[i].color = dirLight->m_color;
+			directionalLightsData[i].direction = dirLight->transform->WorldPosition;
+			directionalLightsData[i].intensity = dirLight->m_intensity;
+			i++;
+		}
+		ubo_PointLight pointLightsData[MAX_POINT_LIGHTS];
+		int pointLightCount = s_instance->m_pointLights.size();
+		i = 0;
+		for (auto pointLight : s_instance->m_pointLights) {
+			pointLightsData[i].color = pointLight->m_color;
+			pointLightsData[i].position = pointLight->transform->WorldPosition;
+			pointLightsData[i].attenuation = pointLight->m_intensity;
+			i++;
+		}
+
+		size_t offset = 0;
 		glBindBuffer(GL_UNIFORM_BUFFER, s_instance->m_ubo);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ubo_DirectionalLight) * MAX_DIRECTIONAL_LIGHTS, s_instance->m_directionalLights);
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(ubo_DirectionalLight) * MAX_DIRECTIONAL_LIGHTS, sizeof(int), &s_instance->m_directionalLightCount);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(ubo_DirectionalLight) * MAX_DIRECTIONAL_LIGHTS, directionalLightsData);
+		offset += sizeof(ubo_DirectionalLight) * MAX_DIRECTIONAL_LIGHTS;
+		glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(ubo_PointLight) * MAX_POINT_LIGHTS, pointLightsData);
+		offset += sizeof(ubo_PointLight) * MAX_POINT_LIGHTS;
+		glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(int), &directionalLightCount);
+		offset += sizeof(int);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(int), &pointLightCount);
+		offset += sizeof(int);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	}
 

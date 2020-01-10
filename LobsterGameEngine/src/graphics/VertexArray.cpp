@@ -42,6 +42,10 @@ namespace Lobster
 		glDeleteVertexArrays(m_bufferCount, m_ids);
 
 		//  Release memory in CPU
+		for (auto vb : m_vertexBuffers) if (vb) delete vb;
+		for (auto ib : m_indexBuffers) if (ib) delete ib;
+		if (m_vertexLayout) delete m_vertexLayout;
+		m_vertexLayout = nullptr;
 		if (m_ids)	delete[] m_ids;
 		m_ids = nullptr;
 	}

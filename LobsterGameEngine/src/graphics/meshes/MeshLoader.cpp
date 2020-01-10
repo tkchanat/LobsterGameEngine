@@ -53,16 +53,6 @@ namespace Lobster
 		// group meshes together using same materials
 		std::vector<std::vector<VertexBuffer*>> vertexBuffers(scene->mNumMaterials);
 		std::vector<std::vector<IndexBuffer*>> indexBuffers(scene->mNumMaterials);
-		VertexLayout* layout = new VertexLayout();
-		layout->Add<float>("in_position", 3);
-		layout->Add<float>("in_normal", 3);
-		layout->Add<float>("in_texcoord", 2);
-		layout->Add<float>("in_tangent", 3);
-		layout->Add<float>("in_bitangent", 3);
-		if (hasAnimation) {
-			layout->Add<int>("in_boneID", 4);
-			layout->Add<float>("in_boneWeight", 4);
-		}
 
         processNode(scene->mRootNode, scene, vertexBuffers, indexBuffers, meshInfo);
 		processBoneNode(scene->mRootNode, meshInfo.RootNode, meshInfo.BoneMap);
@@ -73,6 +63,16 @@ namespace Lobster
 			if (vertexBuffers[i].empty() || indexBuffers[i].empty()) continue;
 
 			// finalize vertex arrays
+			VertexLayout* layout = new VertexLayout();
+			layout->Add<float>("in_position", 3);
+			layout->Add<float>("in_normal", 3);
+			layout->Add<float>("in_texcoord", 2);
+			layout->Add<float>("in_tangent", 3);
+			layout->Add<float>("in_bitangent", 3);
+			if (hasAnimation) {
+				layout->Add<int>("in_boneID", 4);
+				layout->Add<float>("in_boneWeight", 4);
+			}
 			meshInfo.Meshes.push_back(new VertexArray(layout, vertexBuffers[i], indexBuffers[i], PrimitiveType::TRIANGLES));
 
 			// finalize materials

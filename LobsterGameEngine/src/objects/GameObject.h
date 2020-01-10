@@ -5,7 +5,7 @@
 #include "components/ComponentCollection.h"
 #include "system/filesystem.h"
 
-#include "graphics/Scene.h"
+//#include "graphics/Scene.h"
 #include "physics/PhysicsComponentCollection.h"
 
 namespace Lobster
@@ -15,7 +15,6 @@ namespace Lobster
     class GameObject
     {
 		friend class Scene;
-		friend class ImGuiHierarchy;
     public:
 		//	The world / model matrix of the game object
         Transform transform;
@@ -25,7 +24,7 @@ namespace Lobster
 		unsigned long long m_id;
         std::string m_name;
 		GameObject* m_parent;
-		std::vector<std::shared_ptr<GameObject>> m_children;
+		std::vector<GameObject*> m_children;
         std::vector<Component*> m_components;
 		//	Shortcut to access the vector of colliders.
 		std::vector<Collider*> m_colliders;
@@ -45,11 +44,15 @@ namespace Lobster
 
     public:
         GameObject(const char* name);
-        ~GameObject();
+        ~GameObject(); // TODO: private the destructor, forcing users to call Destroy() instead
 		void Destroy();
         void OnUpdate(double deltaTime);
+		void Serialize(cereal::JSONOutputArchive& oarchive);
+		void Deserialize(cereal::JSONInputArchive& iarchive);
 		//	To update ImGui components that describes this game object's attributes
 		virtual void OnImGuiRender();
+		virtual void OnSimulationBegin();
+		virtual void OnSimulationEnd();
 		GameObject* AddComponent(Component* component);
 		GameObject* AddChild(GameObject* child);
 		template<typename T> T* GetComponent();
@@ -57,6 +60,7 @@ namespace Lobster
 		inline unsigned long long GetId() { return m_id; }
         inline std::string GetName() const { return m_name; }
 		inline GameObject* GetParent() const { return m_parent; }
+		inline std::vector<GameObject*> GetChildren() const { return m_children; }
 		inline size_t GetChildrenCount() const { return m_children.size(); }
 		//	RemoveComponent removes the component in vector and deletes comp afterwards.
 		void RemoveComponent(Component* comp);
@@ -82,8 +86,63 @@ namespace Lobster
 		bool IsOverlap(GameObject* other);
 
 	private:
-		inline std::vector<std::shared_ptr<GameObject>> GetChildren() const { return m_children; }
+		friend class cereal::access;
+		template <class Archive>
+		void save(Archive & ar) const
+		{
+			// =============================================
+			// record all children name
+			std::vector<std::string> childrenNames;
+			for (auto child : m_children) childrenNames.push_back(child->GetName());
+			ar(childrenNames);
+			// recursively serialize all children
+			for (auto child : m_children) {
+				child->Serialize(ar);
+			}
 
+			// =============================================
+			// then serialize this GameObject's properties
+
+			// transform
+			ar(transform);
+			// components
+			std::vector<ComponentType> componentTypes;
+			for (auto component : m_components) componentTypes.push_back(component->GetType());
+			ar(componentTypes);
+			// subsequence components
+			for (auto component : m_components) {
+				component->Serialize(ar);
+			}
+		}
+		template <class Archive>
+		void load(Archive & ar)
+		{
+			// recreate all children
+			std::vector<std::string> childrenNames;
+			ar(childrenNames);
+			for (auto name : childrenNames) AddChild(new GameObject(name.c_str()));
+
+			// recursively deserialize all children
+			for (auto child : m_children) {
+				child->Deserialize(ar);
+			}
+
+			// =============================================
+			// then deserialize this GameObject's properties
+			// transform 
+			ar(transform);
+			// components
+			std::vector<ComponentType> componentTypes;
+			std::vector<Component*> uninitializedComponents;
+			ar(componentTypes);
+			for (ComponentType type : componentTypes) uninitializedComponents.push_back(CreateComponentFromType(type));
+			// initialize subsequence components and append to game object
+			for (Component* component : uninitializedComponents) {
+				if (!component) continue;
+				component->Deserialize(ar);
+				AddComponent(component);
+			}
+		}
     };
     
     //=========================================

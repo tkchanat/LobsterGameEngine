@@ -16,11 +16,9 @@ namespace Lobster
         glm::ivec2 m_size;
         glm::ivec2 m_frameBufferSize;
         std::string m_title;
-		JsonFile m_json;
         bool b_isRunning;
 		bool b_vsync;
 	public:
-		Window(JsonFile config);
         Window(int width, int height, std::string title, bool vsync);
 		~Window();
         void Swap() const;

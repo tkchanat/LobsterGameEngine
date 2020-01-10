@@ -11,14 +11,11 @@ namespace Lobster
 	{
 	private:		
 		int itemSelected = -1;
-		int audioSelected = -1;
 		AudioClip* audioPlaying = nullptr;
 		std::string subdirSelected = "meshes"; // by default
 		std::string pathSelected;
 		ImGui::FileBrowser fileDialog;
-		Scene* scene;
 	public:
-		ImGuiAssets(Scene* scene) : ImGuiComponent(), scene(scene) {}
 		void ConfirmDeleteDialog() {
 			ImGui::SetNextWindowSize(ImVec2(400, 120));
 			if (ImGui::BeginPopupModal("Confirm Delete"))
@@ -88,52 +85,23 @@ namespace Lobster
 		}
 
 		void DisplayAudioPanel() {
-			if (ImGui::Button("Load Selected")) {
-				if (itemSelected != -1)
-					AudioSystem::AddAudioClip(FileSystem::Path(pathSelected).c_str());
-			}
-			ImGui::Text("Loaded Audio Files:");
-			ImGui::BeginChild("Loaded Audio", ImVec2(0, -25), true);
-			{
-				int i = 0;
-				for (AudioClip* audioClip : AudioSystem::GetAudioList()) {
-					std::string displayName = audioClip->GetName();
-					if (audioClip == audioPlaying) displayName = "[PLAYING] " + displayName;
-					if (ImGui::Selectable(displayName.c_str(), audioSelected == i)) {
-						audioSelected = i;
-					}
-					i++;
-				}
-			}
-			ImGui::EndChild();
-
-			if (audioSelected == -1) {
-				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-			}
 			if (audioPlaying) {
 				if (ImGui::Button("Stop")) {
 					audioPlaying->Stop();
-					audioPlaying = nullptr;
+					// NO NEED to clearup here, they will be done in the callback
 				}
 			}
 			else {
 				if (ImGui::Button("Play")) {
-					AudioClip* ac = AudioSystem::GetAudioList()[audioSelected];
+					// load and add the audio clip
+					AudioClip* ac = AudioSystem::AddAudioClip(FileSystem::Path(pathSelected).c_str());
 					audioPlaying = ac;
-					ThreadPool::Enqueue([ac]() {
-						ac->Play();
+					// play and pass callback to clearup
+					ac->Play([&] { 
+						AudioSystem::RemoveAudioClip(audioPlaying); 
+						audioPlaying = nullptr; 
 					});
 				}
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Unload")) {
-				AudioClip* ac = AudioSystem::GetAudioList()[audioSelected];
-				AudioSystem::RemoveAudioClip(ac);
-			}
-			if (audioSelected == -1) {
-				ImGui::PopStyleVar();
-				ImGui::PopItemFlag();				
 			}
 		}
 
@@ -160,7 +128,7 @@ namespace Lobster
 				for (const auto& iter : structure)
 				{
 					if (ImGui::Selectable(iter.first.c_str(), !subdirSelected.compare(iter.first))) {
-						itemSelected = audioSelected = -1;
+						itemSelected = -1;
 						subdirSelected = iter.first;
 					}
 				}
@@ -184,11 +152,11 @@ namespace Lobster
 			// The "Add" and "Delete" function in mesh
 			if (subdirSelected == "meshes" && itemSelected != -1) {				
 				ImGui::SameLine();
-				std::string path = FileSystem::GetInstance()->Path(pathSelected);				
+				std::string path = FileSystem::Path(pathSelected);				
 				if (ImGui::Button("Add")) {
 					ImGui::OpenPopup("Name Game Object");
 				}
-				NewNameDialog(scene, path);
+				NewNameDialog(GetScene(), path);
 				ImGui::SameLine();
 				if (ImGui::Button("Delete")) {
 					ImGui::OpenPopup("Confirm Delete");
@@ -196,11 +164,10 @@ namespace Lobster
 				ConfirmDeleteDialog();
 			}
 
-			// The region for displaying files that included as asset
-			int height = (subdirSelected == "audio" ? 300 : 0);
-			ImGui::BeginChild("Files", ImVec2(0, height), true);
+			ImGui::BeginChild("Files", ImVec2(0, 300), true);
 			{
-				// Note (AG): I am thinking whether to change it into the way of audio or not
+				// Note (AG): Just showing all files in disk
+				// you need to do additional loading/processing to the items
 				int i = 0;
 				fs::path subdir = FileSystem::GetCurrentWorkingDirectory() / fs::path(subdirSelected);
 				for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {
@@ -214,7 +181,7 @@ namespace Lobster
 			}
 			ImGui::EndChild();
 
-			// a section to show audios under track
+			// a section to show audio panel under track
 			if (subdirSelected == "audio") {
 				DisplayAudioPanel();
 			}

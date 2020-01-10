@@ -23,28 +23,23 @@ namespace Lobster
         glm::vec3 Min;
         glm::vec3 Max;
     private:
-		glm::vec4 m_debugColor;
-        Material* m_debugMaterial;
-        VertexArray* m_debugMesh;
-        VertexBuffer* m_debugVertexBuffer;
         float m_debugData[24]; // raw vertices position
 		float m_debugInitialData[24]; // raw initial vertices position
-		float m_debugTranslatedData[24]; // raw translated (for once) vertices position
     public:
-        AABB(PhysicsComponent* physics, Transform transform = Transform(), bool draw = true);
-
-		void SetOwner(GameObject* owner);
-
+        AABB(PhysicsComponent* physics, Transform transform = Transform());
+		virtual ~AABB() override;
+		void SetOwner(GameObject* owner) override;
 		void OnUpdate(double deltaTime) override;
-        bool Intersects(Collider* other) override;
+		virtual void DebugDraw() override;
 		bool Intersects(glm::vec3 pos, glm::vec3 dir, float& t) override;
 
 	protected:
-		virtual void DebugDraw() override;
+		//virtual void DebugDraw() override;
+		virtual std::vector<glm::vec3> GetVertices() const override;
 
     private:
-        void SetVertices(int setExtra = 0);
-        void UpdateRotation(glm::quat rotation, glm::vec3 scale, bool translated = false);
+        void SetVertices(bool initialize);
+        void UpdateRotation(glm::quat rotation, glm::vec3 scale);
     };
 
 }
