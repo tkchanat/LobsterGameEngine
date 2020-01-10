@@ -14,6 +14,7 @@ namespace Lobster
     {
     public:
         static MeshInfo Load(const char* path);
+        static std::vector<AnimationInfo> LoadAnimation(const char* path);
     };
     
 }

@@ -1,7 +1,7 @@
 {
     "value0": {
         "value0": [
-            "barrel",
+            "dance",
             "Main Camera",
             "Directional Light"
         ],
@@ -130,20 +130,24 @@
                     "value3": 0.0
                 },
                 "value6": {
-                    "value0": 1.0,
-                    "value1": 1.0,
-                    "value2": 1.0
+                    "value0": 0.02500000037252903,
+                    "value1": 0.02500000037252903,
+                    "value2": 0.02500000037252903
                 }
             },
             "value4": [
                 1,
-                4,
-                6
+                4
             ],
             "value5": {
-                "value0": "../../LobsterGameEngine/res/meshes/Barrel_01.obj",
+                "value0": "../../LobsterGameEngine/res/meshes/dance.fbx",
                 "value1": [
-                    "materials/barrel.mat"
+                    "materials/Beta_Joints_MAT.mat",
+                    "materials/asdf1Beta_HighLimbsGeoSG2.mat"
+                ],
+                "value2": [
+                    "animations/dance.anim",
+                    "animations/punch.anim"
                 ]
             },
             "value6": {}

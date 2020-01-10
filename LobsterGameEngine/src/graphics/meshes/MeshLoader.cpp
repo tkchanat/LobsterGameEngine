@@ -21,7 +21,7 @@ namespace Lobster
 
 	void processMesh(aiMesh *mesh, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, MeshInfo& meshInfo);
 	void processNode(aiNode *node, const aiScene *scene, std::vector<std::vector<VertexBuffer*>>& vertexBuffers, std::vector<std::vector<IndexBuffer*>>& indexBuffers, MeshInfo& meshInfo);
-	void processBoneNode(aiNode * node, BoneNode& boneNode, const std::unordered_map<std::string, uint>& boneMap);
+	void processBoneNode(aiNode * node, BoneNode& boneNode, const std::unordered_map<std::string, int>& boneMap);
 
 	//======================================================
 	//  Static functions
@@ -90,21 +90,41 @@ namespace Lobster
 
 			std::vector<std::string> nameTokens = StringOps::split(path, '/');
 			std::string meshName = StringOps::substr(nameTokens[nameTokens.size() - 1], nullptr, ".");
-			std::string materialPath = "materials/" + std::string(materialName.C_Str()) + ".mat";
-			std::string diffuseMapPath = "textures/" + meshName + '/' + std::string(diffuseMap.C_Str());
-			std::string normalMapPath  = "textures/" + meshName + '/' + std::string(normalMap.C_Str());
+			std::string meshValidName = StringOps::GetValidFilename(meshName);
+			std::string materialValidName = StringOps::GetValidFilename(std::string(materialName.C_Str()));
+			std::string materialPath = "materials/" + materialValidName + ".mat";
+			std::string diffuseMapPath = "textures/" + meshValidName + '/' + std::string(diffuseMap.C_Str());
+			std::string normalMapPath  = "textures/" + meshValidName + '/' + std::string(normalMap.C_Str());
 			Material* newMaterial = MaterialLibrary::Use(materialPath.c_str());
 			meshInfo.Materials.push_back(newMaterial);
 		}
 
+        return meshInfo;
+    }
+
+	std::vector<AnimationInfo> MeshLoader::LoadAnimation(const char * path)
+	{
+		Assimp::Importer import;
+		const aiScene *scene = import.ReadFile(path,
+			aiProcess_Triangulate |
+			aiProcess_GenNormals |
+			aiProcess_GenUVCoords |
+			aiProcess_CalcTangentSpace |
+			aiProcess_FlipUVs
+		);
+
 		// =======================================
 		// Animations
+		std::vector<AnimationInfo> animations;
+		bool hasAnimation = scene->mNumAnimations > 0;
+
 		if (hasAnimation) {
-			meshInfo.Animations.resize(scene->mNumAnimations);
+			animations.resize(scene->mNumAnimations);
 			for (uint i = 0; i < scene->mNumAnimations; ++i) {
 				aiAnimation* anim = scene->mAnimations[i];
-				AnimationInfo& animInfo = meshInfo.Animations[i];
-				animInfo.Name = anim->mName.data;
+				AnimationInfo& animInfo = animations[i];
+				std::string validName = StringOps::GetValidFilename(anim->mName.data);
+				animInfo.Name = "animations/" + validName + ".anim";
 				animInfo.Duration = anim->mDuration;
 				animInfo.TicksPerSecond = anim->mTicksPerSecond;
 				animInfo.Channels.resize(anim->mNumChannels);
@@ -112,8 +132,7 @@ namespace Lobster
 					aiNodeAnim* channel = anim->mChannels[j];
 					ChannelInfo& channelInfo = animInfo.Channels[j];
 					channelInfo.Name = channel->mNodeName.data;
-					int boneID = meshInfo.BoneMap[channelInfo.Name];
-					animInfo.ChannelMap[boneID] = j;
+					animInfo.ChannelMap[channelInfo.Name] = j;
 					channelInfo.Position.resize(channel->mNumPositionKeys);
 					channelInfo.Rotation.resize(channel->mNumRotationKeys);
 					channelInfo.Scale.resize(channel->mNumScalingKeys);
@@ -135,9 +154,8 @@ namespace Lobster
 				}
 			}
 		}
-
-        return meshInfo;
-    }
+		return animations;
+	}
     
 	//======================================================
 	//  Helper functions
@@ -307,12 +325,12 @@ namespace Lobster
         }
     }
     
-	void processBoneNode(aiNode * node, BoneNode& boneNode, const std::unordered_map<std::string, uint>& boneMap)
+	void processBoneNode(aiNode * node, BoneNode& boneNode, const std::unordered_map<std::string, int>& boneMap)
 	{
 		std::string nodeName = node->mName.data;
 		auto it = boneMap.find(nodeName);
 		bool isBone = it != boneMap.end();
-		boneNode.BoneID = isBone ? it->second : -1;
+		boneNode.Name = nodeName;
 		boneNode.Matrix = isBone ? glmMatConversion(node->mTransformation) : glm::mat4(1.0);
 
 		// recursively process children bones

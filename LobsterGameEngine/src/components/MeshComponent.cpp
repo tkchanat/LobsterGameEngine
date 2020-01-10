@@ -15,20 +15,20 @@ namespace Lobster
 	MeshComponent::MeshComponent(const char* meshPath, const char* materialPath) :
 		Component(MESH_COMPONENT),
 		m_meshPath(meshPath),
-		m_meshInfo(MeshInfo()),
-		b_animated(false),
-		m_animationTime(0.0),
-		m_timeMultiplier(1.0f),
-		m_currentAnimation(0)
+		m_meshInfo(MeshInfo())
     {
 		//	Clone the resource by file system before loading
 		FileSystem::GetInstance()->addResource(meshPath);
 		LoadFromFile(meshPath, materialPath);
+		if (!m_animations.empty()) {
+			b_dirty = true;
+		}
     }
 
 	MeshComponent::MeshComponent(VertexArray * mesh, const char * materialPath) :
 		Component(MESH_COMPONENT),
-		m_meshPath("")
+		m_meshPath(""),
+		m_meshInfo(MeshInfo())
 	{
 		m_meshInfo.Meshes.push_back(mesh);
 		m_meshInfo.Materials.push_back(materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault());
@@ -37,17 +37,52 @@ namespace Lobster
 
 	MeshComponent::MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char * materialPath) :
 		Component(MESH_COMPONENT),
-		m_meshPath("")
+		m_meshPath(""),
+		m_meshInfo(MeshInfo())
 	{
 		m_meshInfo.Meshes.push_back(mesh);
 		m_meshInfo.Materials.push_back(materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault());
 		m_meshInfo.Bound = { min, max };
 	}
 
+	AnimationInfo MeshComponent::LoadAnimation(const char* path)
+	{
+		// load animation from file
+		AnimationInfo anim;
+		bool exists = FileSystem::Exist(FileSystem::Path(path));
+		if (!exists) return anim;
+		std::stringstream ss = FileSystem::ReadStringStream(FileSystem::Path(path).c_str(), true);
+		try {
+			cereal::BinaryInputArchive iarchive(ss);
+			iarchive(anim);
+		}
+		catch (std::exception e) {
+			LOG("Loading animation {} failed! Reason: {}", path, e.what());
+		}
+		return anim;
+	}
+
+	void MeshComponent::SaveAnimation()
+	{
+		for (auto& anim : m_animations) {
+			std::stringstream ss;
+			{
+				cereal::BinaryOutputArchive oarchive(ss);
+				oarchive(anim);
+			}
+			FileSystem::WriteStringStream(FileSystem::Path(anim.Name).c_str(), ss, true);
+		}
+		b_dirty = false;
+	}
+
 	void MeshComponent::LoadFromFile(const char * meshPath, const char * materialPath)
 	{
 		// import mesh and load defined materials from model file
 		m_meshInfo = MeshLoader::Load(meshPath);
+		// load animation from file only if .anim file not found
+		if (m_animations.empty()) {
+			m_animations = MeshLoader::LoadAnimation(meshPath);
+		}
 		// if no materials are defined, use material of our own
 		if (m_meshInfo.Materials.empty()) m_meshInfo.Materials.push_back((materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault()));
 	}
@@ -74,9 +109,9 @@ namespace Lobster
 		// Animation update
 		if (b_animated)
 		{
-			float ticksPerSecond = m_meshInfo.Animations[m_currentAnimation].TicksPerSecond;
+			float ticksPerSecond = m_animations[m_currentAnimation].TicksPerSecond;
 			m_animationTime += (deltaTime / 1000.0) * ticksPerSecond * m_timeMultiplier;
-			m_animationTime = std::fmod(m_animationTime, m_meshInfo.Animations[m_currentAnimation].Duration);
+			m_animationTime = std::fmod(m_animationTime, m_animations[m_currentAnimation].Duration);
 			const glm::mat4& transform = m_meshInfo.RootNode.Matrix;
 			UpdateBoneTransforms(m_meshInfo.RootNode, glm::mat4(1.0), glm::inverse(transform));
 		}
@@ -100,10 +135,49 @@ namespace Lobster
 		if (ImGui::CollapsingHeader("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::Indent();
-			if (m_meshInfo.HasAnimation() && ImGui::CollapsingHeader("Skeletal Animation", ImGuiTreeNodeFlags_DefaultOpen))
+			std::string animationHeader = fmt::format("Skeletal Animation{}", b_dirty ? "*" : "");
+			if (ImGui::CollapsingHeader(animationHeader.c_str(), ImGuiTreeNodeFlags_DefaultOpen) && !m_animations.empty())
 			{
+				// Save material pop up
+				if (ImGui::BeginPopupContextItem())
+				{
+					if (ImGui::MenuItem("Save", "", false))
+						SaveAnimation();
+					if (ImGui::MenuItem("Cancel", "", false))
+						ImGui::CloseCurrentPopup();
+					ImGui::EndPopup();
+				}
+
 				ImGui::Checkbox("Animated?", &b_animated);
-				ImGui::Text("Current Animation [%d]: %s", m_currentAnimation, m_meshInfo.Animations[m_currentAnimation].Name);
+				ImGui::SetNextTreeNodeOpen(true);
+				if (ImGui::TreeNode("Animations"))
+				{
+					ImGui::SliderInt("Index", &m_currentAnimation, 0, m_animations.size() - 1);
+					for (int i = 0; i < m_animations.size(); ++i) {
+						static char name[64] = "";
+						AnimationInfo& anim = m_animations[i];
+						std::string str = fmt::format("{}[{}]{}", i == m_currentAnimation ? "> " : "  ", i, anim.Name);
+						ImGui::Text(str.c_str());
+						// Change animation name
+						if (ImGui::BeginPopupContextItem(str.c_str()))
+						{
+							ImGui::InputText("##edit", name, IM_ARRAYSIZE(name));
+							if (ImGui::Button("Rename")) {
+								std::string validName = "animations/" + StringOps::GetValidFilename(name) + ".anim";
+								anim.Name = validName;
+							}
+							ImGui::EndPopup();
+						}
+					}
+					if (ImGui::Button("Add Animation")) {
+						std::string path = FileSystem::OpenFileDialog();
+						if (!path.empty()) {
+							m_animations.push_back(LoadAnimation(path.c_str()));
+							b_dirty = true;
+						}
+					}
+					ImGui::TreePop();
+				}
 				ImGui::Text("Animation Time: %2.f", m_animationTime);
 				ImGui::SliderFloat("Time Multiplier", &m_timeMultiplier, 0.5f, 2.0f);
 				std::string label = fmt::format("{} Bones", m_meshInfo.BoneMap.size());
@@ -133,12 +207,12 @@ namespace Lobster
 
 	void MeshComponent::UpdateBoneTransforms(const BoneNode& node, const glm::mat4& parentTransform, const glm::mat4& globalInverseTransform)
 	{
-		int boneID = node.BoneID;
+		std::string boneName = node.Name;
 		glm::mat4 nodeTransform = node.Matrix;
 		// interpolate between keys
-		const AnimationInfo& anim = m_meshInfo.Animations[m_currentAnimation];
-		auto it = anim.ChannelMap.find(boneID);
-		if (it != anim.ChannelMap.end()) {
+		const AnimationInfo& anim = m_animations[m_currentAnimation];
+		auto it = anim.ChannelMap.find(boneName);
+		if (it != anim.ChannelMap.end() && it->second < anim.Channels.size()) {
 			const ChannelInfo& channel = anim.Channels[it->second];
 			// position
 			glm::vec3 finalPosition = channel.Position[0].Value;
@@ -212,7 +286,8 @@ namespace Lobster
 
 		// recursively update bone transforms
 		glm::mat4 globalTransform = parentTransform * nodeTransform;
-		if (boneID < m_meshInfo.BoneTransforms.size()) {
+		if (anim.ChannelMap.find(boneName) != anim.ChannelMap.end()) {
+			int boneID = m_meshInfo.BoneMap[boneName];
 			m_meshInfo.BoneTransforms[boneID] = globalInverseTransform * globalTransform * m_meshInfo.BoneOffsets[boneID];
 		}
 		for (int i = 0; i < node.Children.size(); ++i) {
