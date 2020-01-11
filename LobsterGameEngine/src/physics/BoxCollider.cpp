@@ -89,9 +89,23 @@ namespace Lobster {
 
 	std::vector<glm::vec3> BoxCollider::GetVertices() const {
 		std::vector<glm::vec3> vertices;
+		float epsilon = 0.001f;
 
 		for (int i = 0; i < 24; i += 3) {
-			vertices.push_back(glm::vec3(m_debugData[i], m_debugData[i + 1], m_debugData[i + 2]));
+			//	First get the position without epsilon.
+			glm::vec3 position = glm::vec3(m_debugData[i], m_debugData[i + 1], m_debugData[i + 2]);
+
+			//	Add the epsilon.
+			glm::vec3 epsilonVec = glm::vec3(0, 0, 0);
+			epsilonVec.x += ( (i / 6) % 2 ? epsilon : -epsilon );
+			epsilonVec.y += ( ((i + 3) / 6) % 2 ? epsilon : -epsilon );
+			epsilonVec.z += ( i / 12 ? epsilon : -epsilon );
+			
+			//	Epsilon apply transform.
+			epsilonVec = transform->WorldRotation * m_transform.WorldRotation * glm::vec4(epsilonVec, 1.0);
+
+			//	Push the position back.
+			vertices.push_back(position + epsilonVec);
 		}
 		return vertices;
 	}

@@ -37,7 +37,7 @@ namespace Lobster {
 
 	protected:
 		//	Mass of component.
-		float m_mass = 1.0f;
+		float m_mass = 5.0f;
 
 		//	Center of mass offset.
 		glm::vec3 m_centerOfMass = glm::vec3(0, 0, 0);

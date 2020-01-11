@@ -5,6 +5,7 @@
 namespace Lobster {
 	//	Sunny: This value is open to change.
 	const glm::vec3 Rigidbody::GRAVITY = glm::vec3(0, -0.981, 0);
+	const float Rigidbody::RESISTANCE = 0.01f;
 
 	void Rigidbody::OnUpdate(double deltaTime) {
 		//	We should update but not draw the bounding box. Update and draw the collider according to user's option.
@@ -154,9 +155,6 @@ namespace Lobster {
 			}
 		}
 
-		//	At last, update m_colliding and m_collided.
-		//gameObject->frameElapse();
-
 		//	Update collision if this object is of block type.
 		if (GetPhysicsType() != 0) return;
 
@@ -168,20 +166,9 @@ namespace Lobster {
 			if (!m_simulate && !(physicsObj->m_simulate)) continue;
 
 			//	1. Compute normal of collision.
-			/*glm::vec3 normal;
-			glm::vec3 diff = physicsObj->transform->WorldPosition - transform->WorldPosition;
-			if (abs(diff.x) > abs(diff.y) && abs(diff.x) > abs(diff.z)) {
-				normal = glm::vec3(diff.x, 0, 0);
-			} else if (abs(diff.y) > abs(diff.x) && abs(diff.y) > abs(diff.z)) {
-				normal = glm::vec3(0, diff.y, 0);
-			} else {
-				normal = glm::vec3(0, 0, diff.z);
-			}
-			normal = glm::normalize(normal);*/
-
-			//	1. Compute normal of collision.
 			glm::vec3 normal;
 			glm::vec3 diff = physicsObj->transform->WorldPosition - transform->WorldPosition;
+			//glm::vec3 bound = 0.5f * (GetOwner()->GetBound().second - GetOwner()->GetBound().first);
 
 			//	Calculate the direction of the bounding box vectors.
 			glm::vec3 xBound = glm::normalize(glm::vec3(1, 0, 0) * glm::conjugate(transform->LocalRotation));
@@ -189,15 +176,16 @@ namespace Lobster {
 			glm::vec3 zBound = glm::normalize(glm::vec3(0, 0, 1) * glm::conjugate(transform->LocalRotation));
 
 			//	Break down the bounding box vectors.
-			glm::vec3 xDiff = glm::dot(diff, xBound) * xBound;
-			glm::vec3 yDiff = glm::dot(diff, yBound) * yBound;
-			glm::vec3 zDiff = glm::dot(diff, zBound) * zBound;
+			glm::vec3 xDiff = glm::dot(diff, xBound) * xBound / transform->LocalScale.x;
+			glm::vec3 yDiff = glm::dot(diff, yBound) * yBound / transform->LocalScale.y;
+			glm::vec3 zDiff = glm::dot(diff, zBound) * zBound / transform->LocalScale.z;
 
 			//	Flip direction of vector if needed.
 			if (glm::length(diff) * glm::length(xBound) / glm::dot(diff, xBound) < 0) xDiff *= -1;
 			if (glm::length(diff) * glm::length(yBound) / glm::dot(diff, yBound) < 0) yDiff *= -1;
 			if (glm::length(diff) * glm::length(zBound) / glm::dot(diff, zBound) < 0) zDiff *= -1;
 
+			//	See which direction has the longest distance - the one with longest distance is the direction of normal.
 			if (glm::length(xDiff) > glm::length(yDiff) && glm::length(xDiff) > glm::length(zDiff)) {
 				normal = xDiff;
 			} else if (glm::length(yDiff) > glm::length(xDiff) && glm::length(yDiff) > glm::length(zDiff)) {
@@ -208,71 +196,123 @@ namespace Lobster {
 			normal = glm::normalize(normal);
 
 			//	2. Determine if the Center of Mass of the object falls inside the opposing collider.
-			//	First find the orientation and the face of collision.
+			glm::vec3 normalProjection = glm::translate(physicsObj->m_centerOfMass) * glm::vec4(gameObj->transform.WorldPosition, 1.0f);
+			normalProjection -= glm::dot(diff, normal) * normal;
 
-			//	Find the COM projection into the other object.
-			glm::vec3 normalProjection = glm::translate(m_centerOfMass) * glm::vec4(transform->WorldPosition, 1.0f);
-			normalProjection += glm::dot(diff, normal) * normal;
-			
-			glm::vec3 mappedPosition = glm::inverse(physicsObj->transform->GetMatrix()) * glm::vec4(normalProjection, 1.0f);
-			std::pair<glm::vec3, glm::vec3> pairBound = gameObj->GetBound();
+			//	Try to map this object into gameObj coordinate system.
+			glm::vec3 mappedPosition = glm::inverse(transform->GetMatrix()) * glm::vec4(normalProjection, 1.0f);
+			std::pair<glm::vec3, glm::vec3> pairBound = GetOwner()->GetBound();
 
-			bool centerOutOfObject = pairBound.first.x > mappedPosition.x || pairBound.second.x < mappedPosition.x
-				|| pairBound.first.y > mappedPosition.y || pairBound.second.y < mappedPosition.y
-				|| pairBound.first.z > mappedPosition.z || pairBound.second.z < mappedPosition.z;
+			glm::vec3 displacement = glm::vec3(0, 0, 0);
+			bool centerOutOfObject = false;
 
-			//	Handle angular velocity for object losing balance.
-
-			if (centerOutOfObject && m_simulate) {
-				LOG("{} Lost balance!", GetOwner()->GetName());
+			//	Check if this object lies outside gameObj by checking trasformed bounding box.
+			if (pairBound.first.x > mappedPosition.x) {
+				displacement.x -= pairBound.first.x - mappedPosition.x;
+				centerOutOfObject = true;
+			} else if (pairBound.second.x < mappedPosition.x) {
+				displacement.x += mappedPosition.x - pairBound.second.x;
+				centerOutOfObject = true;
 			}
 
+			if (pairBound.first.y > mappedPosition.y) {
+				displacement.y -= pairBound.first.y - mappedPosition.y;
+				centerOutOfObject = true;
+			} else if (pairBound.second.y < mappedPosition.y) {
+				displacement.y += mappedPosition.y - pairBound.second.y;
+				centerOutOfObject = true;
+			}
+
+			if (pairBound.first.z > mappedPosition.z) {
+				displacement.z -= pairBound.first.z - mappedPosition.z;
+				centerOutOfObject = true;
+			} else if (pairBound.second.z < mappedPosition.z) {
+				displacement.z += mappedPosition.z - pairBound.second.z;
+				centerOutOfObject = true;
+			}
+		
 			//	3. Compute Impulse. We deferred the step of multiplying a constant to the next step.
 			glm::vec3 impulse = -m_mass * physicsObj->m_mass * normal * glm::dot(normal, m_velocity - physicsObj->m_velocity);
 			impulse /= (m_mass + physicsObj->m_mass);
 
-			//	4. Update velocity.
+			//	4. Apply force due to lost of balance, with our newly calculated impulse.
+			if (centerOutOfObject && physicsObj->m_simulate) {
+				physicsObj->ApplyForce(displacement, impulse);
+			}
+
+			//	Physics system final TODO: object trying to fall down due to lost of balance where COM is not outside colliding object.
+			//	Will be here in the next commit :3
+
+			//	5. Update velocity.
 			//	Different impulse and speed depending on whether the two objects simulate physics.
 			if (!m_simulate) {
 				impulse *= (1 + physicsObj->m_restitution);
-				physicsObj->m_newLinearVelocity -= (impulse / m_mass + impulse / physicsObj->m_mass);
+				physicsObj->m_newLinearVelocity -= impulse / physicsObj->m_mass;
 			} else if (!(physicsObj->m_simulate)) {
 				impulse *= (1 + m_restitution);
-				m_newLinearVelocity += impulse / m_mass + impulse / physicsObj->m_mass;
+				m_newLinearVelocity += impulse / m_mass;
 			} else {
 				m_newLinearVelocity += impulse * (1 + m_restitution) / m_mass;
 				physicsObj->m_newLinearVelocity -= impulse * (1 + physicsObj->m_restitution) / physicsObj->m_mass;
 			}
 
-			//	5. Update position to that before collision.
+			//	6. Update position to that before collision.
 			transform->WorldPosition = m_prevLinearPos;
 			physicsObj->transform->WorldPosition = physicsObj->m_prevLinearPos;
 		}
 	}
 
+	void Rigidbody::ApplyForce(glm::vec3 pos, glm::vec3 force) {
+		LOG("{} applying a force...", GetOwner()->GetName());
+		//	Apply the force separately in x, y, z direction.
+
+		for (int i = 0; i < 3; i++) {
+			//	Cross product of force (i cross j).
+			for (int j = 0; j < 3; j++) {
+				//	Cross product case 1 - x cross x, y cross y, z cross z. Ignore.
+				if (i == j) continue;
+
+				//	Cross product case 2 - x cross y, y cross z, z cross x. Positive angular rotation. (if-case)
+				//	Cross product case 3 - x cross z, y cross x, z cross y. Negative angular rotation. (else-case)
+				if ((j + 3 - i) % 3 == 1) {
+					m_angularAcceleration[(j + 1) % 3] += pos[j] * force[i];
+				} else {
+					m_angularAcceleration[(i + 1) % 3] -= pos[j] * force[i];
+				}
+			}
+		}
+		m_acceleration += pos * force / m_mass;
+	}
+
 	void Rigidbody::Travel(float time, glm::vec3 linearAccel) {
 		transform->WorldPosition += m_velocity * time + 0.5f * linearAccel * time;
 		m_velocity += linearAccel * time;
-		//	TODO: Damping algorithm
-		m_velocity *= (100.0f - m_linearDamping) / 100.0f;
+
+		//	Damping algorithm (to be reviewed)
+		if (glm::length(m_acceleration) > 0.0f) {
+			m_acceleration *= (1 - m_linearDamping / 100.0f / glm::length(m_acceleration));
+		}
+		if (glm::length(m_velocity) > 0.0f) {
+			m_velocity *= (1 - RESISTANCE / glm::length(m_velocity));
+		}
 
 		transform->LocalEulerAngles += m_angularVelocity * time + 0.5f * m_angularAcceleration * time;
 		m_angularVelocity += m_angularAcceleration * time;
-		//	TODO: Damping algorithm
-		m_angularVelocity *= (100.0f - m_angularDamping) / 100.0f;
 
+		//	Damping algorithm (to be reviewed)
+		if (glm::length(m_angularAcceleration) > 0.0f) {
+			m_angularAcceleration *= (1 - m_linearDamping / 100.0f / glm::length(m_angularAcceleration));
+		}
 
-		//LOG("Velocity ({}, {}, {})", m_velocity.x, m_velocity.y, m_velocity.z);
+		if (glm::length(m_angularVelocity) > 0.0f) {
+			m_angularVelocity *= (1 - RESISTANCE) / glm::length(m_angularVelocity);
+		}
 	}
 
 	void Rigidbody::UndoTravel(float time, glm::vec3 linearAccel) {
-		//	TODO: Damping algorithm
-		m_angularVelocity /= (100.0f - m_angularDamping) / 100.0f;
 		m_angularVelocity -= m_angularAcceleration * time;
 		transform->LocalEulerAngles -= m_angularVelocity * time + 0.5f * m_angularAcceleration * time;
-		
-		//	TODO: Damping algorithm
-		m_velocity /= (100.0f - m_linearDamping) / 100.0f;
+
 		m_velocity -= linearAccel * time;
 		transform->WorldPosition -= m_velocity * time + 0.5f * linearAccel * time;
 	}
