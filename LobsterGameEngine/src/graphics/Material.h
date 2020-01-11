@@ -29,7 +29,7 @@ namespace Lobster
 		bool b_dirty;
 	public:
 		virtual ~Material();
-		void OnImGuiRender(int material_id);
+		void OnImGuiRender();
 		void SetRawUniform(const char* name, void* data);
 		void SetUniforms();
 		void SaveConfiguration();

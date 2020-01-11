@@ -67,7 +67,10 @@ namespace Lobster
 			R"(#version 410 core
 uniform mat4 sys_world;
 uniform mat4 sys_view;
-uniform mat4 sys_projection;)");
+uniform mat4 sys_projection;
+uniform mat4 sys_bones[)"+ std::to_string(MAX_BONES) + R"(];
+uniform bool sys_animate = false;)");
+
 		StringOps::ReplaceAll(fs, "///FragmentShader",
 			R"(#version 410 core
 #define PI 3.14159265359
@@ -137,6 +140,19 @@ uniform sampler2D sys_brdfLUTMap;)");
 		}
 
 		INFO("{} successfully compiled!", m_name);
+		//int total = -1;
+		//glGetProgramiv(m_id, GL_ACTIVE_UNIFORMS, &total);
+		//for (int i = 0; i < total; ++i) {
+		//	int name_len = -1, num = -1;
+		//	GLenum type = GL_ZERO;
+		//	char name[100];
+		//	glGetActiveUniform(m_id, GLuint(i), sizeof(name) - 1,
+		//		&name_len, &num, &type, name);
+		//	name[name_len] = 0;
+		//	GLuint location = glGetUniformLocation(m_id, name);
+		//	LOG("{}: {} ({})", m_name, name, location);
+		//}
+
         return true;
     }
 
@@ -218,11 +234,11 @@ uniform sampler2D sys_brdfLUTMap;)");
 		glUniform1f(location, data);
 	}
 
-	void Shader::SetUniform(const char * name, const bool & data)
+	void Shader::SetUniform(const char * name, bool data)
 	{
 		int location = glGetUniformLocation(m_id, name);
 		if (location == -1) return;
-		//glUniform3fv(location, 1, glm::value_ptr(data));
+		glUniform1i(location, data);
 	}
 
 	void Shader::SetUniform(const char * name, const glm::ivec2 & data)
@@ -259,6 +275,13 @@ uniform sampler2D sys_brdfLUTMap;)");
 		if (location == -1) return;
         glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(data));
     }
+
+	void Shader::SetUniform(const char * name, size_t count, const glm::mat4 * data)
+	{
+		int location = glGetUniformLocation(m_id, name);
+		if (location == -1) return;
+		glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(*data));
+	}
 
 	void Shader::SetTexture2D(uint slot, void * texture2D)
 	{

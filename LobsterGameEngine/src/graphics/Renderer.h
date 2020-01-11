@@ -11,11 +11,10 @@ namespace Lobster
 
 	struct RenderCommand
 	{
-		Material* UseMaterial;
-		VertexArray* UseVertexArray;
-		glm::mat4 UseWorldTransform;
-
-		RenderCommand() { memset(this, 0, sizeof(RenderCommand)); }
+		Material* UseMaterial = nullptr;
+		VertexArray* UseVertexArray = nullptr;
+		glm::mat4 UseWorldTransform = glm::mat4(1.0);
+		glm::mat4* UseBoneTransforms = nullptr;
 	};
 
 	struct RenderOverlayCommand
