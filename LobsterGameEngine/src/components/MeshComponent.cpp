@@ -72,16 +72,18 @@ namespace Lobster
 		return anim;
 	}
 
-	void MeshComponent::SaveAnimation()
+	void MeshComponent::SaveAnimation(int animation)
 	{
-		for (auto& anim : m_animations) {
-			std::stringstream ss;
-			{
-				cereal::BinaryOutputArchive oarchive(ss);
-				oarchive(anim);
-			}
-			FileSystem::WriteStringStream(FileSystem::Path(anim.Name).c_str(), ss, true);
+		if (animation < 0 || animation > m_animations.size())
+			return;
+
+		const AnimationInfo& anim = m_animations[animation];
+		std::stringstream ss;
+		{
+			cereal::BinaryOutputArchive oarchive(ss);
+			oarchive(anim);
 		}
+		FileSystem::WriteStringStream(FileSystem::Path(anim.Name).c_str(), ss, true);
 		b_dirty = false;
 	}
 
@@ -161,28 +163,13 @@ namespace Lobster
 			std::string animationHeader = fmt::format("Skeletal Animation{}", b_dirty ? "*" : "");
 			if (ImGui::CollapsingHeader(animationHeader.c_str(), ImGuiTreeNodeFlags_DefaultOpen) && !m_animations.empty())
 			{
-				// Save material pop up
-				if (ImGui::BeginPopupContextItem())
-				{
-					if (ImGui::MenuItem("Save", "", false))
-						SaveAnimation();
-					if (ImGui::MenuItem("Cancel", "", false))
-						ImGui::CloseCurrentPopup();
-					ImGui::EndPopup();
-				}
+				// Animation Controls
+				if (ImGui::Button("Play")) PlayAnimation();
+				ImGui::SameLine();
+				if (ImGui::Button("Pause")) PauseAnimation();
+				ImGui::SameLine();
+				if (ImGui::Button("Stop")) StopAnimation();
 
-				if (ImGui::Button("Play")) {
-					PlayAnimation();
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Pause")) {
-					PauseAnimation();
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Stop")) {
-					StopAnimation();
-				}
-				ImGui::SetNextTreeNodeOpen(true);
 				if (ImGui::TreeNode("Animations"))
 				{
 					int lastAnimation = m_currentAnimation;
@@ -201,10 +188,27 @@ namespace Lobster
 						if (ImGui::BeginPopupContextItem(str.c_str()))
 						{
 							ImGui::InputText("##edit", name, IM_ARRAYSIZE(name));
-							if (ImGui::Button("Rename")) {
-								std::string validName = "animations/" + StringOps::GetValidFilename(name) + ".anim";
-								anim.Name = validName;
+							std::string validName = "animations/" + StringOps::GetValidFilename(name) + ".anim";
+							bool invalid = name[0] == '\0';
+							if (StringOps::GetValidFilename(name) == name)
+								ImGui::Text("Animation clip will be saved as: %s", validName.c_str());
+							else
+								ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "[WARN]: Illegal characters detected\nAnimation clip will be renamed & saved as: %s", validName.c_str());
+							if (invalid) {
+								ImGui::TextColored(ImVec4(1.0, 0.0, 0.0, 1.0), "Animation clip name cannot be empty!");
+								ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+								ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 							}
+							if (ImGui::Button("Save")) {
+								anim.Name = validName;
+								SaveAnimation(i);
+							}
+							if (invalid) {
+								ImGui::PopItemFlag();
+								ImGui::PopStyleVar();
+							}
+							ImGui::SameLine();
+							if (ImGui::Button("Cancel")) ImGui::CloseCurrentPopup();
 							ImGui::EndPopup();
 						}
 					}
@@ -228,17 +232,18 @@ namespace Lobster
 					ImGui::TreePop();
 				}
 			}
-			if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_None))
-			{
-				ImGui::Indent();
-				for (int i = 0; i < m_meshInfo.Materials.size(); ++i)
-				{
-					m_meshInfo.Materials[i]->OnImGuiRender(i);
-					ImGui::Spacing();
-					ImGui::Spacing();
-					ImGui::Spacing();
+
+			// Materials
+			if (ImGui::CollapsingHeader("Materials")) {
+				for (int i = 0; i < m_meshInfo.Materials.size(); ++i) {
+					Material* material = m_meshInfo.Materials[i];
+					std::string headerLabel = fmt::format("Material: {}", material->GetName());
+					if (ImGui::TreeNode(headerLabel.c_str()))
+					{
+						material->OnImGuiRender();
+						ImGui::TreePop();
+					}
 				}
-				ImGui::Unindent();
 			}
 			ImGui::Unindent();
 		}
@@ -282,7 +287,7 @@ namespace Lobster
 
 		// recursively update bone transforms
 		glm::mat4 globalTransform = parentTransform * nodeTransform;
-		if (anim.ChannelMap.find(boneName) != anim.ChannelMap.end()) {
+		if (m_meshInfo.BoneMap.find(boneName) != m_meshInfo.BoneMap.end()) {
 			int boneID = m_meshInfo.BoneMap[boneName];
 			m_meshInfo.BoneTransforms[boneID] = globalInverseTransform * globalTransform * m_meshInfo.BoneOffsets[boneID];
 		}

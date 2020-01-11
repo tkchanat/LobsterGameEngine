@@ -67,7 +67,7 @@ namespace Lobster
 		void CrossfadeAnimation(int animation, double fadeDuration);
 	private:
 		AnimationInfo LoadAnimation(const char* path);
-		void SaveAnimation();
+		void SaveAnimation(int animation);
 		void LoadFromFile(const char* meshPath, const char* materialPath);
 		void UpdateBoneTransforms(const BoneNode & node, const glm::mat4 & parentTransform, const glm::mat4& globalInverseTransform);
 		glm::vec3 InterpolatePosition(double animationTime, const ChannelInfo& channel) const;

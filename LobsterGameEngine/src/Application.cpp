@@ -106,7 +106,7 @@ namespace Lobster
 //		});
 
 		GameObject* dance = new GameObject("dance");
-		dance->AddComponent(new MeshComponent(FileSystem::Path("meshes/Hook.fbx").c_str()));
+		dance->AddComponent(new MeshComponent(FileSystem::Path("meshes/dance.fbx").c_str()));
 		dance->transform.LocalScale *= 0.025;
 		dance->AddChild(new GameObject("child 1"));
 		dance->AddChild(new GameObject("child 2"));
@@ -124,10 +124,10 @@ namespace Lobster
 
 		//for (int i = 0; i < 5; ++i)
 		//{
-		//	GameObject* cube = (new GameObject(std::to_string(i).c_str()))
-		//		->AddComponent<MeshComponent>(FileSystem::Path("meshes/sphere.obj").c_str(), "materials/cube.mat");
-		//	cube->transform.WorldPosition = glm::vec3(0, 0, (i - 2.0)*2.5);
-		//	m_scene->AddGameObject(cube);
+		//	GameObject* sphere = (new GameObject(std::to_string(i).c_str()));
+		//	sphere->AddComponent(new MeshComponent(FileSystem::Path("meshes/sphere.obj").c_str(), "materials/cube.mat"));
+		//	sphere->transform.WorldPosition = glm::vec3(0, 0, (i - 2.0)*2.5);
+		//	m_scene->AddGameObject(sphere);
 		//}
 
 		GameObject* camera = new GameObject("Main Camera");

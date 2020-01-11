@@ -116,64 +116,53 @@ namespace Lobster
     {
     }
 
-	void Material::OnImGuiRender(int material_id)
+	void Material::OnImGuiRender()
 	{
-		ImGui::PushID(material_id);
-		std::string headerLabel = fmt::format("Material{}: {}", b_dirty ? "*" : "", m_name);
-		if (ImGui::CollapsingHeader(headerLabel.c_str()))
-		{
-			// Save material pop up
-			if (ImGui::BeginPopupContextItem())
+		ImVec2 previewSize(24, 24);
+		Texture2D* notFound = TextureLibrary::Placeholder();
+        static std::string selectedTexture;
+		// Shader
+		const auto findShaderIndex = [this](const char* shaders[], size_t size) -> int {
+			for (int i = 0; i < size; ++i) {
+				if (m_shader->GetName() == shaders[i])
+					return i;
+			}
+			return 0;
+		};
+		const char* shaders[] = { "shaders/Phong.glsl", "shaders/PBR.glsl" };
+		static int usedShader = findShaderIndex(shaders, sizeof(shaders));
+		int prev_shader = usedShader;
+		ImGui::Combo("Shader", &usedShader, shaders, IM_ARRAYSIZE(shaders));
+		if (prev_shader != usedShader) {
+			m_shader = ShaderLibrary::Use(shaders[usedShader]);
+			ResizeUniformBuffer(m_shader->GetUniformBufferSize());
+			AssignTextureSlot();
+			b_dirty = true;
+		}
+		// Rendering Mode
+		const char* modes[] = { "Opaque", "Transparent" };
+		ImGui::PushItemWidth(110);
+		RenderingMode prev_mode = m_mode;
+		ImGui::Combo("Rendering Mode", (int*)&m_mode, modes, IM_ARRAYSIZE(modes));
+		b_dirty |= prev_mode != m_mode;
+		ImGui::PopItemWidth();
+		// Uniforms
+		auto declaration = m_shader->GetUniformDeclarations();
+		size_t offset = 0;
+		for (auto decl : declaration) {
+			void* data = m_uniformData + offset;
+			std::string str_id = decl.Name + "##" + m_name;
+			ImGui::PushID(str_id.c_str());
+			switch (decl.Type) 
 			{
-				if (ImGui::MenuItem("Save", "", false))
-					SaveConfiguration();
-				if (ImGui::MenuItem("Cancel", "", false))
-					ImGui::CloseCurrentPopup();
-				ImGui::EndPopup();
-			}
-
-			ImVec2 previewSize(24, 24);
-			Texture2D* notFound = TextureLibrary::Placeholder();
-            static std::string selectedTexture;
-			// Shader
-			const auto findShaderIndex = [this](const char* shaders[], size_t size) -> int {
-				for (int i = 0; i < size; ++i) {
-					if (m_shader->GetName() == shaders[i])
-						return i;
-				}
-				return 0;
-			};
-			const char* shaders[] = { "shaders/Phong.glsl", "shaders/PBR.glsl" };
-			static int usedShader = findShaderIndex(shaders, sizeof(shaders));
-			int prev_shader = usedShader;
-			ImGui::Combo("Shader", &usedShader, shaders, IM_ARRAYSIZE(shaders));
-			if (prev_shader != usedShader) {
-				m_shader = ShaderLibrary::Use(shaders[usedShader]);
-				ResizeUniformBuffer(m_shader->GetUniformBufferSize());
-				AssignTextureSlot();
-				b_dirty = true;
-			}
-			// Rendering Mode
-			const char* modes[] = { "Opaque", "Transparent" };
-			ImGui::PushItemWidth(110);
-			RenderingMode prev_mode = m_mode;
-			ImGui::Combo("Rendering Mode", (int*)&m_mode, modes, IM_ARRAYSIZE(modes));
-			b_dirty |= prev_mode != m_mode;
-			ImGui::PopItemWidth();
-			// Uniforms
-			auto declaration = m_shader->GetUniformDeclarations();
-			size_t offset = 0;
-			for (auto decl : declaration) {
-				void* data = m_uniformData + offset;
-				switch (decl.Type) {
 				case UniformDeclaration::BOOL:
-					ImGui::Checkbox(decl.Name.c_str(), (bool*)data); break;
+					ImGui::Checkbox(str_id.c_str(), (bool*)data); break;
 				case UniformDeclaration::FLOAT:
-					ImGui::SliderFloat(decl.Name.c_str(), (float*)data, 0.f, 1.f); break;
+					ImGui::SliderFloat(str_id.c_str(), (float*)data, 0.f, 1.f); break;
 				case UniformDeclaration::VEC3:
-					ImGui::ColorEdit3(decl.Name.c_str(), (float*)data); break;
+					ImGui::ColorEdit3(str_id.c_str(), (float*)data); break;
 				case UniformDeclaration::VEC4:
-					ImGui::ColorEdit4(decl.Name.c_str(), (float*)data); break;
+					ImGui::ColorEdit4(str_id.c_str(), (float*)data); break;
 				case UniformDeclaration::SAMPLER2D:
 					if (ImGui::ImageButton(m_textures[*(uint*)data] ? m_textures[*(uint*)data]->Get() : notFound->Get(), previewSize)) {
 						std::string path = FileSystem::OpenFileDialog();
@@ -199,12 +188,25 @@ namespace Lobster
 					ImGui::Text(decl.Name.c_str());
 					break;
 				default: break;
-				}
-				b_dirty |= ImGui::IsItemActive();
-				offset += decl.Size();
 			}
+			ImGui::PopID();
+			b_dirty |= ImGui::IsItemActive();
+			offset += decl.Size();
 		}
-		ImGui::PopID();
+
+		// Save configurations
+		bool disableButton = !b_dirty;
+		if (disableButton) {
+			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+		}
+		if (ImGui::Button("Save Configurations")) {
+			SaveConfiguration();
+		}
+		if (disableButton) {
+			ImGui::PopItemFlag();
+			ImGui::PopStyleVar();
+		}
 	}
 
 	void Material::SetRawUniform(const char * name, void * data)
