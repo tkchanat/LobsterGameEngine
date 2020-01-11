@@ -42,9 +42,13 @@ namespace Lobster
 	private:
 		// Skeletal animation data
 		bool b_dirty = false;
+		bool b_posing = false;
 		bool b_animated = false;
 		double m_animationTime = 0.0;
+		double m_fadeAnimationTime = 0.0;
+		double m_fadeDuration = 0.0;
 		float m_timeMultiplier = 1.0f;
+		int m_targetAnimation = 0;
 		int m_currentAnimation = 0;
 		std::vector<AnimationInfo> m_animations;
     public:
@@ -57,11 +61,18 @@ namespace Lobster
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 		inline std::pair<glm::vec3, glm::vec3> GetBound() const { return m_meshInfo.Bound; }
+		inline void PlayAnimation() { b_animated = b_posing = true; }
+		inline void PauseAnimation() { b_animated = false; b_posing = true; }
+		inline void StopAnimation() { m_animationTime = 0.0; b_animated = b_posing = false; }
+		void CrossfadeAnimation(int animation, double fadeDuration);
 	private:
 		AnimationInfo LoadAnimation(const char* path);
 		void SaveAnimation();
 		void LoadFromFile(const char* meshPath, const char* materialPath);
 		void UpdateBoneTransforms(const BoneNode & node, const glm::mat4 & parentTransform, const glm::mat4& globalInverseTransform);
+		glm::vec3 InterpolatePosition(double animationTime, const ChannelInfo& channel) const;
+		glm::quat InterpolateRotation(double animationTime, const ChannelInfo& channel) const;
+		glm::vec3 InterpolateScale(double animationTime, const ChannelInfo& channel) const;
 		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 	private:

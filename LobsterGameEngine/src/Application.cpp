@@ -106,7 +106,7 @@ namespace Lobster
 //		});
 
 		GameObject* dance = new GameObject("dance");
-		dance->AddComponent(new MeshComponent(FileSystem::Path("meshes/dance.fbx").c_str()));
+		dance->AddComponent(new MeshComponent(FileSystem::Path("meshes/Hook.fbx").c_str()));
 		dance->transform.LocalScale *= 0.025;
 		dance->AddChild(new GameObject("child 1"));
 		dance->AddChild(new GameObject("child 2"));

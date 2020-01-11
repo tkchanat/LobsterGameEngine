@@ -147,7 +147,8 @@
                 ],
                 "value2": [
                     "animations/dance.anim",
-                    "animations/punch.anim"
+                    "animations/punch.anim",
+                    "animations/hook.anim"
                 ]
             },
             "value6": {}

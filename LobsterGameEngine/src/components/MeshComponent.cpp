@@ -45,6 +45,16 @@ namespace Lobster
 		m_meshInfo.Bound = { min, max };
 	}
 
+	void MeshComponent::CrossfadeAnimation(int animation, double fadeDuration)
+	{
+		if (fadeDuration < 0.0 || fadeDuration > 1.0) {
+			WARN("CrossfadeAnimation(): Please input a 0.0 - 1.0 value for fadeDuration instead.");
+			return;
+		}
+		m_targetAnimation = animation;
+		m_fadeDuration = fadeDuration * m_animations[animation].Duration;
+	}
+
 	AnimationInfo MeshComponent::LoadAnimation(const char* path)
 	{
 		// load animation from file
@@ -107,13 +117,26 @@ namespace Lobster
 	void MeshComponent::OnUpdate(double deltaTime)
 	{
 		// Animation update
-		if (b_animated)
-		{
-			float ticksPerSecond = m_animations[m_currentAnimation].TicksPerSecond;
-			m_animationTime += (deltaTime / 1000.0) * ticksPerSecond * m_timeMultiplier;
-			m_animationTime = std::fmod(m_animationTime, m_animations[m_currentAnimation].Duration);
-			const glm::mat4& transform = m_meshInfo.RootNode.Matrix;
-			UpdateBoneTransforms(m_meshInfo.RootNode, glm::mat4(1.0), glm::inverse(transform));
+		if (!m_animations.empty()) {
+			if (b_animated)
+			{
+				float ticksPerSecond = m_animations[m_currentAnimation].TicksPerSecond;
+				double elapsedTicks = (deltaTime / 1000.0) * ticksPerSecond * m_timeMultiplier;
+				m_animationTime += elapsedTicks;
+				m_animationTime = std::fmod(m_animationTime, m_animations[m_currentAnimation].Duration);
+				assert(m_animationTime < m_animations[m_currentAnimation].Duration);
+				if (m_currentAnimation != m_targetAnimation) {
+					m_fadeAnimationTime += elapsedTicks;
+					// fading finished
+					if (m_fadeAnimationTime > m_fadeDuration) {
+						m_currentAnimation = m_targetAnimation;
+						m_animationTime = m_fadeAnimationTime;
+						m_fadeAnimationTime = 0.0;
+					}
+				}
+			}
+			const glm::mat4& globalTransform = m_meshInfo.RootNode.Matrix;
+			UpdateBoneTransforms(m_meshInfo.RootNode, glm::mat4(1.0), glm::inverse(globalTransform));
 		}
 
 		// Submit render command
@@ -123,7 +146,7 @@ namespace Lobster
 			command.UseMaterial = m_meshInfo.Materials[i];
 			command.UseVertexArray = m_meshInfo.Meshes[i];
 			command.UseWorldTransform = transform->GetMatrix();
-			if (b_animated) {
+			if (b_posing) {
 				command.UseBoneTransforms = m_meshInfo.BoneTransforms.data();
 			}
 			Renderer::Submit(command);
@@ -148,11 +171,27 @@ namespace Lobster
 					ImGui::EndPopup();
 				}
 
-				ImGui::Checkbox("Animated?", &b_animated);
+				if (ImGui::Button("Play")) {
+					PlayAnimation();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Pause")) {
+					PauseAnimation();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Stop")) {
+					StopAnimation();
+				}
 				ImGui::SetNextTreeNodeOpen(true);
 				if (ImGui::TreeNode("Animations"))
 				{
-					ImGui::SliderInt("Index", &m_currentAnimation, 0, m_animations.size() - 1);
+					int lastAnimation = m_currentAnimation;
+					static int animIndex = m_currentAnimation;
+					ImGui::SliderInt("Index", &animIndex, 0, m_animations.size() - 1);
+					if (lastAnimation != animIndex) {
+						CrossfadeAnimation(animIndex, 0.5);
+					}
+
 					for (int i = 0; i < m_animations.size(); ++i) {
 						static char name[64] = "";
 						AnimationInfo& anim = m_animations[i];
@@ -210,79 +249,36 @@ namespace Lobster
 		std::string boneName = node.Name;
 		glm::mat4 nodeTransform = node.Matrix;
 		// interpolate between keys
+		glm::vec3 finalPosition = glm::vec3();
+		glm::quat finalRotation = glm::quat();
+		glm::vec3 finalScale = glm::vec3(1.0);
 		const AnimationInfo& anim = m_animations[m_currentAnimation];
 		auto it = anim.ChannelMap.find(boneName);
 		if (it != anim.ChannelMap.end() && it->second < anim.Channels.size()) {
 			const ChannelInfo& channel = anim.Channels[it->second];
-			// position
-			glm::vec3 finalPosition = channel.Position[0].Value;
-			if (channel.Position.size() > 1) {
-				uint index([&](){
-					assert(channel.Position.size() > 0);
-					uint i = 0;
-					for (; i < channel.Position.size() - 1; ++i)
-						if (m_animationTime < channel.Position[i].Time)
-							return i;
-					return i - 1;
-				}());
-				uint nextIndex = index + 1;
-				assert(nextIndex < channel.Position.size());
-				float deltaTime = channel.Position[nextIndex].Time - channel.Position[index].Time;
-				float factor = (m_animationTime - channel.Position[index].Time) / deltaTime;
-				if (factor < 0.0f) factor = 0.0f;
-				assert(factor <= 1.0f && "Factor must be smaller than 1.0f");
-				const glm::vec3& start = channel.Position[index].Value;
-				const glm::vec3& end = channel.Position[nextIndex].Value;
-				finalPosition = glm::mix(start, end, factor);
-			}
-			// rotation
-			glm::quat finalRotation = channel.Rotation[0].Value;
-			if (channel.Rotation.size() > 1) {
-				uint index([&]() {
-					assert(channel.Rotation.size() > 0);
-					uint i = 0;
-					for (; i < channel.Rotation.size() - 1; ++i)
-						if (m_animationTime < channel.Rotation[i].Time)
-							return i;
-					return i - 1;
-				}());
-				uint nextIndex = index + 1;
-				assert(nextIndex < channel.Scale.size());
-				float deltaTime = channel.Scale[nextIndex].Time - channel.Scale[index].Time;
-				float factor = (m_animationTime - channel.Scale[index].Time) / deltaTime;
-				if (factor < 0.0f) factor = 0.0f;
-				assert(factor <= 1.0f && "Factor must be smaller than 1.0f");
-				const glm::quat& start = channel.Rotation[index].Value;
-				const glm::quat& end = channel.Rotation[nextIndex].Value;
-				finalRotation = glm::slerp(start, end, factor);
-			}
-			// scale
-			glm::vec3 finalScale = channel.Scale[0].Value;
-			if (channel.Scale.size() > 1) {
-				uint index([&]() {
-					assert(channel.Scale.size() > 0);
-					uint i = 0;
-					for (; i < channel.Scale.size() - 1; ++i)
-						if (m_animationTime < channel.Scale[i].Time)
-							return i;
-					return i - 1;
-				}());
-				uint nextIndex = index + 1;
-				assert(nextIndex < channel.Scale.size());
-				float deltaTime = channel.Scale[nextIndex].Time - channel.Scale[index].Time;
-				float factor = (m_animationTime - channel.Scale[index].Time) / deltaTime;
-				if (factor < 0.0f) factor = 0.0f;
-				assert(factor <= 1.0f && "Factor must be smaller than 1.0f");
-				const glm::vec3& start = channel.Scale[index].Value;
-				const glm::vec3& end = channel.Scale[nextIndex].Value;
-				finalScale = glm::mix(start, end, factor);
-			}
-			// combine transformations
-			glm::mat4 scale = glm::scale(finalScale);
-			glm::mat4 rotation = glm::toMat4(finalRotation);
-			glm::mat4 translation = glm::translate(finalPosition);
-			nodeTransform = translation * rotation * scale;
+			finalPosition = InterpolatePosition(m_animationTime, channel);
+			finalRotation = InterpolateRotation(m_animationTime, channel);
+			finalScale = InterpolateScale(m_animationTime, channel);
 		}
+		
+		// cross fading...
+		if (m_fadeAnimationTime > 0.0) {
+			const AnimationInfo& anim = m_animations[m_targetAnimation];
+			auto it = anim.ChannelMap.find(boneName);
+			if (it != anim.ChannelMap.end() && it->second < anim.Channels.size()) {
+				const ChannelInfo& channel = anim.Channels[it->second];
+				float normalizeFade = m_fadeAnimationTime / m_fadeDuration;
+				finalPosition = glm::mix(finalPosition, InterpolatePosition(m_fadeAnimationTime, channel), normalizeFade);
+				finalRotation = glm::slerp(finalRotation, InterpolateRotation(m_fadeAnimationTime, channel), normalizeFade);
+				finalScale = glm::mix(finalScale, InterpolateScale(m_fadeAnimationTime, channel), normalizeFade);
+			}
+		}
+
+		// combine transformations
+		glm::mat4 scale = glm::scale(finalScale);
+		glm::mat4 rotation = glm::toMat4(finalRotation);
+		glm::mat4 translation = glm::translate(finalPosition);
+		nodeTransform = translation * rotation * scale;
 
 		// recursively update bone transforms
 		glm::mat4 globalTransform = parentTransform * nodeTransform;
@@ -293,6 +289,78 @@ namespace Lobster
 		for (int i = 0; i < node.Children.size(); ++i) {
 			UpdateBoneTransforms(node.Children[i], globalTransform, globalInverseTransform);
 		}
+	}
+
+	glm::vec3 MeshComponent::InterpolatePosition(double animationTime, const ChannelInfo & channel) const
+	{
+		glm::vec3 finalPosition = channel.Position[0].Value;
+		if (channel.Position.size() > 1) {
+			uint index([&]() {
+				assert(channel.Position.size() > 0);
+				uint i = 0;
+				for (; i < channel.Position.size() - 1; ++i)
+					if (animationTime < channel.Position[i].Time)
+						return i;
+				return i - 1;
+			}());
+			uint nextIndex = index + 1;
+			assert(nextIndex < channel.Position.size());
+			float deltaTime = channel.Position[nextIndex].Time - channel.Position[index].Time;
+			float factor = (animationTime - channel.Position[index].Time) / deltaTime;
+			factor = glm::clamp(factor, 0.0f, 1.0f);
+			const glm::vec3& start = channel.Position[index].Value;
+			const glm::vec3& end = channel.Position[nextIndex].Value;
+			finalPosition = glm::mix(start, end, factor);
+		}
+		return finalPosition;
+	}
+
+	glm::quat MeshComponent::InterpolateRotation(double animationTime, const ChannelInfo & channel) const
+	{
+		glm::quat finalRotation = channel.Rotation[0].Value;
+		if (channel.Rotation.size() > 1) {
+			uint index([&]() {
+				assert(channel.Rotation.size() > 0);
+				uint i = 0;
+				for (; i < channel.Rotation.size() - 1; ++i)
+					if (animationTime < channel.Rotation[i].Time)
+						return i;
+				return i - 1;
+			}());
+			uint nextIndex = index + 1;
+			assert(nextIndex < channel.Scale.size());
+			float deltaTime = channel.Scale[nextIndex].Time - channel.Scale[index].Time;
+			float factor = (animationTime - channel.Scale[index].Time) / deltaTime;
+			factor = glm::clamp(factor, 0.0f, 1.0f);
+			const glm::quat& start = channel.Rotation[index].Value;
+			const glm::quat& end = channel.Rotation[nextIndex].Value;
+			finalRotation = glm::slerp(start, end, factor);
+		}
+		return finalRotation;
+	}
+
+	glm::vec3 MeshComponent::InterpolateScale(double animationTime, const ChannelInfo & channel) const
+	{
+		glm::vec3 finalScale = channel.Scale[0].Value;
+		if (channel.Scale.size() > 1) {
+			uint index([&]() {
+				assert(channel.Scale.size() > 0);
+				uint i = 0;
+				for (; i < channel.Scale.size() - 1; ++i)
+					if (animationTime < channel.Scale[i].Time)
+						return i;
+				return i - 1;
+			}());
+			uint nextIndex = index + 1;
+			assert(nextIndex < channel.Scale.size());
+			float deltaTime = channel.Scale[nextIndex].Time - channel.Scale[index].Time;
+			float factor = (animationTime - channel.Scale[index].Time) / deltaTime;
+			factor = glm::clamp(factor, 0.0f, 1.0f);
+			const glm::vec3& start = channel.Scale[index].Value;
+			const glm::vec3& end = channel.Scale[nextIndex].Value;
+			finalScale = glm::mix(start, end, factor);
+		}
+		return finalScale;
 	}
 
 	void MeshComponent::Serialize(cereal::JSONOutputArchive & oarchive)
