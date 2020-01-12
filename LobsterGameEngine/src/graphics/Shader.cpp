@@ -8,9 +8,10 @@
 namespace Lobster
 {
     
-    Shader::Shader(const char* path) :
+	Shader::Shader(const char* path) :
 		m_id(glCreateProgram()),
 		m_vsId(glCreateShader(GL_VERTEX_SHADER)),
+		m_gsId(glCreateShader(GL_GEOMETRY_SHADER)),
 		m_fsId(glCreateShader(GL_FRAGMENT_SHADER)),
 		m_name(path),
         m_path(FileSystem::Path(path)),
@@ -22,6 +23,7 @@ namespace Lobster
     Shader::~Shader()
     {
 		glDeleteShader(m_vsId);
+		glDeleteShader(m_gsId);
 		glDeleteShader(m_fsId);
         glDeleteProgram(m_id);
     }
@@ -59,8 +61,21 @@ namespace Lobster
 			WARN("Shader file {} is either invalid or empty, aborting compilation...", m_path);
 			return false;
 		}
-		std::string vs = StringOps::substr(source, "///VertexShader", "///FragmentShader");
-		std::string fs = StringOps::substr(source, "///FragmentShader", nullptr);
+		size_t readLocation = 0;
+		std::string vs, gs, fs;
+		while ((readLocation = source.find("///", readLocation)) != std::string::npos) {
+			size_t blockEnd = source.find("\n", readLocation);
+			std::string shaderType = source.substr(readLocation, blockEnd - readLocation);
+			size_t nextShaderToken = source.find("///", blockEnd);
+			std::string shaderCode = source.substr(readLocation, nextShaderToken - readLocation);
+			if (shaderType == "///VertexShader")
+				vs = shaderCode;
+			else if (shaderType == "///GeometryShader")
+				gs = shaderCode;
+			else if (shaderType == "///FragmentShader")
+				fs = shaderCode;
+			readLocation = blockEnd;
+		}
 
 		// Preprocess system uniforms and shader version
 		StringOps::ReplaceAll(vs, "///VertexShader", 
@@ -70,6 +85,12 @@ uniform mat4 sys_view;
 uniform mat4 sys_projection;
 uniform mat4 sys_bones[)"+ std::to_string(MAX_BONES) + R"(];
 uniform bool sys_animate = false;)");
+
+		StringOps::ReplaceAll(gs, "///GeometryShader", 
+			R"(#version 410 core
+uniform mat4 sys_world;
+uniform mat4 sys_view;
+uniform mat4 sys_projection;)");
 
 		StringOps::ReplaceAll(fs, "///FragmentShader",
 			R"(#version 410 core
@@ -102,30 +123,44 @@ uniform sampler2D sys_brdfLUTMap;)");
 
 		// System defined macro
 		fs = StringOps::RegexReplace(fs, "TextureExists\\((\\w*)\\)", "textureSize($1, 0).x > 1");
+		b_hasGS = !gs.empty();
 
         const char* vertexShaderSource = vs.c_str();
+		const char* geometryShaderSource = gs.c_str();
         const char* fragmentShaderSource = fs.c_str();
         
         char infoLog[512];
-        int successVS, successFS, successLink;
-        // vertex shader
+        int successVS, successGS, successFS, successLink;
+		// vertex shader
 		glShaderSource(m_vsId, 1, &vertexShaderSource, NULL);
-        glCompileShader(m_vsId);
-        glGetShaderiv(m_vsId, GL_COMPILE_STATUS, &successVS);
-        if (!successVS) {
-            glGetShaderInfoLog(m_vsId, 512, NULL, infoLog);
-            INFO("Vertex Shader compilation failed: {}", infoLog);
-        }
+		glCompileShader(m_vsId);
+		glGetShaderiv(m_vsId, GL_COMPILE_STATUS, &successVS);
+		if (!successVS) {
+			glGetShaderInfoLog(m_vsId, 512, NULL, infoLog);
+			INFO("Vertex Shader compilation failed: {}", infoLog);
+		}
+		// geometry shader
+		if (b_hasGS)
+		{
+ 			glShaderSource(m_gsId, 1, &geometryShaderSource, NULL);
+			glCompileShader(m_gsId);
+			glGetShaderiv(m_gsId, GL_COMPILE_STATUS, &successGS);
+			if (!successGS) {
+				glGetShaderInfoLog(m_gsId, 512, NULL, infoLog);
+				INFO("Geometry Shader compilation failed: {}", infoLog);
+			}
+		}
         // fragment shader
-        glShaderSource(m_fsId, 1, &fragmentShaderSource, NULL);
-        glCompileShader(m_fsId);
-        glGetShaderiv(m_fsId, GL_COMPILE_STATUS, &successFS);
-        if (!successFS) {
-            glGetShaderInfoLog(m_fsId, 512, NULL, infoLog);
+		glShaderSource(m_fsId, 1, &fragmentShaderSource, NULL);
+		glCompileShader(m_fsId);
+		glGetShaderiv(m_fsId, GL_COMPILE_STATUS, &successFS);
+		if (!successFS) {
+			glGetShaderInfoLog(m_fsId, 512, NULL, infoLog);
 			INFO("Fragment Shader compilation failed: {}", infoLog);
-        }
+		}
         // link shaders
         glAttachShader(m_id, m_vsId);
+		if (b_hasGS) glAttachShader(m_id, m_gsId);
         glAttachShader(m_id, m_fsId);
         glLinkProgram(m_id);
         // check for linking errors
@@ -135,7 +170,7 @@ uniform sampler2D sys_brdfLUTMap;)");
 			INFO("Shader Linking failed: {}", infoLog);
         }
 
-		if (!successVS || !successFS || !successLink) {
+		if (!successVS || !successGS || !successFS || !successLink) {
 			return false;
 		}
 
@@ -171,13 +206,29 @@ uniform sampler2D sys_brdfLUTMap;)");
 			std::vector<std::string> tokens = StringOps::split(block, ' ');
 			std::string uniformType = tokens[1];
 			std::string uniformName = tokens[2];
+			// default value
 			std::string defaultValStr = "";
 			if (block.find("=") != std::string::npos) {
 				size_t parenthesesPos = block.find("(");
 				defaultValStr = block.substr(parenthesesPos != std::string::npos ? parenthesesPos : block.find("=") + 1);
 			}
+			// range value
+			size_t lineEnd = source.find("\n", blockEnd + 1);
+			std::string rangeValStr = source.substr(blockEnd + 1, lineEnd - readLocation);
+			StringOps::Erase(rangeValStr, " ");
+			float min = 0.f;
+			float max = 1.f;
+			bool hasRangeValue = rangeValStr.find("//[") != std::string::npos;
+			if (hasRangeValue && (uniformType == "float" || uniformType == "double" || uniformType == "int" || uniformType == "uint")) {
+				std::vector<std::string> range = StringOps::RegexAllOccurrence(rangeValStr, "[0-9]+");
+				if (range.size() == 2) {
+					min = std::stof(range[0]);
+					max = std::stof(range[1]);
+				}
+			}
+
 			m_uniformLocationMap[uniformName] = glGetUniformLocation(m_id, uniformName.c_str());
-			m_uniformDeclarations.push_back(UniformDeclaration(uniformName, defaultValStr, uniformType));
+			m_uniformDeclarations.push_back(UniformDeclaration(uniformName, defaultValStr, uniformType, min, max));
 		}
 	}
 

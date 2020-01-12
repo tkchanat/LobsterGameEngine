@@ -122,13 +122,18 @@ namespace Lobster
 // 		barrel->AddChild(new GameObject("child 2"));
 // 		m_scene->AddGameObject(barrel);
 
-		//for (int i = 0; i < 5; ++i)
-		//{
-		//	GameObject* sphere = (new GameObject(std::to_string(i).c_str()));
-		//	sphere->AddComponent(new MeshComponent(FileSystem::Path("meshes/sphere.obj").c_str(), "materials/cube.mat"));
-		//	sphere->transform.WorldPosition = glm::vec3(0, 0, (i - 2.0)*2.5);
-		//	m_scene->AddGameObject(sphere);
-		//}
+		GameObject* particle = new GameObject("Particle System");
+		particle->AddComponent(new ParticleComponent());
+		particle->transform.WorldPosition = glm::vec3(0, 3, 3);
+		m_scene->AddGameObject(particle);
+
+		for (int i = 0; i < 5; ++i)
+		{
+			GameObject* sphere = (new GameObject(std::to_string(i).c_str()));
+			sphere->AddComponent(new MeshComponent(FileSystem::Path("meshes/sphere.obj").c_str(), "materials/cube.mat"));
+			sphere->transform.WorldPosition = glm::vec3(0, 0, (i - 2.0)*2.5);
+			m_scene->AddGameObject(sphere);
+		}
 
 		GameObject* camera = new GameObject("Main Camera");
 		camera->AddComponent(new CameraComponent());

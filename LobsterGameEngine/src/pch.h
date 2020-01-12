@@ -13,6 +13,7 @@ typedef unsigned char byte;
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <numeric>
 #include <regex>
 #include <string>
 #include <sstream>
@@ -70,6 +71,7 @@ typedef unsigned char byte;
 #define MAX_BONE_INFLUENCE 4
 #define MAX_DIRECTIONAL_LIGHTS 4
 #define MAX_POINT_LIGHTS 64
+#define MAX_PARTICLES 128
 
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)

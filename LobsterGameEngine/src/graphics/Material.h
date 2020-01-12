@@ -31,6 +31,7 @@ namespace Lobster
 		virtual ~Material();
 		void OnImGuiRender();
 		void SetRawUniform(const char* name, void* data);
+		void SetRawTexture2D(int slot, Texture2D* data);
 		void SetUniforms();
 		void SaveConfiguration();
 		std::stringstream Serialize();

@@ -122,22 +122,24 @@ namespace Lobster
 		Texture2D* notFound = TextureLibrary::Placeholder();
         static std::string selectedTexture;
 		// Shader
-		const auto findShaderIndex = [this](const char* shaders[], size_t size) -> int {
+		auto findShaderIndex = [&](const char* shaders[], size_t size) -> int {
 			for (int i = 0; i < size; ++i) {
 				if (m_shader->GetName() == shaders[i])
 					return i;
 			}
-			return 0;
+			return -1;
 		};
-		const char* shaders[] = { "shaders/Phong.glsl", "shaders/PBR.glsl" };
-		static int usedShader = findShaderIndex(shaders, sizeof(shaders));
-		int prev_shader = usedShader;
-		ImGui::Combo("Shader", &usedShader, shaders, IM_ARRAYSIZE(shaders));
-		if (prev_shader != usedShader) {
-			m_shader = ShaderLibrary::Use(shaders[usedShader]);
-			ResizeUniformBuffer(m_shader->GetUniformBufferSize());
-			AssignTextureSlot();
-			b_dirty = true;
+		const char* shaders[2] = { "shaders/Phong.glsl", "shaders/PBR.glsl" };
+		static int usedShader = findShaderIndex(shaders, 2);
+		if (usedShader > 0) {
+			int prev_shader = usedShader;
+			ImGui::Combo("Shader", &usedShader, shaders, IM_ARRAYSIZE(shaders));
+			if (prev_shader != usedShader) {
+				m_shader = ShaderLibrary::Use(shaders[usedShader]);
+				ResizeUniformBuffer(m_shader->GetUniformBufferSize());
+				AssignTextureSlot();
+				b_dirty = true;
+			}
 		}
 		// Rendering Mode
 		const char* modes[] = { "Opaque", "Transparent" };
@@ -157,8 +159,10 @@ namespace Lobster
 			{
 				case UniformDeclaration::BOOL:
 					ImGui::Checkbox(str_id.c_str(), (bool*)data); break;
+				case UniformDeclaration::INT:
+					ImGui::SliderInt(str_id.c_str(), (int*)data, (int)decl.Min, (int)decl.Max); break;
 				case UniformDeclaration::FLOAT:
-					ImGui::SliderFloat(str_id.c_str(), (float*)data, 0.f, 1.f); break;
+					ImGui::SliderFloat(str_id.c_str(), (float*)data, decl.Min, decl.Max); break;
 				case UniformDeclaration::VEC3:
 					ImGui::ColorEdit3(str_id.c_str(), (float*)data); break;
 				case UniformDeclaration::VEC4:
@@ -219,6 +223,13 @@ namespace Lobster
 			}
 			offset += decl.Size();
 		}
+	}
+
+	void Material::SetRawTexture2D(int slot, Texture2D * data)
+	{
+		if (slot < 0 || slot > m_textures.size())
+			return;
+		m_textures[slot] = data;
 	}
 
 	void Material::SetUniforms()

@@ -17,8 +17,9 @@ namespace Lobster
 			MAT3, MAT4,
 			SAMPLER2D, SAMPLER3D, SAMPLERCUBE
 		} Type;
+		float Min, Max;
 	public:
-		UniformDeclaration(const std::string& name, const std::string& defaultValStr, const std::string& type) {
+		UniformDeclaration(const std::string& name, const std::string& defaultValStr, const std::string& type, float min, float max) {
 			this->Name = name;
 			this->DefaultValueString = defaultValStr;
 			if (type == "bool") this->Type = BOOL;
@@ -47,6 +48,8 @@ namespace Lobster
 			else if (type == "sampler3D") this->Type = SAMPLER3D;
 			else if (type == "samplerCube") this->Type = SAMPLERCUBE;
 			else throw std::runtime_error("Unknown uniform type");
+			this->Min = min;
+			this->Max = max;
 		}
 		constexpr size_t Size() {
 			switch (Type)

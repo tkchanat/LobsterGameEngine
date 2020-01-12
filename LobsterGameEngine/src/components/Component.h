@@ -18,7 +18,8 @@ namespace Lobster
 		PHYSICS_COMPONENT,
 		SCRIPT_COMPONENT,
 		AUDIO_SOURCE_COMPONENT,
-		AUDIO_LISTENER_COMPONENT
+		AUDIO_LISTENER_COMPONENT,
+		PARTICLE_COMPONENT
 	};
 
 	//	This class is an abstract class for inheriting components.
