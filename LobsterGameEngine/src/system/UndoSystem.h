@@ -9,6 +9,7 @@ namespace Lobster {
 	class UndoSystem {
 	public:
 		UndoSystem(int size = 50);
+		~UndoSystem();
 
 		//	Gets amount of undos / redos left
 		int UndosRemaining() const;

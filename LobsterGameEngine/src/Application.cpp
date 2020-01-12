@@ -46,8 +46,10 @@ namespace Lobster
     {
 		if (m_renderer) delete m_renderer;
 		if (m_scene) delete m_scene;
+		if (m_undoSystem) delete m_undoSystem;
 		m_renderer = nullptr;
 		m_scene = nullptr;
+		m_undoSystem = nullptr;
     }
 
     void Application::Initialize()

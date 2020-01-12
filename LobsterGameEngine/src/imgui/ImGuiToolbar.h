@@ -79,6 +79,7 @@ namespace Lobster
 				GameObject* plane = new GameObject("Plane");
 				plane->AddComponent(new MeshComponent(MeshFactory::Plane(), glm::vec3(-1, -1, 0), glm::vec3(1, 1, 0)));
 				scene->AddGameObject(plane);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(plane, scene));
 			}
 			ImGui::SameLine();
 			// Cube Generation =============
@@ -86,6 +87,7 @@ namespace Lobster
 				GameObject* cube = new GameObject("Cube");
 				cube->AddComponent(new MeshComponent(MeshFactory::Cube(), glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)));
 				scene->AddGameObject(cube);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(cube, scene));
 			}
 			ImGui::SameLine();
 			// Sphere Generation =============
@@ -93,6 +95,7 @@ namespace Lobster
 				GameObject* sphere = new GameObject("Sphere");
 				sphere->AddComponent(new MeshComponent(MeshFactory::Sphere(1, 32, 32)));
 				scene->AddGameObject(sphere);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(sphere, scene));
 			}
 			ImGui::SameLine();
 			ImGui::Dummy(ImVec2(spacer_width, 0.0f));
@@ -102,6 +105,7 @@ namespace Lobster
 				GameObject* light = new GameObject("Point Light");
 				light->AddComponent(new LightComponent(LightType::POINT_LIGHT));
 				scene->AddGameObject(light);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(light, scene));
 			}
 			ImGui::SameLine();
 			// Directional Light =============
@@ -109,6 +113,7 @@ namespace Lobster
 				GameObject* light = new GameObject("Directional Light");
 				light->AddComponent(new LightComponent(LightType::DIRECTIONAL_LIGHT));
 				scene->AddGameObject(light);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(light, scene));
 			}
 			ImGui::SameLine();
 			ImGui::Dummy(ImVec2(spacer_width, 0.0f));

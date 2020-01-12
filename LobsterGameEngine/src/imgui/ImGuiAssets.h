@@ -4,6 +4,7 @@
 
 #include "ImGuiFileBrowser.h"
 #include "audio/AudioSystem.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster
 {
@@ -69,6 +70,7 @@ namespace Lobster
 						GameObject* renamedGO = new GameObject(rename);
 						renamedGO->AddComponent(new MeshComponent(path.c_str()));
 						scene->AddGameObject(renamedGO);
+						UndoSystem::GetInstance()->Push(new CreateObjectCommand(renamedGO, scene));
 						rename[0] = '\0';
 						nothing = false;
 						ImGui::CloseCurrentPopup();

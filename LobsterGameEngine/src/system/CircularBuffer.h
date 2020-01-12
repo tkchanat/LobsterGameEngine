@@ -11,12 +11,14 @@ public:
 	//	Inserts an item to the buffer, move to the front if buffer is full.
 	void push(T item) {
 		std::lock_guard<std::mutex> lock(mutex);
-		buffer[head] = item;
 
-		//	Only modify tail when it is full.
+		//	Only modify tail when it is full, and delete original item.
 		if (is_full) {
 			tail = (tail + 1) % max_size;
+			//	TODO: Item not deleted. Manual memory deallocation needed?
 		}
+
+		buffer[head] = item;
 		head = (head + 1) % max_size;
 
 		//	Check for fullness after end of insertion.

@@ -11,6 +11,9 @@ namespace Lobster {
 
 	class Command {
 	public:
+		//	When a command could no longer be undo again.
+		virtual ~Command() {};
+
 		//	We will execute a command with the given details.
 		virtual void Exec() = 0;
 
@@ -33,5 +36,37 @@ namespace Lobster {
 		GameObject* m_object;
 		Transform m_original;
 		Transform m_new;
+	};
+
+	//	Creation / Deletion of a game object.
+	class DestroyObjectCommand : public Command {
+	public:
+		virtual ~DestroyObjectCommand() override;
+
+		DestroyObjectCommand(GameObject* object, Scene* scene);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		GameObject* m_object;
+		Scene* m_scene;
+		bool b_isDeleted;
+	};
+
+	//	Creation of a game object.
+	class CreateObjectCommand : public Command {
+	public:
+		virtual ~CreateObjectCommand() override;
+
+		CreateObjectCommand(GameObject* object, Scene* scene);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		GameObject* m_object;
+		Scene* m_scene;
+		bool b_isDeleted;
 	};
 }

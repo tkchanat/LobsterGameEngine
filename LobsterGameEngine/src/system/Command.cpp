@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "system/Command.h"
+#include "graphics/Scene.h"
 #include "objects/GameObject.h"
 
 namespace Lobster {
@@ -36,5 +37,65 @@ namespace Lobster {
 		}
 		
 		return act + m_object->GetName() + " to " + vect;
+	}
+
+	DestroyObjectCommand::DestroyObjectCommand(GameObject* object, Scene* scene) :
+		m_object(object),
+		m_scene(scene),
+		b_isDeleted(true)
+	{
+
+	}
+
+	DestroyObjectCommand::~DestroyObjectCommand() {
+		if (b_isDeleted) delete m_object;
+		m_object = nullptr;
+		m_scene = nullptr;
+	}
+
+	//	Executing a destroy command is to soft delete an object.
+	void DestroyObjectCommand::Exec() {
+		m_scene->RemoveGameObject(m_object);
+		b_isDeleted = true;
+	}
+
+	//	By performing an undo on destroy command, the object should come back to live.
+	void DestroyObjectCommand::Undo() {
+		m_scene->AddGameObject(m_object);
+		b_isDeleted = false;
+	}
+
+	std::string DestroyObjectCommand::ToString() const {
+		return "Destroyed " + m_object->GetName();
+	}
+
+	CreateObjectCommand::CreateObjectCommand(GameObject* object, Scene* scene) :
+		m_object(object),
+		m_scene(scene),
+		b_isDeleted(false)
+	{
+
+	}
+
+	CreateObjectCommand::~CreateObjectCommand() {
+		if (b_isDeleted) delete m_object;
+		m_object = nullptr;
+		m_scene = nullptr;
+	}
+
+	//	Executing a create command is to bring an object to live.
+	void CreateObjectCommand::Exec() {
+		m_scene->AddGameObject(m_object);
+		b_isDeleted = false;
+	}
+
+	//	By performing an undo on create command, the object should be deleted.
+	void CreateObjectCommand::Undo() {
+		m_scene->RemoveGameObject(m_object);
+		b_isDeleted = true;
+	}
+
+	std::string CreateObjectCommand::ToString() const {
+		return "Created " + m_object->GetName();
 	}
 }
