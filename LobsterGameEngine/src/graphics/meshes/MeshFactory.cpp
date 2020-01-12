@@ -17,8 +17,8 @@ namespace Lobster
 		IndexBuffer* indexBuffer = new IndexBuffer;
 		VertexLayout* layout = new VertexLayout;
         layout->Add<float>("POSITION", 3);
-		layout->Add<float>("NORMAL", 3, sizeof(float) * 3);
-		layout->Add<float>("TEXCOORD", 2, sizeof(float) * 6);
+		layout->Add<float>("NORMAL", 3);
+		layout->Add<float>("TEXCOORD", 2);
         
 		float vertices[288] = {
 			// position         // normal       // texture
@@ -85,8 +85,8 @@ namespace Lobster
 		IndexBuffer* indexBuffer = new IndexBuffer;
 		VertexLayout* layout = new VertexLayout;
 		layout->Add<float>("in_position", 3);
-		layout->Add<float>("in_normal", 3, sizeof(float) * 3);
-		layout->Add<float>("in_texcoord", 2, sizeof(float) * 6);
+		layout->Add<float>("in_normal", 3);
+		layout->Add<float>("in_texcoord", 2);
 
 		float vertices[48] = {
 			// positions		 // normals			// texCoords
@@ -120,9 +120,9 @@ namespace Lobster
 		VertexBuffer* vertexBuffer = new VertexBuffer;
 		IndexBuffer* indexBuffer = new IndexBuffer;
 		VertexLayout* layout = new VertexLayout;
-		layout->Add<float>("POSITION", 3);
-		layout->Add<float>("NORMAL", 3, sizeof(float) * 3);
-		layout->Add<float>("TEXCOORD", 2, sizeof(float) * 6);
+		layout->Add<float>("in_position", 3);
+		layout->Add<float>("in_normal", 3);
+		layout->Add<float>("in_texcoord", 2);
 
 		float* vertices = new float[(du+1) * (dv+1) * 8];
 		float* vtx = vertices;

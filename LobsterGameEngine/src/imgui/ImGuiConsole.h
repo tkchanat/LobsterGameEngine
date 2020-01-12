@@ -1,6 +1,24 @@
 #pragma once
-#include <spdlog/fmt/fmt.h>
 #include "ImGuiComponent.h"
+#include <spdlog/fmt/fmt.h>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+#define USE_SPDLOG_CONSOLE
+
+#ifdef USE_SPDLOG_CONSOLE
+#define LOG(...) ::spdlog::get("console")->trace(__VA_ARGS__)
+#define INFO(...) ::spdlog::get("console")->info(__VA_ARGS__)
+#define WARN(...) ::spdlog::get("console")->warn(__VA_ARGS__)
+#define CRITICAL(...) ::spdlog::get("console")->error(__VA_ARGS__)
+#define GL_LOG(x) x; ::spdlog::get("console")->trace("GL Error Code: {}", glGetError())
+#else
+#define LOG(...) ImGuiConsole::log.AddLog((std::string("[LOG] ") + fmt::format(__VA_ARGS__)).c_str())
+#define INFO(...) ImGuiConsole::log.AddLog((std::string("[INFO] ") + fmt::format(__VA_ARGS__)).c_str())
+#define WARN(...) ImGuiConsole::log.AddLog((std::string("[WARN] ") + fmt::format(__VA_ARGS__)).c_str())
+#define CRITICAL(...) ImGuiConsole::log.AddLog((std::string("[CRITICAL] ") + fmt::format(__VA_ARGS__)).c_str())
+#define GL_LOG(x) x; ImGuiConsole::log.AddLog(fmt::format("GL Error Code: {}", glGetError()).c_str())
+#endif
 
 namespace Lobster
 {
@@ -15,9 +33,20 @@ namespace Lobster
 
 		SSFLog()
 		{
+#ifdef USE_SPDLOG_CONSOLE
+			InitConsole();
+#endif
 			AutoScroll = true;
 			ScrollToBottom = false;
 			Clear();
+		}
+
+		void InitConsole() {
+			static std::shared_ptr<spdlog::logger> g_console;
+			spdlog::set_pattern("%^[%n %T]: %v%$");
+			g_console = spdlog::stdout_color_mt("console");
+			g_console->set_level(spdlog::level::trace);
+			g_console->info("SPDLOG is running...");
 		}
 
 		void Clear()
@@ -150,9 +179,3 @@ namespace Lobster
 	};
 
 }
-
-#define LOG(...) ImGuiConsole::log.AddLog((std::string("[LOG] ") + fmt::format(__VA_ARGS__)).c_str())
-#define INFO(...) ImGuiConsole::log.AddLog((std::string("[INFO] ") + fmt::format(__VA_ARGS__)).c_str())
-#define WARN(...) ImGuiConsole::log.AddLog((std::string("[WARN] ") + fmt::format(__VA_ARGS__)).c_str())
-#define CRITICAL(...) ImGuiConsole::log.AddLog((std::string("[CRITICAL] ") + fmt::format(__VA_ARGS__)).c_str())
-#define GL_LOG(x) x; ImGuiConsole::log.AddLog(fmt::format("GL Error Code: {}", glGetError()).c_str())

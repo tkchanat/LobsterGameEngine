@@ -98,23 +98,29 @@ namespace Lobster
 //			LOG("ThreadPool is working! :D");
 //		});
 
+		GameObject* dance = new GameObject("dance");
+		dance->AddComponent(new MeshComponent(FileSystem::Path("meshes/dance.fbx").c_str()));
+		dance->transform.LocalScale *= 0.025;
+		dance->AddChild(new GameObject("child 1"));
+		dance->AddChild(new GameObject("child 2"));
+		m_scene->AddGameObject(dance);
 
-		GameObject* barrel = new GameObject("barrel");
-		barrel->AddComponent(new MeshComponent(FileSystem::Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat"));
-		barrel->AddComponent(new AudioSource());
-		//barrel->AddComponent(new AABB());
-		//barrel->AddComponent(new Rigidbody());
-		//barrel->transform.Translate(0, 2, 0);
-		barrel->AddChild(new GameObject("child 1"));
-		barrel->AddChild(new GameObject("child 2"));
-		m_scene->AddGameObject(barrel);
+// 		GameObject* barrel = new GameObject("barrel");
+// 		barrel->AddComponent(new MeshComponent(FileSystem::Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat"));
+// 		barrel->AddComponent(new AudioSource());
+// 		//barrel->AddComponent(new AABB());
+// 		//barrel->AddComponent(new Rigidbody());
+// 		//barrel->transform.Translate(0, 2, 0);
+// 		barrel->AddChild(new GameObject("child 1"));
+// 		barrel->AddChild(new GameObject("child 2"));
+// 		m_scene->AddGameObject(barrel);
 
 		//for (int i = 0; i < 5; ++i)
 		//{
-		//	GameObject* cube = (new GameObject(std::to_string(i).c_str()))
-		//		->AddComponent<MeshComponent>(FileSystem::Path("meshes/sphere.obj").c_str(), "materials/cube.mat");
-		//	cube->transform.WorldPosition = glm::vec3(0, 0, (i - 2.0)*2.5);
-		//	m_scene->AddGameObject(cube);
+		//	GameObject* sphere = (new GameObject(std::to_string(i).c_str()));
+		//	sphere->AddComponent(new MeshComponent(FileSystem::Path("meshes/sphere.obj").c_str(), "materials/cube.mat"));
+		//	sphere->transform.WorldPosition = glm::vec3(0, 0, (i - 2.0)*2.5);
+		//	m_scene->AddGameObject(sphere);
 		//}
 
 		GameObject* camera = new GameObject("Main Camera");

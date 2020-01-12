@@ -215,9 +215,11 @@ namespace Lobster {
 	{
 		return fs::last_write_time(fs::path(Path(path)));
 	}
-	std::stringstream FileSystem::ReadStringStream(const char * path)
+	std::stringstream FileSystem::ReadStringStream(const char * path, bool binary)
 	{
-		std::ifstream inFile(path);
+		int flags = std::ios::in;
+		if (binary) flags |= std::ios::binary;
+		std::ifstream inFile(path, flags);
 		std::stringstream ss;
 		if (inFile.is_open()) {
 			ss << inFile.rdbuf();
@@ -225,9 +227,11 @@ namespace Lobster {
 		}
 		return ss;
 	}
-	void FileSystem::WriteStringStream(const char * path, const std::stringstream & ss)
+	void FileSystem::WriteStringStream(const char * path, const std::stringstream & ss, bool binary)
 	{
-		std::ofstream outFile(path);
+		int flags = std::ios::out;
+		if (binary) flags |= std::ios::binary;
+		std::ofstream outFile(path, flags);
 		if (outFile.is_open()) {
 			outFile << ss.rdbuf();
 			outFile.close();

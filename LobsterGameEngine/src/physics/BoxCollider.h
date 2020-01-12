@@ -8,8 +8,8 @@ namespace Lobster {
 
 	class BoxCollider : public Collider {
 	private:
-		float m_debugData[24]; // raw vertices position
-		float m_debugInitialData[24]; // raw initial vertices position
+		float m_vertexData[24]; // raw vertices position
+		float m_vertexInitialData[24]; // raw initial vertices position
 		//float m_debugTranslatedData[24]; // raw translated (for once) vertices position
 
 	public:
@@ -17,7 +17,7 @@ namespace Lobster {
 
 		void SetOwner(GameObject* owner) override;
 		void OnUpdate(double deltaTime) override;
-		virtual void DebugDraw() override;
+		virtual void Draw() override;
 		bool Intersects(glm::vec3 pos, glm::vec3 dir, float& t) override;
 
 	protected:

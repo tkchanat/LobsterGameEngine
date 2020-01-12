@@ -14,9 +14,9 @@ namespace Lobster {
 		const static char* ColliderType[];
 
 		Collider(PhysicsComponent* physics, Transform transform = Transform()) :
-			m_debugMaterial(nullptr),
-			m_debugMesh(nullptr),
-			m_debugVertexBuffer(nullptr),
+			m_vertexMaterial(nullptr),
+			m_mesh(nullptr),
+			m_vertexBuffer(nullptr),
 			physics(physics),
 			m_transform(transform)
 		{
@@ -24,17 +24,17 @@ namespace Lobster {
 		}
 		virtual ~Collider() {}
 
-		virtual void DebugDraw() = 0;
+		virtual void Draw() = 0;
 		//virtual bool Intersects(Collider* collider) = 0;
 		bool Intersects(Collider* collider) { return Intersects(this, collider); }
 		virtual bool Intersects(glm::vec3 pos, glm::vec3 dir, float& t) = 0;	// ray intersection
 
 	protected:
 		//	Materials for rendering
-		glm::vec4 m_debugColor;
-		Material* m_debugMaterial;
-		VertexArray* m_debugMesh;
-		VertexBuffer* m_debugVertexBuffer;
+		glm::vec4 m_vertexColor;
+		Material* m_vertexMaterial;
+		VertexArray* m_mesh;
+		VertexBuffer* m_vertexBuffer;
 
 		bool m_enabled = true;
 

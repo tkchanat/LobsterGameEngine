@@ -12,6 +12,7 @@ namespace Lobster {
 
 		//  Wrapper for std::regex_replace
 		std::string RegexReplace(const std::string& str, const char* expr, const char* pattern);
+		inline std::string GetValidFilename(const std::string& str) { return RegexReplace(str, "[,.<>:\"/\\|?*]", ""); }
 		
 		//	Finding occurrence of expression with regex.
 		std::vector<std::string> RegexAllOccurrence(const std::string& str, const char* expr);

@@ -197,7 +197,7 @@ project "LobsterGameEngine"
 	filter "system:windows"
 		entrypoint "mainCRTStartup"
 		systemversion "latest"
-		kind "WindowedApp"
+		kind "ConsoleApp"
 		debugdir "bin/%{cfg.buildcfg}"
 
 		pchheader "pch.h"

@@ -24,13 +24,14 @@ namespace Lobster
 		inline static FileSystem* GetInstance() { return m_instance; }
 		inline static std::string GetCurrentWorkingDirectory() { return m_instance->m_workingDir; }
 		inline static std::map<std::string, std::vector<std::string>> GetDirectoryStructure() { return m_instance->m_directory; }				
+		inline static bool Exist(const std::string& path) { return std::filesystem::exists(path); }
 		static std::string Join(const std::string& path, const std::string& path2);
 		static std::string Path(std::string path);
 		static std::string ReadText(const char* path);
 		static std::string OpenFileDialog();
 		static std::filesystem::file_time_type LastModified(const char* path);
-		static std::stringstream ReadStringStream(const char* path);
-		static void WriteStringStream(const char* path, const std::stringstream& ss);
+		static std::stringstream ReadStringStream(const char* path, bool binary = false);
+		static void WriteStringStream(const char* path, const std::stringstream& ss, bool binary = false);
 		
 		bool assignWorkingDirectory(std::string dir); // for DEBUG
 		bool createWorkingDirectory(std::string dir); // for RELEASE

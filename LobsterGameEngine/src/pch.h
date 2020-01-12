@@ -38,6 +38,7 @@ typedef unsigned char byte;
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/json.hpp>
 #include <cereal/types/map.hpp>
+#include <cereal/types/unordered_map.hpp>
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/complex.hpp>
@@ -67,6 +68,10 @@ typedef unsigned char byte;
 //  Custom Defines
 #define MAX_TEXTURE_UNIT 16
 #define MAX_UNIFORM_BUFFER 16
+#define MAX_BONES 64
+#define MAX_BONE_INFLUENCE 4
+#define MAX_DIRECTIONAL_LIGHTS 4
+#define MAX_POINT_LIGHTS 64
 
 #define PATH_AUDIO "audio"
 #define PATH_MESHES "meshes"
