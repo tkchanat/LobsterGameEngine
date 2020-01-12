@@ -26,14 +26,14 @@ namespace Lobster
 		FrameBuffer* m_frameBuffer;
 		bool b_uiEditor = false;
 		GameUI* gameUI = nullptr;
-
-		void DrawUI();
+		
 		static CameraComponent* s_activeCamera;
 
     public:
         CameraComponent();
         ~CameraComponent();
 		void ResizeProjection(float width, float height);
+		void DrawUI();
 		virtual void OnAttach() override;
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;

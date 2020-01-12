@@ -11,7 +11,7 @@ namespace Lobster {
 	public:
 		GameUI();
 		~GameUI();
-		void SortSprites();
+		void SortSprites();				// to sort spriteList in DESCENDING ORDER
 		void AddSprite(Sprite2D* sprite);		
 		void RemoveSprite(Sprite2D* sprite);
 		void GoFront(Sprite2D* sprite); // move the item to the front by one layer

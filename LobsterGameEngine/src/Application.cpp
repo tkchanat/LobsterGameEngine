@@ -66,14 +66,6 @@ namespace Lobster
 		if (err) throw std::runtime_error("Unable to create directory");
 		LOG("Working Directory: " + m_fileSystem->GetCurrentWorkingDirectory());
 
-		// Read from JSON
-        struct {
-            int width = 1280;
-            int height = 760;
-            std::string title = "Lobster Engine";
-            bool vsync = true;
-        } config;
-
 		// Independent system initialization
 		ThreadPool::Initialize(16);
 		AudioSystem::Initialize();
@@ -83,6 +75,7 @@ namespace Lobster
 		Input::Initialize();
 
 		// OpenGL dependent system initialization (Window class create OpenGL context)
+		Config config;
 		m_window = new Window(config.width, config.height, config.title, config.vsync);
 		TextureLibrary::Initialize();
 		ShaderLibrary::Initialize();
@@ -201,14 +194,6 @@ namespace Lobster
 		// Scene update
 		Timer sceneUpdateTimer;
 		m_scene->OnUpdate(deltaTime);	// update game scene
-		RenderOverlayCommand ocommand;
-		ocommand.UseTexture = TextureLibrary::Use("textures/ui/light.png");
-		ocommand.x = 200.0f;
-		ocommand.y = 300.0f;
-		ocommand.w = 64.0f;
-		ocommand.h = 64.0f;
-		ocommand.z = 1;
-		Renderer::Submit(ocommand);
 		Profiler::SubmitData("Scene Update Time", sceneUpdateTimer.GetElapsedTime());
 
 		//=========================================================
@@ -222,7 +207,7 @@ namespace Lobster
 		Timer renderTimer;
 		m_renderer->Render(CameraComponent::GetActiveCamera());
 		Profiler::SubmitData("Render Time", renderTimer.GetElapsedTime());
-
+		m_renderer->ClearOverlayQueue();
 		//=========================================================
 		// GUI Renderer update
 		#ifdef LOBSTER_BUILD_DEBUG

@@ -117,6 +117,9 @@ namespace Lobster
 			if (Application::GetMode() == EDITOR) {
 				if (ImGui::ImageButton(m_tex[9]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
 					Application::SwitchMode(SIMULATION);
+					// TODO save scene TODO
+					// ...
+
 					m_gameView = new ImGuiGame();
 					m_showGameView = true;
 					// initialize all gameobjects and components
@@ -132,12 +135,14 @@ namespace Lobster
 					// clearup of all gameobjects and components
 					for (GameObject* gameObject : scene->GetGameObjects()) {
 						gameObject->OnSimulationEnd();
-					}
+					}					
 					// reinitialize the game view
 					if (m_gameView) {
 						delete m_gameView;
 						m_gameView = nullptr;
 					}
+					// TODO load the original scene setup
+					// Application::GetInstance()->OpenScene("scenes/test.lobster");
 				}
 			}			
 			// show the game mode tab

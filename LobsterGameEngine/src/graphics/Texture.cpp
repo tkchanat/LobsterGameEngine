@@ -14,9 +14,7 @@ namespace Lobster
 	// Texture2D
 	// =======================================================
 	Texture2D::Texture2D(const char* path) :
-		m_id(0),
-		m_path(FileSystem::Path(path)),
-		m_name(path)
+		m_id(0), m_path(FileSystem::Path(path)), m_name(path)
 	{
 		//	Generate texture
 		glGenTextures(1, &m_id);
@@ -31,6 +29,18 @@ namespace Lobster
 		{
 			WARN("Couldn't load texture {}", m_path);
 		}
+	}
+
+	Texture2D::Texture2D(byte* buffer, const char* id, int w, int h) : m_id(0), m_path(""), m_name(id)
+	{
+		//	Generate texture
+		glGenTextures(1, &m_id);
+		glBindTexture(GL_TEXTURE_2D, m_id);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 	}
 
 	Texture2D::~Texture2D()
@@ -306,6 +316,36 @@ namespace Lobster
 		Texture2D* newTexture = new Texture2D(path);
 		s_instance->m_textures.push_back(newTexture);
 		return newTexture;
+	}
+
+	Texture2D* TextureLibrary::Use(const char* id, byte* buffer, int w, int h) {
+		char name[32];
+		sprintf(name, "textsprite-%s", id);
+		// search for texture with given id
+		Texture2D* texFound = nullptr;
+		int it = 0;
+		for (Texture2D*& texture : s_instance->m_textures) {			
+			if (texture->GetName() == name) {
+				texFound = texture;
+				break;
+			}
+			it++;
+		}		
+		// search for texture only: return texture found
+		if (!buffer || !w || !h) {
+			return texFound;
+		}
+		// edit texture: delete and return a new one
+		else if (texFound) {			
+			delete texFound;			
+			texFound = s_instance->m_textures[it] = new Texture2D(buffer, name, w, h);
+		}
+		// add texture: create a new one and push into library
+		else {
+			texFound = new Texture2D(buffer, name, w, h);
+			s_instance->m_textures.push_back(texFound);
+		}			
+		return texFound;
 	}
 
 }

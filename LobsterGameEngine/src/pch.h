@@ -54,7 +54,6 @@ typedef unsigned char byte;
 #include FT_FREETYPE_H
 
 //  Custom includes
-#include "typedefs.h"
 #include "events/EventCollection.h"
 #include "events/EventDispatcher.h"
 #include "imgui/ImGuiConsole.h"
@@ -68,6 +67,14 @@ typedef unsigned char byte;
 //  Custom Defines
 #define MAX_TEXTURE_UNIT 16
 #define MAX_UNIFORM_BUFFER 16
+
+#define PATH_AUDIO "audio"
+#define PATH_MESHES "meshes"
+#define PATH_MATERIALS "materials"
+#define PATH_SHADERS "shaders"
+#define PATH_TEXTURES "textures"
+#define PATH_SPRITES "sprites"
+#define PATH_FONT "textures/font"
 
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)

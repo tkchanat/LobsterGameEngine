@@ -139,7 +139,7 @@ project "ImGui"
         "LobsterGameEngine/vendor/imgui/im**.h",
         "LobsterGameEngine/vendor/imgui/im**.cpp"
 	}
-	
+
 project "ImGuizmo"
 	location "LobsterGameEngine/vendor"
     kind "StaticLib"
@@ -169,7 +169,8 @@ project "LobsterGameEngine"
 	objdir ("bin/int/%{cfg.buildcfg}")
 	libdirs	{
 		"%{prj.location}/vendor/assimp/lib",
-		"%{prj.location}/vendor/openal/libs/Win64"
+		"%{prj.location}/vendor/openal/libs/Win64",
+		"%{prj.location}/vendor/freetype/win64"
 	}
 
 	files {
@@ -190,7 +191,7 @@ project "LobsterGameEngine"
 		"%{prj.location}/vendor/json/include",
 		"%{prj.location}/vendor/spdlog/include",
 		"%{prj.location}/vendor/openal/include",
-		"%{prj.location}/vendor/freetype2/include"
+		"%{prj.location}/vendor/freetype/include",
 	}
 
 	filter "system:windows"
@@ -210,7 +211,7 @@ project "LobsterGameEngine"
 			"GLAD",
 			"opengl32",
 			"OpenAL32",
-			"freetype2"
+			"freetype",
 		}
 
 		prebuildcommands {
@@ -233,7 +234,7 @@ project "LobsterGameEngine"
 			"ImGui",
 			"ImGuizmo",
 			"GLAD",
-			"freetype2",
+			"freetype",
 			"Cocoa.framework",
 			"OpenAL.framework",
 			"OpenGL.framework",

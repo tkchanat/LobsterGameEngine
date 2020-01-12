@@ -16,6 +16,14 @@ namespace Lobster
 		EDITOR, SIMULATION, GAME
 	};
     
+	// Read from JSON
+	struct Config {
+		int width = 1280;
+		int height = 760;
+		std::string title = "Lobster Engine";
+		bool vsync = true;
+	};
+
     class Application
     {
 		friend class ImGuiComponent;

@@ -52,6 +52,8 @@ namespace Lobster
 		command.position = transform->WorldPosition;
 		command.source = gameObject;
 		ImGuiScene::SubmitGizmos(command);
+
+		DrawUI();
 #endif
     }
 
@@ -73,8 +75,6 @@ namespace Lobster
 	{
 		if (ImGui::CollapsingHeader("CameraComponent", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			// draw UI on frame buffer
-			DrawUI();
 			// draw camera preview
 			ImVec2 window_size = ImGui::GetItemRectSize();			
 			void* image = m_frameBuffer->Get();
@@ -92,17 +92,15 @@ namespace Lobster
 				ImGuiUIEditor* editor = EditorLayer::GetUIEditor();
 				editor->SetUI(gameUI);
 				editor->Show(&b_uiEditor);
-			}
+			}			
 		}
 	}
 
 	void CameraComponent::DrawUI() {
 		if (!gameUI) return;
-		m_frameBuffer->Bind();
 		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
-			sprite->Draw();
+			sprite->SubmitDrawCommand();
 		}
-		m_frameBuffer->Unbind();
 	}
 
 	void CameraComponent::OnSimulationBegin() {
