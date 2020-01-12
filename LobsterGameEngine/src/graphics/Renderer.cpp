@@ -152,19 +152,22 @@ namespace Lobster
 		// Transparent(sorted)
 		Renderer::SetAlphaBlend(true);
 		Renderer::DrawQueue(camera, m_transparentQueue);
-		Renderer::SetAlphaBlend(false);
+		Renderer::SetAlphaBlend(false);		
+		// from front to back order
 		// Overlay
 		m_spriteShader->Bind();
-		for (std::list<RenderOverlayCommand>::iterator it = m_overlayQueue.begin(); it != m_overlayQueue.end(); ++it)
+		for (auto it = m_overlayQueue.rbegin(); it != m_overlayQueue.rend(); ++it)
 		{
 			RenderOverlayCommand& command = *it;
-			m_spriteShader->SetTexture2D(0, command.UseTexture->Get());
 			glm::mat4 world = glm::mat4(1.0);
 			world = glm::translate(world, glm::vec3(command.x, command.y, command.z));
 			world = glm::scale(world, glm::vec3(command.w, command.h, 1.0f));
-
+			m_spriteShader->SetTexture2D(0, renderTarget->Get());
+			m_spriteShader->SetTexture2D(1, command.UseTexture->Get());			
 			m_spriteShader->SetUniform("sys_world", world);
 			m_spriteShader->SetUniform("sys_projection", camera->GetOrthoMatrix());
+			m_spriteShader->SetUniform("sys_background", 0);
+			m_spriteShader->SetUniform("sys_spriteTexture", 1);
 			m_spriteMesh->Draw();
 		}
 
@@ -218,6 +221,10 @@ namespace Lobster
 	void Renderer::EndScene()
 	{
 		// do all batching and sorting job here
+	}
+
+	void Renderer::ClearOverlayQueue() {
+		s_instance->m_overlayQueue.clear();
 	}
 
 	void Renderer::ClearAllQueues()

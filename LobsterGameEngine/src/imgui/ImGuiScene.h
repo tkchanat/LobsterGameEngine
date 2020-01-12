@@ -157,7 +157,7 @@ namespace Lobster
 				float distlen = glm::length(dist);
 				glm::vec3 closeVec = glm::dot(glm::normalize(dist), glm::normalize(dir)) * distlen * dir - dist;
 				glm::vec3 closePt = cm.position + closeVec; 
-				float threshold = 0.02 * distlen; // 0.02 is a good size after testing
+				float threshold = 0.02f * distlen; // 0.02 is a good size after testing
 				if (glm::length(closePt - cm.position) < threshold && distlen < tmin) {
 					tmin = distlen;
 					nearestGameObject = cm.source;
@@ -299,10 +299,10 @@ namespace Lobster
 							UndoSystem::GetInstance()->Push(new TransformCommand(gameObject, m_transform, gameObject->transform));
 						}
 					}
-				}				
-				ImGui::End();
-				ImGui::PopStyleVar();
+				}						
 			}
+			ImGui::End();
+			ImGui::PopStyleVar();
 
 			// ====================================================
 			// Profiling overlay
@@ -327,7 +327,7 @@ namespace Lobster
 				}
 				ImGui::End();
 				ImGui::PopStyleVar();
-			}
+			}								
 		}
 
 		private:

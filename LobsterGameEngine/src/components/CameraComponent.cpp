@@ -4,6 +4,7 @@
 #include "imgui/ImGuiScene.h"
 #include "graphics/FrameBuffer.h"
 #include "physics/Rigidbody.h"
+#include "imgui/ImGuiUIEditor.h"
 
 namespace Lobster
 {
@@ -51,6 +52,8 @@ namespace Lobster
 		command.position = transform->WorldPosition;
 		command.source = gameObject;
 		ImGuiScene::SubmitGizmos(command);
+
+		DrawUI();
 #endif
     }
 
@@ -73,13 +76,37 @@ namespace Lobster
 		if (ImGui::CollapsingHeader("CameraComponent", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			// draw camera preview
-			ImVec2 window_size = ImGui::GetItemRectSize();
+			ImVec2 window_size = ImGui::GetItemRectSize();			
 			void* image = m_frameBuffer->Get();
-			ImGui::Text("Camera Preview");
+			ImGui::Text("Camera Preview");			
 			ImGui::Image(image, ImVec2(window_size.x, window_size.x / m_frameBuffer->GetAspectRatio()), ImVec2(0, 1), ImVec2(1, 0));
+			
+			if (ImGui::Button("Edit UI")) {
+				if (!gameUI) {
+					gameUI = new GameUI();
+				}
+				b_uiEditor = true;
+			}
+			// show the UI editor
+			if (b_uiEditor) {
+				ImGuiUIEditor* editor = EditorLayer::GetUIEditor();
+				editor->SetUI(gameUI);
+				editor->Show(&b_uiEditor);
+			}			
 		}
 	}
 
+	void CameraComponent::DrawUI() {
+		if (!gameUI) return;
+		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
+			sprite->SubmitDrawCommand();
+		}
+	}
+
+	void CameraComponent::OnSimulationBegin() {
+
+	}
+		
 	void CameraComponent::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
 		//LOG("Serializing CameraComponent");

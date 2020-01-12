@@ -12,11 +12,14 @@ void main()
 in vec2 frag_texcoord;
 out vec4 out_color;
 
+uniform sampler2D sys_background;
 uniform sampler2D sys_spriteTexture;
 
 void main()
 { 
-    vec4 color = texture(sys_spriteTexture, frag_texcoord); 
-    if(color.a == 0.0) discard;
-    out_color = color;
+	vec4 base = texelFetch(sys_background, ivec2(gl_FragCoord.xy), 0);
+    vec4 color = texture(sys_spriteTexture, frag_texcoord);	
+
+	if (color.a < 0.01) discard;
+	out_color = vec4(vec3(color) * color.a + vec3(base) * (1.0 - color.a), 1);    	
 }

@@ -2,6 +2,7 @@
 
 #include "Component.h"
 #include "objects/Transform.h"
+#include "graphics/2D/GameUI.h"
 
 namespace Lobster
 {
@@ -23,14 +24,20 @@ namespace Lobster
         glm::mat4 m_projectionMatrix;
 		glm::mat4 m_orthoMatrix;
 		FrameBuffer* m_frameBuffer;
+		bool b_uiEditor = false;
+		GameUI* gameUI = nullptr;
+		
 		static CameraComponent* s_activeCamera;
+
     public:
         CameraComponent();
         ~CameraComponent();
 		void ResizeProjection(float width, float height);
+		void DrawUI();
 		virtual void OnAttach() override;
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
+		virtual void OnSimulationBegin() override;
 		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 		glm::mat4 GetViewMatrix() const;
