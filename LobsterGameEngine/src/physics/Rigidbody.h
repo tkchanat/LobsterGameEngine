@@ -58,6 +58,9 @@ namespace Lobster {
 		//	Coefficients of restitution. 0 means not bouncing, 1 means most elastic.
 		float m_restitution = 0.0f;
 
+		//	Find the normal between this and other. Normal is pointing out from this, towards other direction.
+		glm::vec3 GetNormal(Rigidbody* other) const;
+
 		void Travel(float time, glm::vec3 linearAccel);
 		void UndoTravel(float time, glm::vec3 linearAccel);
 		std::vector<GameObject*> m_lastCollided;
