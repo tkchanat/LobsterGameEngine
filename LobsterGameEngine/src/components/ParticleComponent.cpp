@@ -11,9 +11,15 @@ namespace Lobster
 
 	ParticleComponent::ParticleComponent() :
 		Component(PARTICLE_COMPONENT),
-		m_shape(EmitterShape::BOX),
-		b_animated(false),
-		m_particleCount(MAX_PARTICLES / 2),
+		m_shape(EmitterShape::CONE),
+		b_animated(true),
+		b_emitOneByOne(false),
+		_simulateElapsedTime(0.0f),
+		_volumeFilled(false),
+		m_emissionRate(0.1f),
+		m_emissionAngle(M_PI/6),
+		m_particleCount(0),
+		m_particleCutoff(MAX_PARTICLES / 2),
 		m_particleSize(0.125f),
 		m_particleOrientation(0.0f),
 		m_particleTexture(nullptr),
@@ -22,12 +28,7 @@ namespace Lobster
 		m_vertexBuffer(nullptr)
 	{
 		srand(time(NULL));
-		for (int i = 0; i < MAX_PARTICLES; ++i) {
-			float x = RandomNumber();
-			float y = RandomNumber();
-			float z = RandomNumber();
-			m_particlePositions[i] = glm::vec3(x, y, z);
-		}
+		FillVolume();
 
 		m_material = MaterialLibrary::UseShader("shaders/GPUParticle.glsl");
 		m_material->GetShader()->SetUniform("sys_particleSize", m_particleSize);
@@ -66,18 +67,33 @@ namespace Lobster
 	{
 		// Update particle position
 		if (b_animated) {
-			for (int i = 0; i < MAX_PARTICLES; ++i) {
-				m_particlePositions[i].y -= deltaTime / 1000.f;
-				if (m_particlePositions[i].y < -1.f) {
-					m_particlePositions[i].y = 1.f;
-				}
+			if (!b_emitOneByOne && !_volumeFilled) {
+				m_particleCount = m_particleCutoff;
+				FillVolume();
+				_volumeFilled = true;
+			}
+			else if (b_emitOneByOne && _volumeFilled) {
+				m_particleCount = 0;
+				_volumeFilled = false;
+			}
+			switch (m_shape)
+			{
+			case EmitterShape::BOX:
+				BoxEmitter(deltaTime); break;
+			case EmitterShape::CONE:
+				ConeEmitter(deltaTime); break;
+			case EmitterShape::SPHERE:
+				SphereEmitter(deltaTime); break;
+			default:
+				break;
 			}
 			// Set vertex data
 			m_vertexBuffer->SetData(m_particlePositions, sizeof(m_particlePositions));
 		}
 
 		// Update shader uniforms
-		m_material->SetRawUniform("ParticleCount", &m_particleCount);
+		int cutoff = std::min(m_particleCutoff, m_particleCount);
+		m_material->SetRawUniform("ParticleCutoff", &cutoff);
 		m_material->SetRawUniform("ParticleSize", &m_particleSize);
 		m_material->SetRawUniform("ParticleOrientation", (void*)glm::value_ptr(glm::rotate(m_particleOrientation, glm::vec3(0, 0, 1))));
 		m_material->SetRawTexture2D(0, m_particleTexture ? m_particleTexture : TextureLibrary::Use("textures/ocornut.png"));
@@ -94,9 +110,24 @@ namespace Lobster
 	{
 		if (ImGui::CollapsingHeader("Particle System", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::Text("Fuck ocornut");
-			ImGui::Checkbox("Animated?", &b_animated);
-			ImGui::SliderInt("Particle Count", &m_particleCount, 0, MAX_PARTICLES);
+			ImGui::Checkbox("Simulate?", &b_animated);
+			bool prev_state = b_emitOneByOne;
+			ImGui::Checkbox("Emit One By One?", &b_emitOneByOne);
+			if (prev_state != b_emitOneByOne) {
+				m_particleCount = 0;
+				_simulateElapsedTime = 0.f;
+			}
+			ImGui::DragFloat("Emission Rate (per second)", &m_emissionRate, 0.1f);
+			m_emissionRate = m_emissionRate < 0.0f ? 0.0f : m_emissionRate;
+			ImGui::SliderAngle("Emission Angle", &m_emissionAngle, 0.f, 89.f);
+			
+			const char* shapes[] = { "Box", "Cone", "Sphere" };
+			EmitterShape prev_shape = m_shape;
+			ImGui::Combo("Shape", (int*)&m_shape, shapes, IM_ARRAYSIZE(shapes));
+			if (prev_shape != m_shape) {
+				FillVolume();
+			}
+			ImGui::SliderInt("Particle Cutoff", &m_particleCutoff, 0, MAX_PARTICLES);
 			ImGui::SliderFloat("Particle Size", &m_particleSize, 0.f, 1.f);
 			ImGui::SliderAngle("Particle Orientation", &m_particleOrientation, 0.f, 360.f);
 			ImVec2 previewSize(24, 24);
@@ -127,9 +158,150 @@ namespace Lobster
 		}
 	}
 
+	void ParticleComponent::FillVolume()
+	{
+		//Timer timer;
+		switch (m_shape)
+		{
+		case EmitterShape::BOX:
+			for (int i = 0; i < MAX_PARTICLES; ++i) {
+				float x = RandomNumber() * 2.f - 1.f;
+				float y = RandomNumber() * 2.f - 1.f;
+				float z = RandomNumber() * 2.f - 1.f;
+				m_particlePositions[i] = { x, y, z };
+			}
+			break;
+		case EmitterShape::CONE:
+			for (int i = 0; i < MAX_PARTICLES; ++i) {
+				float h = 1.f * std::cbrt(RandomNumber());
+				float r = tan(m_emissionAngle) * h * std::sqrt(RandomNumber());
+				float t = 2.f * M_PI *RandomNumber();
+				m_particlePositions[i] = { r*cos(t), h, r*sin(t) };
+			}
+			break;
+		case EmitterShape::SPHERE:
+			for (int i = 0; i < MAX_PARTICLES; ++i) {
+				float u = RandomNumber() * 2.f - 1.f;
+				float x1 = RandomNumber() * 2.f - 1.f;
+				float x2 = RandomNumber() * 2.f - 1.f;
+				float x3 = RandomNumber() * 2.f - 1.f;
+				float mag = std::sqrt(x1*x1 + x2*x2 + x3*x3);
+				x1 /= mag; 
+				x2 /= mag; 
+				x3 /= mag;
+				float c = std::cbrt(u);
+				m_particlePositions[i] = { x1*c, x2*c, x3*c };
+			}
+			break;
+		default:
+			break;
+		}
+		//LOG("Particle position generation: {}s", timer.GetElapsedTime());
+	}
+
+	void ParticleComponent::BoxEmitter(double deltaTime)
+	{
+		// emit new particle one by one
+		if (b_emitOneByOne) {
+			_simulateElapsedTime += deltaTime / 1000.0; // in seconds
+			if (_simulateElapsedTime > m_emissionRate) {
+				if (m_particleCount + 1 < MAX_PARTICLES) {
+					float x = RandomNumber() * 2.f - 1.f;
+					float y = -1.f;
+					float z = RandomNumber() * 2.f - 1.f;
+					m_particlePositions[m_particleCount++] = { x, y, z };
+				}
+				_simulateElapsedTime = 0.0f;
+			}
+		}
+
+		// animate particles
+		for (int i = 0; i < m_particleCount; ++i) {
+			m_particlePositions[i].y += deltaTime / 1000.f;
+			if (m_particlePositions[i].y > 1.f) {
+				m_particlePositions[i].y = std::fmod(m_particlePositions[i].y, 2.f) - 1.99f;
+				if (b_emitOneByOne) {
+					m_particleCount--;
+				}
+			}
+		}
+	}
+
+	void ParticleComponent::ConeEmitter(double deltaTime)
+	{
+		// emit new particle one by one
+		if (b_emitOneByOne) {
+			_simulateElapsedTime += deltaTime / 1000.0; // in seconds
+			if (_simulateElapsedTime > m_emissionRate) {
+				if (m_particleCount + 1 < MAX_PARTICLES) {
+					float h = 1.f * std::cbrt(RandomNumber());
+					float r = tan(m_emissionAngle) * h * std::sqrt(RandomNumber());
+					float t = 2.f * M_PI *RandomNumber();
+					m_particlePositions[m_particleCount++] = 0.001f * glm::vec3(r*cos(t), h, r*sin(t));
+				}
+				_simulateElapsedTime = 0.0f;
+			}
+		}
+
+		// animate particles
+		for (int i = 0; i < m_particleCount; ++i) {
+			glm::vec3 direction = glm::normalize(m_particlePositions[i]);
+			m_particlePositions[i] += direction * float(deltaTime / 1000.f);
+			float dist = glm::length(m_particlePositions[i]);
+			if (dist > 1.f) {
+				dist = std::fmod(dist, 1.f);
+				float h = 1.f * std::cbrt(RandomNumber());
+				float r = tan(m_emissionAngle) * h * std::sqrt(RandomNumber());
+				float t = 2.f * M_PI *RandomNumber();
+				glm::vec3 position = { r*cos(t), h, r*sin(t) };
+				m_particlePositions[i] = glm::normalize(position) * dist;
+				if (b_emitOneByOne) {
+					m_particleCount--;
+				}
+			}
+		}
+	}
+
+	void ParticleComponent::SphereEmitter(double deltaTime)
+	{
+		// emit new particle one by one
+		if (b_emitOneByOne) {
+			_simulateElapsedTime += deltaTime / 1000.0; // in seconds
+			if (_simulateElapsedTime > m_emissionRate) {
+				if (m_particleCount + 1 < MAX_PARTICLES) {
+					float u = RandomNumber() * 2.f - 1.f;
+					float x1 = RandomNumber() * 2.f - 1.f;
+					float x2 = RandomNumber() * 2.f - 1.f;
+					float x3 = RandomNumber() * 2.f - 1.f;
+					float mag = std::sqrt(x1*x1 + x2 * x2 + x3 * x3);
+					x1 /= mag;
+					x2 /= mag;
+					x3 /= mag;
+					float c = std::cbrt(u);
+					m_particlePositions[m_particleCount++] = glm::normalize(glm::vec3(x1*c, x2*c, x3*c)) * 0.001f;
+				}
+				_simulateElapsedTime = 0.0f;
+			}
+		}
+
+		// animate particle
+		for (int i = 0; i < m_particleCount; ++i) {
+			glm::vec3 direction = glm::normalize(m_particlePositions[i]);
+			m_particlePositions[i] += direction * float(deltaTime / 1000.f);
+			float dist = glm::length(m_particlePositions[i]);
+			if (dist > 1.f) {
+				dist = std::fmod(dist, 1.f);
+				m_particlePositions[i] = direction * dist;
+				if (b_emitOneByOne) {
+					m_particleCount--;
+				}
+			}
+		}
+	}
+
 	inline float ParticleComponent::RandomNumber() const
 	{
-		float number = (float(rand()) / float(RAND_MAX)) * 2.f - 1.f;
+		float number = (float(rand()) / float(RAND_MAX));
 		return number;
 	}
 

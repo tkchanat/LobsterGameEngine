@@ -22,13 +22,13 @@ out FS_OUT {
     vec2 texcoord;
 } fs_out;
 
-uniform int ParticleCount; // [0, 1024]
+uniform int ParticleCutoff; // [0, 1024]
 uniform float ParticleSize;
 uniform mat4 ParticleOrientation;
 
 void main()
 {
-    if(gl_PrimitiveIDIn >= ParticleCount) {
+    if(gl_PrimitiveIDIn >= ParticleCutoff) {
         EndPrimitive();
         return;
     }

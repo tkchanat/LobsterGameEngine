@@ -9,7 +9,7 @@ namespace Lobster
 	class VertexBuffer;
 	class Texture2D;
 
-	enum EmitterShape : uint
+	enum class EmitterShape : uint
 	{
 		BOX, CONE, SPHERE
 	};
@@ -18,8 +18,14 @@ namespace Lobster
 	{
 	private:
 		EmitterShape m_shape;
+		float _simulateElapsedTime;
+		bool _volumeFilled;
 		bool b_animated;
+		bool b_emitOneByOne;
+		float m_emissionRate;
+		float m_emissionAngle;
 		int m_particleCount;
+		int m_particleCutoff;
 		float m_particleSize;
 		float m_particleOrientation;
 		Texture2D* m_particleTexture;
@@ -36,6 +42,10 @@ namespace Lobster
 		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 	private:
+		void FillVolume();
+		void BoxEmitter(double deltaTime);
+		void ConeEmitter(double deltaTime);
+		void SphereEmitter(double deltaTime);
 		inline float RandomNumber() const;
 	private:
 		friend class cereal::access;
