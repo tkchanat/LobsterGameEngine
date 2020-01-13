@@ -21,14 +21,18 @@ namespace Lobster
 		AUDIO_LISTENER_COMPONENT
 	};
 
+	//	Warning 2: Remember to register your component name (in proper English) in Component.cpp too.
+
 	//	This class is an abstract class for inheriting components.
 	//	If you don't know what a component does / have no idea what a ECS (Entity-Component System),
 	//	I highly recommend the following video to start with: https://www.youtube.com/watch?v=2rW7ALyHaas
     class Component
     {
         friend Script;
+
     protected:
 		ComponentType m_type;
+		static std::string componentName[];
 		//	This boolean value determines whether this component should update or not.
         bool m_enabled;
 		//	These pointers are just short-hands for referencing when user needs to obtain them while scripting.
@@ -55,6 +59,7 @@ namespace Lobster
         inline void RemoveOwner() { gameObject = nullptr; }
 		inline GameObject* GetOwner() { return gameObject; }	//	TODO: Discuss if this class is needed, used for print intersection result only for now.
 		inline ComponentType GetType() const { return m_type; }
+		inline std::string GetTypeName() const { return componentName[m_type]; }
         inline bool IsEnabled() { return m_enabled; }
 		inline void SetEnabled(bool enabled) { m_enabled = enabled; }
     protected:

@@ -48,6 +48,7 @@ namespace Lobster {
 	}
 
 	DestroyObjectCommand::~DestroyObjectCommand() {
+		LOG("yay");
 		if (b_isDeleted) delete m_object;
 		m_object = nullptr;
 		m_scene = nullptr;
@@ -97,5 +98,65 @@ namespace Lobster {
 
 	std::string CreateObjectCommand::ToString() const {
 		return "Created " + m_object->GetName();
+	}
+
+	DestroyComponentCommand::DestroyComponentCommand(Component* component, GameObject* object) :
+		m_component(component),
+		m_object(object),
+		b_isDeleted(true)
+	{
+
+	}
+
+	DestroyComponentCommand::~DestroyComponentCommand() {
+		if (b_isDeleted) delete m_component;
+		m_component = nullptr;
+		m_object = nullptr;
+	}
+
+	//	Executing a destroy command is to soft delete a component.
+	void DestroyComponentCommand::Exec() {
+		m_object->RemoveComponent(m_component);
+		b_isDeleted = true;
+	}
+
+	//	By performing an undo on destroy command, the component should come back to live.
+	void DestroyComponentCommand::Undo() {
+		m_object->AddComponent(m_component);
+		b_isDeleted = false;
+	}
+
+	std::string DestroyComponentCommand::ToString() const {
+		return "Destroyed " + m_component->GetTypeName() + " in " + m_object->GetName();
+	}
+
+	CreateComponentCommand::CreateComponentCommand(Component* component, GameObject* object) :
+		m_component(component),
+		m_object(object),
+		b_isDeleted(false)
+	{
+
+	}
+
+	CreateComponentCommand::~CreateComponentCommand() {
+		if (b_isDeleted) delete m_component;
+		m_component = nullptr;
+		m_object = nullptr;
+	}
+
+	//	Executing a create command is to bring a component to live.
+	void CreateComponentCommand::Exec() {
+		m_object->AddComponent(m_component);
+		b_isDeleted = false;
+	}
+
+	//	By performing an undo on create command, the component should be deleted.
+	void CreateComponentCommand::Undo() {
+		m_object->RemoveComponent(m_component);
+		b_isDeleted = true;
+	}
+
+	std::string CreateComponentCommand::ToString() const {
+		return "Created " + m_component->GetTypeName() + " in " + m_object->GetName();
 	}
 }

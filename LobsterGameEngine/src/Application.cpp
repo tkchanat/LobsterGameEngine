@@ -88,7 +88,7 @@ namespace Lobster
         m_renderer = new Renderer();
         
 		//	Initialize UndoSystem with length = 50
-		m_undoSystem = new UndoSystem(50);
+		m_undoSystem = new UndoSystem(5);
 
         //  Initialize GameObjects
 		Timer loadTimer;

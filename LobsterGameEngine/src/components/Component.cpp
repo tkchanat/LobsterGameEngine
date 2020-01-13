@@ -4,6 +4,17 @@
 
 namespace Lobster
 {
+	//	Maps a component enum to a string.
+	std::string Component::componentName[] = {
+		"Unknown",
+		"Mesh Component",
+		"Camera Component",
+		"Light Component",
+		"Physics Component",
+		"Script Component",
+		"Audio Source Component",
+		"Audio Listener Component"
+	};
 
 	void Component::RemoveComponent(Component* comp) 
 	{

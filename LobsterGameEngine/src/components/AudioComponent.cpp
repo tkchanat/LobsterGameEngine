@@ -1,13 +1,16 @@
 #include "pch.h"
 #include "Application.h"
 #include "AudioComponent.h"
+#include "system/Input.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster {
 	// ========= Members of AudioSource ==========
 	std::vector<AudioSource*> AudioSource::sourceList = std::vector<AudioSource*>();
+	const char* AudioSource::rolloff[] = { "Linear", "Inverse Square", "Exponential" };
 
-	AudioSource::AudioSource() : 
-		Component(AUDIO_SOURCE_COMPONENT) 
+	AudioSource::AudioSource() :
+		Component(AUDIO_SOURCE_COMPONENT)
 	{
 		// append itself to sourceList
 		sourceList.push_back(this);
@@ -15,7 +18,7 @@ namespace Lobster {
 
 	AudioSource::~AudioSource() {
 		// clear itself from static sourceList
-		sourceList.erase(std::remove(sourceList.begin(), sourceList.end(), this), sourceList.end());		
+		sourceList.erase(std::remove(sourceList.begin(), sourceList.end(), this), sourceList.end());
 	}
 
 	void AudioSource::SetSource(AudioClip* ac) {
@@ -37,36 +40,95 @@ namespace Lobster {
 	void AudioSource::OnImGuiRender() {
 		if (ImGui::CollapsingHeader("Audio Source", &m_open, ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			std::string prevClipName = m_clipName;
 			if (ImGui::BeginCombo("Audio Clip", m_clipName.c_str())) {
 				// TODO switch to a more efficient way of display
 				fs::path subdir = FileSystem::Join(FileSystem::GetCurrentWorkingDirectory(), "audio");
-				for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {					
+				for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {
 					std::string displayName = dirEntry.path().filename().string();
 					if (ImGui::Selectable(displayName.c_str(), displayName == m_clipName)) {
 						m_clipName = displayName;
 					}
 				}
+
+				if (prevClipName != m_clipName) {
+					UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_clipName, prevClipName, m_clipName, "Set clip name to " + m_clipName + " for " + GetOwner()->GetName()));
+				}
 				ImGui::EndCombo();
-			}			
-			if (ImGui::Checkbox("Mute", &m_muted))
+			}
+
+			if (ImGui::Checkbox("Mute", &m_muted)) {
 				if (m_clip) m_clip->Mute(m_muted);
-			if (ImGui::SliderFloat("Gain", &m_gain, 0.0f, 1.0f))
-				if (m_clip) m_clip->SetGain(m_gain);
-			if (ImGui::SliderFloat("Pitch", &m_pitch, 0.5f, 2.0f))
-				if (m_clip) m_clip->SetPitch(m_pitch);
-			if (ImGui::TreeNode("3D Sound Setting")) {				
+				UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_muted, !m_muted, m_muted, std::string(m_muted ? "Muted" : "Unmuted") + " audio for " + GetOwner()->GetName()));
+			}
+
+			if (ImGui::SliderFloat("Gain", &m_gain, 0.0f, 1.0f)) {
+				m_isChanging = 0;
+			}
+			if (m_isChanging != 0) {
+				m_prevProp[0] = m_gain;
+			} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+				if (m_prevProp[0] != m_gain) {
+					if (m_clip) m_clip->SetGain(m_gain);
+					UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_gain, m_prevProp[0], m_gain, "Set gain value to " + StringOps::ToString(m_gain) + " for " + GetOwner()->GetName()));
+				}
+				m_isChanging = -1;
+			}
+
+			if (ImGui::SliderFloat("Pitch", &m_pitch, 0.5f, 2.0f)) {
+				m_isChanging = 1;
+			}
+			if (m_isChanging != 1) {
+				m_prevProp[1] = m_pitch;
+			} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+				if (m_prevProp[1] != m_pitch) {
+					if (m_clip) m_clip->SetPitch(m_pitch);
+					UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_pitch, m_prevProp[1], m_pitch, "Set pitch value to " + StringOps::ToString(m_pitch) + " for " + GetOwner()->GetName()));
+				}
+				m_isChanging = -1;
+			}
+
+			if (ImGui::TreeNode("3D Sound Setting")) {
 				ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.5f); // reduce width
-				if (ImGui::Checkbox("Enable", &m_enable3d));
-				const char* rolloff[] = { "Linear", "Inverse Square", "Exponential" };
+
+				if (ImGui::Checkbox("Enable", &m_enable3d)) {
+					UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_enable3d, !m_enable3d, m_enable3d, std::string(m_enable3d ? "Enabled" : "Disabled") + " 3D audio for " + GetOwner()->GetName()));
+				}
+
+				VolumeRolloff prevRolloff = m_rolloff;
 				if (ImGui::Combo("Volume Rolloff", (int*)&m_rolloff, rolloff, IM_ARRAYSIZE(rolloff))) {
-					AudioSystem::SetRolloffType(m_rolloff);
+					if (prevRolloff != m_rolloff) {
+						AudioSystem::SetRolloffType(m_rolloff);
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_rolloff, prevRolloff, m_rolloff, "Set volume rolloff to " + std::string(rolloff[m_rolloff]) + " mode for " + GetOwner()->GetName()));
+					}
 				}
+
 				if (ImGui::InputFloat("Min Distance", &m_minDistance)) {
-					SetMinMaxDistance();
+					m_isChanging = 2;
 				}
+				if (m_isChanging != 2) {
+					m_prevProp[2] = m_minDistance;
+				} else if (ImGui::IsItemActive() == false) {
+					if (m_prevProp[2] != m_minDistance) {
+						SetMinMaxDistance();
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_minDistance, m_prevProp[2], m_minDistance, "Set min distance to " + StringOps::ToString(m_minDistance) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
+
 				if (ImGui::InputFloat("Max Distance", &m_maxDistance)) {
-					SetMinMaxDistance();
+					m_isChanging = 3;
 				}
+				if (m_isChanging != 3) {
+					m_prevProp[3] = m_maxDistance;
+				} else if (ImGui::IsItemActive() == false) {
+					if (m_prevProp[3] != m_maxDistance) {
+						SetMinMaxDistance();
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_maxDistance, m_prevProp[3], m_maxDistance, "Set max distance to " + StringOps::ToString(m_maxDistance) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
+
 				ImGui::PopItemWidth();
 				ImGui::TreePop();
 			}
@@ -74,7 +136,9 @@ namespace Lobster {
 		
 		// Remove the component upon the cross button click
 		if (!m_open) {
+			m_open = true;
 			gameObject->RemoveComponent(this);
+			UndoSystem::GetInstance()->Push(new DestroyComponentCommand(this, gameObject));
 		}
 	}
 
@@ -149,7 +213,11 @@ namespace Lobster {
 
 		// Remove the component upon the cross button click
 		if (!m_open) {
-			gameObject->RemoveComponent(this);
+			if (!m_open) {
+				m_open = true;
+				gameObject->RemoveComponent(this);
+				UndoSystem::GetInstance()->Push(new DestroyComponentCommand(this, gameObject));
+			}
 		}
 	}	
 

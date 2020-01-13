@@ -10,7 +10,11 @@ namespace Lobster {
 		friend class AudioListener;
 	public:
 		static std::vector<AudioSource*> sourceList;
-	private:		
+	private:
+		static const char* rolloff[];
+		int m_isChanging = -1;		//	Used for undo system. 0 = gain, 1 = pitch, 2 = minDistance, 3 = maxDistance.
+		float m_prevProp[4];		//	Used for undo system.
+
 		// normally this is not set until OnSimulationBegin(), to specify a file to load,
 		// set the name of the audio clip in m_clipName
 		AudioClip* m_clip = nullptr;

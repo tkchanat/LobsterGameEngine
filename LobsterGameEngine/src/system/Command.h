@@ -38,7 +38,7 @@ namespace Lobster {
 		Transform m_new;
 	};
 
-	//	Creation / Deletion of a game object.
+	//	Deletion of a game object.
 	class DestroyObjectCommand : public Command {
 	public:
 		virtual ~DestroyObjectCommand() override;
@@ -68,5 +68,71 @@ namespace Lobster {
 		GameObject* m_object;
 		Scene* m_scene;
 		bool b_isDeleted;
+	};
+
+	//	Deletion of a component.
+	class DestroyComponentCommand : public Command {
+	public:
+		virtual ~DestroyComponentCommand() override;
+
+		DestroyComponentCommand(Component* component, GameObject* object);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		Component* m_component;
+		GameObject* m_object;
+		bool b_isDeleted;
+	};
+
+	//	Creation of a component.
+	class CreateComponentCommand : public Command {
+	public:
+		virtual ~CreateComponentCommand() override;
+
+		CreateComponentCommand(Component* component, GameObject* object);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		Component* m_component;
+		GameObject* m_object;
+		bool b_isDeleted;
+	};
+
+	//	Setting property on a component.
+	template <typename T>
+	class PropertyAssignmentCommand : public Command {
+	public:
+		PropertyAssignmentCommand(Component* component, T* prop, T originalValue, T newValue, std::string action) :
+			m_component(component),
+			m_prop(prop),
+			m_original(originalValue),
+			m_new(newValue),
+			m_action(action)
+		{
+			LOG("{}", action);	//	Debug purpose
+		}
+
+		void Exec() override {
+			*m_prop = m_new;
+		}
+
+		void Undo() override {
+			*m_prop = m_original;
+		}
+
+		std::string ToString() const override {
+			return m_action;
+		}
+
+	private:
+		Component* m_component;
+		T* m_prop;
+		T m_original;
+		T m_new;
+		std::string m_action;
 	};
 }
