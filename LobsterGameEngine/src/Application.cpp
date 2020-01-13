@@ -125,6 +125,7 @@ namespace Lobster
 		GameObject* particle = new GameObject("Particle System");
 		particle->AddComponent(new ParticleComponent());
 		particle->transform.WorldPosition = glm::vec3(0, 3, 3);
+		//particle->transform.RotateEuler(90, glm::vec3(0, 0, 1));
 		m_scene->AddGameObject(particle);
 
 		for (int i = 0; i < 5; ++i)

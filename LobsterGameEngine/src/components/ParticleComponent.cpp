@@ -11,9 +11,11 @@ namespace Lobster
 
 	ParticleComponent::ParticleComponent() :
 		Component(PARTICLE_COMPONENT),
+		m_shape(EmitterShape::BOX),
 		b_animated(false),
 		m_particleCount(MAX_PARTICLES / 2),
 		m_particleSize(0.125f),
+		m_particleOrientation(0.0f),
 		m_particleTexture(nullptr),
 		m_material(nullptr),
 		m_vertexArray(nullptr),
@@ -66,7 +68,9 @@ namespace Lobster
 		if (b_animated) {
 			for (int i = 0; i < MAX_PARTICLES; ++i) {
 				m_particlePositions[i].y -= deltaTime / 1000.f;
-				if (m_particlePositions[i].y < -1.f) m_particlePositions[i].y = 1.f;
+				if (m_particlePositions[i].y < -1.f) {
+					m_particlePositions[i].y = 1.f;
+				}
 			}
 			// Set vertex data
 			m_vertexBuffer->SetData(m_particlePositions, sizeof(m_particlePositions));
@@ -75,6 +79,7 @@ namespace Lobster
 		// Update shader uniforms
 		m_material->SetRawUniform("ParticleCount", &m_particleCount);
 		m_material->SetRawUniform("ParticleSize", &m_particleSize);
+		m_material->SetRawUniform("ParticleOrientation", (void*)glm::value_ptr(glm::rotate(m_particleOrientation, glm::vec3(0, 0, 1))));
 		m_material->SetRawTexture2D(0, m_particleTexture ? m_particleTexture : TextureLibrary::Use("textures/ocornut.png"));
 
 		// Submit render command
@@ -93,6 +98,7 @@ namespace Lobster
 			ImGui::Checkbox("Animated?", &b_animated);
 			ImGui::SliderInt("Particle Count", &m_particleCount, 0, MAX_PARTICLES);
 			ImGui::SliderFloat("Particle Size", &m_particleSize, 0.f, 1.f);
+			ImGui::SliderAngle("Particle Orientation", &m_particleOrientation, 0.f, 360.f);
 			ImVec2 previewSize(24, 24);
 			Texture2D* notFound = TextureLibrary::Placeholder();
 			if (ImGui::ImageButton(m_particleTexture ? m_particleTexture->Get() : notFound->Get(), previewSize)) {
@@ -103,6 +109,21 @@ namespace Lobster
 			}
 			ImGui::SameLine();
 			ImGui::Text("Particle Texture");
+		}
+	}
+
+	void ParticleComponent::Serialize(cereal::JSONOutputArchive & oarchive)
+	{
+		oarchive(*this);
+	}
+
+	void ParticleComponent::Deserialize(cereal::JSONInputArchive & iarchive)
+	{
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing ParticleComponent failed. Reason: {}", e.what());
 		}
 	}
 

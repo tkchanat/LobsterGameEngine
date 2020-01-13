@@ -90,7 +90,8 @@ uniform bool sys_animate = false;)");
 			R"(#version 410 core
 uniform mat4 sys_world;
 uniform mat4 sys_view;
-uniform mat4 sys_projection;)");
+uniform mat4 sys_projection;
+uniform vec3 sys_cameraPosition;)");
 
 		StringOps::ReplaceAll(fs, "///FragmentShader",
 			R"(#version 410 core
