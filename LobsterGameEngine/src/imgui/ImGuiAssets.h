@@ -4,6 +4,7 @@
 
 #include "ImGuiFileBrowser.h"
 #include "audio/AudioSystem.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster
 {
@@ -69,6 +70,7 @@ namespace Lobster
 						GameObject* renamedGO = new GameObject(rename);
 						renamedGO->AddComponent(new MeshComponent(path.c_str()));
 						scene->AddGameObject(renamedGO);
+						UndoSystem::GetInstance()->Push(new CreateObjectCommand(renamedGO, scene));
 						rename[0] = '\0';
 						nothing = false;
 						ImGui::CloseCurrentPopup();
@@ -170,8 +172,9 @@ namespace Lobster
 				// you need to do additional loading/processing to the items
 				int i = 0;
 				fs::path subdir = FileSystem::GetCurrentWorkingDirectory() / fs::path(subdirSelected);
-				for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {
-					std::string displayName = /*(dirEntry.is_directory() ? "[D] " : "[F] ") + */dirEntry.path().filename().string();
+				for (const auto& dirEntry : fs::directory_iterator(subdir)) {
+					if (dirEntry.is_directory()) continue; // not to display folder
+					std::string displayName = dirEntry.path().filename().string();
 					if (ImGui::Selectable(displayName.c_str(), itemSelected == i)) {
 						itemSelected = i;
 						pathSelected = FileSystem::Join(subdirSelected, dirEntry.path().filename().string());
@@ -187,6 +190,16 @@ namespace Lobster
 			}
 
 			ImGui::End();
+		}
+
+		static std::vector<std::string> ListResources(std::string subdirToList) {
+			std::vector<std::string> list;
+			fs::path subdir = FileSystem::GetCurrentWorkingDirectory() / fs::path(subdirToList);
+			for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {
+				if (dirEntry.is_directory()) continue;
+				list.push_back(dirEntry.path().filename().string());
+			}
+			return list;
 		}
 	};
 }

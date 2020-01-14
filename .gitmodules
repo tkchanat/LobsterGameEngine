@@ -16,3 +16,6 @@
 [submodule "LobsterGameEngine/vendor/cereal"]
 	path = LobsterGameEngine/vendor/cereal
 	url = https://github.com/USCiLab/cereal.git
+[submodule "LobsterGameEngine/vendor/freetype"]
+	path = LobsterGameEngine/vendor/freetype
+	url = https://github.com/ubawurinna/freetype-windows-binaries

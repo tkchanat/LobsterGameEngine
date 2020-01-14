@@ -74,5 +74,12 @@ namespace Lobster
 			ss << std::fixed << std::setprecision(dec) << '<' << vec.x << ',' << vec.y << ',' << vec.z << '>';
 			return ss.str();
 		}
+
+		std::string ToString(float val, int decimals) {
+			int dec = (decimals > 0 ? decimals : 0);
+			std::stringstream ss;
+			ss << std::fixed << std::setprecision(dec) << val;
+			return ss.str();
+		}
 	}
 }

@@ -52,6 +52,8 @@ typedef unsigned char byte;
 #include <glm/gtx/quaternion.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 //  Custom includes
 #include "events/EventCollection.h"
@@ -73,6 +75,14 @@ typedef unsigned char byte;
 #define MAX_DIRECTIONAL_LIGHTS 4
 #define MAX_POINT_LIGHTS 64
 #define MAX_PARTICLES 1024
+
+#define PATH_AUDIO "audio"
+#define PATH_MESHES "meshes"
+#define PATH_MATERIALS "materials"
+#define PATH_SHADERS "shaders"
+#define PATH_TEXTURES "textures"
+#define PATH_SPRITES "sprites"
+#define PATH_FONT "textures/font"
 
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)

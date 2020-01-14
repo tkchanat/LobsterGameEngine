@@ -125,6 +125,7 @@ namespace Lobster
 		if (!physics || !physics->IsEnabled()) {
 			if (ImGui::Button("Add Rigidbody")) {
 				physics->SetEnabled(true);
+
 			}
 		} else {
 			if (ImGui::Button("Add Collider")) {
@@ -257,7 +258,7 @@ namespace Lobster
 			i++;
 		}
 
-		delete comp;
+		//delete comp;
 	}
 
 

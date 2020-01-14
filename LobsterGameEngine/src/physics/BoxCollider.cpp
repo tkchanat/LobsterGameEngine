@@ -13,15 +13,15 @@ namespace Lobster {
 		Collider(physics, transform)
 	{
 		// member variable initialization
-		m_debugColor = glm::vec4(0, 0, 1, 1);
+		m_vertexColor = glm::vec4(0, 0, 1, 1);
 		SetColliderType(1);
 
-		memset(m_debugData, 0, sizeof(float) * 24);
-		memset(m_debugInitialData, 0, sizeof(float) * 24);
+		memset(m_vertexData, 0, sizeof(float) * 24);
+		memset(m_vertexInitialData, 0, sizeof(float) * 24);
 		//memset(m_debugTranslatedData, 0, sizeof(float) * 24);
-		m_debugMaterial = MaterialLibrary::UseShader("shaders/SolidColor.glsl");
-		m_debugMaterial->SetRawUniform("color", glm::value_ptr(m_debugColor));
-		m_debugVertexBuffer = new VertexBuffer(DrawMode::DYNAMIC_DRAW);
+		m_vertexMaterial = MaterialLibrary::UseShader("shaders/SolidColor.glsl");
+		m_vertexMaterial->SetRawUniform("color", glm::value_ptr(m_vertexColor));
+		m_vertexBuffer = new VertexBuffer(DrawMode::DYNAMIC_DRAW);
 		IndexBuffer* indexBuffer = new IndexBuffer();
 		VertexLayout* layout = new VertexLayout();
 		layout->Add<float>("in_position", 3);
@@ -29,7 +29,7 @@ namespace Lobster {
 		std::vector<IndexBuffer*> ib;
 
 		// construct vertex buffer data
-		vb.push_back(m_debugVertexBuffer);
+		vb.push_back(m_vertexBuffer);
 
 		// construct index buffer data
 		uint indices[24] = {
@@ -38,18 +38,18 @@ namespace Lobster {
 		indexBuffer->SetData(indices, 24);
 		ib.push_back(indexBuffer);
 
-		m_debugMesh = new VertexArray(layout, vb, ib, PrimitiveType::LINES);
+		m_mesh = new VertexArray(layout, vb, ib, PrimitiveType::LINES);
 	}
 
 	void BoxCollider::SetOwner(GameObject* owner) {
 		std::pair<glm::vec3, glm::vec3> pair = owner->GetBound();
 
-		m_debugInitialData[0] = m_debugInitialData[3] = m_debugInitialData[12] = m_debugInitialData[15] = pair.first.x;
-		m_debugInitialData[1] = m_debugInitialData[10] = m_debugInitialData[13] = m_debugInitialData[22] = pair.first.y;
-		m_debugInitialData[2] = m_debugInitialData[5] = m_debugInitialData[8] = m_debugInitialData[11] = pair.first.z;
-		m_debugInitialData[6] = m_debugInitialData[9] = m_debugInitialData[18] = m_debugInitialData[21] = pair.second.x;
-		m_debugInitialData[4] = m_debugInitialData[7] = m_debugInitialData[16] = m_debugInitialData[19] = pair.second.y;
-		m_debugInitialData[14] = m_debugInitialData[17] = m_debugInitialData[20] = m_debugInitialData[23] = pair.second.z;
+		m_vertexInitialData[0] = m_vertexInitialData[3] = m_vertexInitialData[12] = m_vertexInitialData[15] = pair.first.x;
+		m_vertexInitialData[1] = m_vertexInitialData[10] = m_vertexInitialData[13] = m_vertexInitialData[22] = pair.first.y;
+		m_vertexInitialData[2] = m_vertexInitialData[5] = m_vertexInitialData[8] = m_vertexInitialData[11] = pair.first.z;
+		m_vertexInitialData[6] = m_vertexInitialData[9] = m_vertexInitialData[18] = m_vertexInitialData[21] = pair.second.x;
+		m_vertexInitialData[4] = m_vertexInitialData[7] = m_vertexInitialData[16] = m_vertexInitialData[19] = pair.second.y;
+		m_vertexInitialData[14] = m_vertexInitialData[17] = m_vertexInitialData[20] = m_vertexInitialData[23] = pair.second.z;
 	}
 
 	void BoxCollider::OnUpdate(double deltaTime) {
@@ -65,11 +65,11 @@ namespace Lobster {
 		return false;
 	}
 
-	void BoxCollider::DebugDraw() {
+	void BoxCollider::Draw() {
 #ifdef LOBSTER_BUILD_DEBUG
 		// validate data, and return if we haven't define game object yet
 		if (!physics) return;
-		if (!m_debugMaterial || !m_debugMesh)
+		if (!m_vertexMaterial || !m_mesh)
 		{
 			throw std::runtime_error("Oops... This BoxCollider is not ready to be drawn!");
 			// Possible causes:
@@ -80,8 +80,8 @@ namespace Lobster {
 
 		//	issue draw call
 		RenderCommand command;
-		command.UseMaterial = m_debugMaterial;
-		command.UseVertexArray = m_debugMesh;
+		command.UseMaterial = m_vertexMaterial;
+		command.UseVertexArray = m_mesh;
 		command.UseWorldTransform = glm::translate(glm::vec3(0, 0, 0));
 		Renderer::Submit(command);
 #endif
@@ -89,24 +89,38 @@ namespace Lobster {
 
 	std::vector<glm::vec3> BoxCollider::GetVertices() const {
 		std::vector<glm::vec3> vertices;
+		float epsilon = 0.001f;
 
 		for (int i = 0; i < 24; i += 3) {
-			vertices.push_back(glm::vec3(m_debugData[i], m_debugData[i + 1], m_debugData[i + 2]));
+			//	First get the position without epsilon.
+			glm::vec3 position = glm::vec3(m_vertexData[i], m_vertexData[i + 1], m_vertexData[i + 2]);
+
+			//	Add the epsilon.
+			glm::vec3 epsilonVec = glm::vec3(0, 0, 0);
+			epsilonVec.x += ( (i / 6) % 2 ? epsilon : -epsilon );
+			epsilonVec.y += ( ((i + 3) / 6) % 2 ? epsilon : -epsilon );
+			epsilonVec.z += ( i / 12 ? epsilon : -epsilon );
+			
+			//	Epsilon apply transform.
+			epsilonVec = transform->WorldRotation * m_transform.WorldRotation * glm::vec4(epsilonVec, 1.0);
+
+			//	Push the position back.
+			vertices.push_back(position + epsilonVec);
 		}
 		return vertices;
 	}
 
 	void BoxCollider::UpdateRotation() {
 		for (int i = 0; i < 24; i += 3) {
-			glm::vec3 vertices = glm::vec3(m_debugInitialData[i], m_debugInitialData[i + 1], m_debugInitialData[i + 2]);
+			glm::vec3 vertices = glm::vec3(m_vertexInitialData[i], m_vertexInitialData[i + 1], m_vertexInitialData[i + 2]);
 
 			glm::vec3 boundCorner = transform->GetMatrix() * m_transform.GetMatrix() * glm::vec4(vertices, 1.0);
 
-			m_debugData[i] = boundCorner.x;
-			m_debugData[i + 1] = boundCorner.y;
-			m_debugData[i + 2] = boundCorner.z;
+			m_vertexData[i] = boundCorner.x;
+			m_vertexData[i + 1] = boundCorner.y;
+			m_vertexData[i + 2] = boundCorner.z;
 		}
 
-		m_debugVertexBuffer->SetData(m_debugData, sizeof(float) * 24);
+		m_vertexBuffer->SetData(m_vertexData, sizeof(float) * 24);
 	}
 }

@@ -7,6 +7,7 @@ namespace Lobster {
 	class Rigidbody : public PhysicsComponent {
 	public:
 		static const glm::vec3 GRAVITY;
+		static const float RESISTANCE;
 
 		Rigidbody() :
 			m_velocity(glm::vec3(0, 0, 0)),
@@ -28,6 +29,11 @@ namespace Lobster {
 		void OnPhysicsUpdate(double deltaTime) override;
 		void OnPhysicsLateUpdate(double deltaTime) override;
 
+		//	Apply force and angular motion.
+		//	position: Offset from COM position, in world coordinates (ie invariant with object scale and rotation)
+		//	force: Force in Newton (N) to apply to the object.
+		void ApplyForce(glm::vec3 position, glm::vec3 force);
+
 	private:
 		//	Velocity and acceleration for physics calculation.
 		glm::vec3 m_velocity;
@@ -47,10 +53,13 @@ namespace Lobster {
 
 		//	Damping factors. 0 means no damping.
 		float m_linearDamping = 1.0f;
-		float m_angularDamping = 0.0f;
+		float m_angularDamping = 1.0f;
 
 		//	Coefficients of restitution. 0 means not bouncing, 1 means most elastic.
 		float m_restitution = 0.0f;
+
+		//	Find the normal between this and other. Normal is pointing out from this, towards other direction.
+		glm::vec3 GetNormal(Rigidbody* other) const;
 
 		void Travel(float time, glm::vec3 linearAccel);
 		void UndoTravel(float time, glm::vec3 linearAccel);

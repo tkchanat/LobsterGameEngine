@@ -15,6 +15,7 @@
 #include "imgui/ImGuiProperties.h"
 #include "imgui/ImGuiScene.h"
 #include "imgui/ImGuiToolbar.h"
+#include "imgui/ImGuiUIEditor.h"
 
 #include <imgui_internal.h>
 
@@ -23,6 +24,7 @@ namespace Lobster
 	// Static initialization
 	uint EditorLayer::s_dockspace_id = 0; 
 	GameObject* EditorLayer::s_selectedGameObject = nullptr;
+	ImGuiUIEditor* EditorLayer::s_uiEditor = nullptr;
 	std::queue<GizmosCommand> ImGuiScene::m_gizmosQueue;
 	SSFLog ImGuiConsole::log;
 
@@ -34,9 +36,12 @@ namespace Lobster
 		m_hierarchy(new ImGuiHierarchy()),
 		m_menuBar(new ImGuiMenuBar()),
 		m_properties(new ImGuiProperties()),
-		m_scene(new ImGuiScene()),
+		m_scene(new ImGuiScene()),		
 		m_toolbar(new ImGuiToolbar())
 	{
+		s_uiEditor = new ImGuiUIEditor(); // created but not shown
+		// configure imgui io setting
+		ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 	}
 
 	EditorLayer::~EditorLayer()
@@ -75,8 +80,8 @@ namespace Lobster
 		m_menuBar->Show(&show_menuBar); // Menu bar
 		m_properties->Show(&show_properties); // Properties
 		m_scene->Show(&show_scene); // Scene
-		//m_gameView->Show(&show_gameView); // Game View (note the boolean is a static member)
-		m_toolbar->Show(&show_toolbar); // Toolbar
+		m_toolbar->Show(&show_toolbar); // Toolbar	
+		ImGui::End();
 	}
 
 	void EditorLayer::RenderDockSpace()
@@ -120,7 +125,7 @@ namespace Lobster
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
 			ImGui::DockSpace(s_dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
-		}
+		}		
 	}
 
 	void EditorLayer::ResetDefaultLayout()
@@ -144,8 +149,7 @@ namespace Lobster
 		//							078h						|						//
 		// ============================================================================ //
 		// Naming scheme: dock_<left><right><top><bottom>, 0 = leftmost, w/h(10) = rightmost/downmost
-		ImGuiID dock_0w01, dock_0w1h, dock_070h, dock_7w0h, dock_0708, dock_078h, dock_0318, dock_3718, dock_0314, dock_0348;
-		centerID = dock_3718;
+		ImGuiID dock_0w01, dock_0w1h, dock_070h, dock_7w0h, dock_0708, dock_078h, dock_0318, dock_3718, dock_0314, dock_0348;		
 		// Disable tab bar for custom toolbar
 		ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.06f, &dock_0w01, &dock_0w1h);
 		ImGui::DockBuilderGetNode(dock_0w01)->LocalFlags |= ImGuiDockNodeFlags_AutoHideTabBar;
@@ -154,14 +158,16 @@ namespace Lobster
 		ImGui::DockBuilderSplitNode(dock_0708, ImGuiDir_Left, 0.3f, &dock_0318, &dock_3718);
 		ImGui::DockBuilderSplitNode(dock_0318, ImGuiDir_Up, 0.4f, &dock_0314, &dock_0348);
 		ImGui::DockBuilderDockWindow("Toolbar", dock_0w01);
-		//ImGui::DockBuilderDockWindow("Game", dock_3718);
-		ImGui::DockBuilderDockWindow("Scene", dock_3718);		
+		ImGui::DockBuilderDockWindow("Scene", dock_3718);
+		ImGui::DockBuilderDockWindow("Editor UI", dock_3718); // dont remove, it fixes bug
 		ImGui::DockBuilderDockWindow("Assets", dock_078h);
 		ImGui::DockBuilderDockWindow("Console", dock_078h);
 		ImGui::DockBuilderDockWindow("Hierarchy", dock_0314);
 		ImGui::DockBuilderDockWindow("Dear ImGui Demo", dock_0348);
-		ImGui::DockBuilderDockWindow("Properties", dock_7w0h);
+		ImGui::DockBuilderDockWindow("Properties", dock_7w0h);		
 		ImGui::DockBuilderFinish(s_dockspace_id);
+		// set the center ID
+		centerID = dock_3718;
 	}
 
 	ImGuiID EditorLayer::centerID = 0;

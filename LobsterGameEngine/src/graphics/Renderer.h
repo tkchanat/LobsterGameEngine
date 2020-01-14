@@ -19,7 +19,9 @@ namespace Lobster
 
 	struct RenderOverlayCommand
 	{
+		enum OverlayType { Image, Text };
 		Texture2D* UseTexture;
+		OverlayType type;
 		float x, y;
 		float w, h;
 		int z;
@@ -105,6 +107,7 @@ namespace Lobster
 		static void Submit(RenderCommand command);
 		static void Submit(RenderOverlayCommand ocommand);
 		static void EndScene();
+		static void ClearOverlayQueue();
 		static void ClearAllQueues();
 	private:
 		void DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue);

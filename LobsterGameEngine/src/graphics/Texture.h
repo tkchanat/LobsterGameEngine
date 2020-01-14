@@ -14,11 +14,13 @@ namespace Lobster
 	public:
 		virtual ~Texture() {}
 		virtual void* Get() const = 0;
+		inline int GetWidth() { return m_width; }
+		inline int GetHeight() { return m_height; }
 	protected:
 		Texture() : m_width(1), m_height(1), m_channelCount(4), b_loadSuccess(false) {}
 	};
 
-	class Texture2D : Texture
+	class Texture2D : public Texture
 	{
 		friend class TextureLibrary;
 	private:
@@ -33,6 +35,8 @@ namespace Lobster
 		inline std::string GetName() const { return m_name; }
 	private:
 		explicit Texture2D(const char* path);
+		// This constructor should only be used to create text sprite
+		explicit Texture2D(byte* buffer, const char* id, int w, int h);
 		bool Load();
 	};
 
@@ -81,6 +85,8 @@ namespace Lobster
 	public:
 		static void Initialize();
 		static Texture2D* Use(const char* path);
+		// search, edit or add texture to the corresponding id
+		static Texture2D* Use(const char* id, byte* buffer, int w, int h);
 		inline static Texture2D* Placeholder() { return s_instance->m_placeholder; } // only use this in debug mode
 	};
 
