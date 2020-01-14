@@ -215,7 +215,8 @@ project "LobsterGameEngine"
 		}
 
 		prebuildcommands {
-			"{COPY} vendor/assimp/lib/ ../bin/%{cfg.buildcfg}"
+			"{COPY} vendor/assimp/lib/ ../bin/%{cfg.buildcfg}",
+			"{COPY} vendor/freetype/win64/ ../bin/%{cfg.buildcfg}"
 		}
 
 		defines {
