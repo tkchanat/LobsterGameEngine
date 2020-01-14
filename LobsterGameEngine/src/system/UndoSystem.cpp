@@ -83,7 +83,10 @@ namespace Lobster {
 			m_redo.pop();
 		}
 
-		m_undo.push(command);
+		//	Push into undo system, free memory if needed due to buffer being full.
+		Command* c = m_undo.push(command);
+		if (c != nullptr) delete c;
+
 		m_undo_str.push(command->ToString());
 	}
 }

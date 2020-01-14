@@ -247,7 +247,7 @@ namespace Lobster
 			return GetComponent<MeshComponent>()->GetBound();
 		}
 		else {
-			return { glm::vec3(0, 0, 0), glm::vec3(0.01, 0.01, 0.01) };
+			return { glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1) };
 		}
 	}
 

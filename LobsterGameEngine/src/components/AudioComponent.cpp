@@ -111,7 +111,7 @@ namespace Lobster {
 				} else if (ImGui::IsItemActive() == false) {
 					if (m_prevProp[2] != m_minDistance) {
 						SetMinMaxDistance();
-						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_minDistance, m_prevProp[2], m_minDistance, "Set min distance to " + StringOps::ToString(m_minDistance) + " for " + GetOwner()->GetName()));
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_minDistance, m_prevProp[2], m_minDistance, "Set min distance to " + StringOps::ToString(m_minDistance) + " for " + GetOwner()->GetName(), &AudioSource::SetMinMaxDistance));
 					}
 					m_isChanging = -1;
 				}
@@ -124,7 +124,7 @@ namespace Lobster {
 				} else if (ImGui::IsItemActive() == false) {
 					if (m_prevProp[3] != m_maxDistance) {
 						SetMinMaxDistance();
-						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_maxDistance, m_prevProp[3], m_maxDistance, "Set max distance to " + StringOps::ToString(m_maxDistance) + " for " + GetOwner()->GetName()));
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_maxDistance, m_prevProp[3], m_maxDistance, "Set max distance to " + StringOps::ToString(m_maxDistance) + " for " + GetOwner()->GetName(), &AudioSource::SetMinMaxDistance));
 					}
 					m_isChanging = -1;
 				}
@@ -143,6 +143,7 @@ namespace Lobster {
 	}
 
 	void AudioSource::SetMinMaxDistance() {
+		LOG("debug we called dis");
 		if (m_clip) {
 			alSourcef(m_clip->GetSource(), AL_REFERENCE_DISTANCE, m_minDistance);
 			alSourcef(m_clip->GetSource(), AL_MAX_DISTANCE, m_maxDistance);

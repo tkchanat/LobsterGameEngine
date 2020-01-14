@@ -61,6 +61,7 @@ namespace Lobster
 
 	void ParticleComponent::OnAttach()
 	{
+		LOG("{} {}", gameObject->GetBound().first.x, gameObject->GetBound().second.x);
 		PhysicsComponent* physics = new Rigidbody();
 		physics->SetEnabled(false);
 		gameObject->AddComponent(physics);

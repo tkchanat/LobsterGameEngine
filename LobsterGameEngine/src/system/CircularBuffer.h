@@ -9,13 +9,17 @@ public:
 	explicit CircularBuffer(size_t size) : buffer(std::unique_ptr<T[]>(new T[size])), max_size(size) {}
 
 	//	Inserts an item to the buffer, move to the front if buffer is full.
-	void push(T item) {
+	T push(T item) {
 		std::lock_guard<std::mutex> lock(mutex);
+		T ret = T();
 
 		//	Only modify tail when it is full, and delete original item.
 		if (is_full) {
 			tail = (tail + 1) % max_size;
 			//	TODO: Item not deleted. Manual memory deallocation needed?
+			if (std::is_pointer<T>::value) {
+				ret = buffer[head];
+			}
 		}
 
 		buffer[head] = item;
@@ -23,6 +27,8 @@ public:
 
 		//	Check for fullness after end of insertion.
 		is_full = (head == tail);
+
+		return ret;
 	}
 
 	//	Return the first item we are pointing to and shift head.

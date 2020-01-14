@@ -48,7 +48,6 @@ namespace Lobster {
 	}
 
 	DestroyObjectCommand::~DestroyObjectCommand() {
-		LOG("yay");
 		if (b_isDeleted) delete m_object;
 		m_object = nullptr;
 		m_scene = nullptr;
