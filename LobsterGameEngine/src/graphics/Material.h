@@ -31,6 +31,7 @@ namespace Lobster
 		virtual ~Material();
 		void OnImGuiRender();
 		void SetRawUniform(const char* name, void* data);
+		void SetRawTexture2D(int slot, Texture2D* data);
 		void SetUniforms();
 		void SaveConfiguration();
 		std::stringstream Serialize();
@@ -39,6 +40,7 @@ namespace Lobster
 		inline std::string GetPath() const { return FileSystem::Path(m_name); }
 		inline Shader* GetShader() const { return m_shader; }
 		inline RenderingMode GetRenderingMode() const { return m_mode; }
+		inline void SetRenderingMode(RenderingMode mode) { m_mode = mode; }
 	private:
 		friend class cereal::access;
 		template <class Archive>

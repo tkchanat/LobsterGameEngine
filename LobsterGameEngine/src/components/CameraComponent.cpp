@@ -78,8 +78,10 @@ namespace Lobster
 			// draw camera preview
 			ImVec2 window_size = ImGui::GetItemRectSize();			
 			void* image = m_frameBuffer->Get();
-			ImGui::Text("Camera Preview");			
-			ImGui::Image(image, ImVec2(window_size.x, window_size.x / m_frameBuffer->GetAspectRatio()), ImVec2(0, 1), ImVec2(1, 0));
+			float padding = 10.f;
+			ImGui::Text("Camera Preview");
+			ImVec2 imageSize = { (window_size.x - padding), (window_size.x - padding) / m_frameBuffer->GetAspectRatio() };
+			ImGui::Image(image, imageSize, ImVec2(0, 1), ImVec2(1, 0));
 			
 			if (ImGui::Button("Edit UI")) {
 				if (!gameUI) {

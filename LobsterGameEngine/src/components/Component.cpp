@@ -37,6 +37,8 @@ namespace Lobster
 			return new AudioSource();
 		case ComponentType::AUDIO_LISTENER_COMPONENT:
 			return new AudioListener();
+		case ComponentType::PARTICLE_COMPONENT:
+			return new ParticleComponent();
 		default:
 			assert(false && "Please register your own typeName-to-component conversion here!");
 			break;

@@ -18,7 +18,8 @@ namespace Lobster
 		PHYSICS_COMPONENT,
 		SCRIPT_COMPONENT,
 		AUDIO_SOURCE_COMPONENT,
-		AUDIO_LISTENER_COMPONENT
+		AUDIO_LISTENER_COMPONENT,
+		PARTICLE_COMPONENT
 	};
 
 	//	Warning 2: Remember to register your component name (in proper English) in Component.cpp too.
