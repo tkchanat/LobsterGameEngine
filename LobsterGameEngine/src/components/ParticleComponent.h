@@ -24,6 +24,8 @@ namespace Lobster
 		bool b_emitOneByOne;
 		float m_emissionRate;
 		float m_emissionAngle;
+		glm::vec4 m_colorStartTransition;
+		glm::vec4 m_colorEndTransition;
 		int m_particleCount;
 		int m_particleCutoff;
 		float m_particleSize;

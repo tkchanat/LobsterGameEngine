@@ -11,13 +11,15 @@ namespace Lobster
 
 	ParticleComponent::ParticleComponent() :
 		Component(PARTICLE_COMPONENT),
-		m_shape(EmitterShape::CONE),
+		m_shape(EmitterShape::BOX),
 		b_animated(true),
 		b_emitOneByOne(false),
 		_simulateElapsedTime(0.0f),
 		_volumeFilled(false),
 		m_emissionRate(0.1f),
 		m_emissionAngle(M_PI/6),
+		m_colorStartTransition(glm::vec4(1.0)),
+		m_colorEndTransition(glm::vec4(1.0)),
 		m_particleCount(0),
 		m_particleCutoff(MAX_PARTICLES / 2),
 		m_particleSize(0.125f),
@@ -31,6 +33,7 @@ namespace Lobster
 		FillVolume();
 
 		m_material = MaterialLibrary::UseShader("shaders/GPUParticle.glsl");
+		m_material->SetRenderingMode(RenderingMode::MODE_TRANSPARENT);
 		m_material->GetShader()->SetUniform("sys_particleSize", m_particleSize);
 		m_vertexBuffer = new VertexBuffer(DrawMode::DYNAMIC_DRAW);
 		IndexBuffer* indexBuffer = new IndexBuffer();
@@ -93,10 +96,13 @@ namespace Lobster
 
 		// Update shader uniforms
 		int cutoff = std::min(m_particleCutoff, m_particleCount);
+		m_material->SetRawUniform("EmissionShape", (void*)&m_shape);
+		m_material->SetRawUniform("ColorStartTransition", (void*)glm::value_ptr(m_colorStartTransition));
+		m_material->SetRawUniform("ColorEndTransition", (void*)glm::value_ptr(m_colorEndTransition));
 		m_material->SetRawUniform("ParticleCutoff", &cutoff);
 		m_material->SetRawUniform("ParticleSize", &m_particleSize);
 		m_material->SetRawUniform("ParticleOrientation", (void*)glm::value_ptr(glm::rotate(m_particleOrientation, glm::vec3(0, 0, 1))));
-		m_material->SetRawTexture2D(0, m_particleTexture ? m_particleTexture : TextureLibrary::Use("textures/ocornut.png"));
+		m_material->SetRawTexture2D(0, m_particleTexture ? m_particleTexture : TextureLibrary::Use("textures/ui/sphere.png"));
 
 		// Submit render command
 		RenderCommand command;
@@ -111,35 +117,49 @@ namespace Lobster
 		if (ImGui::CollapsingHeader("Particle System", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			ImGui::Checkbox("Simulate?", &b_animated);
-			bool prev_state = b_emitOneByOne;
-			ImGui::Checkbox("Emit One By One?", &b_emitOneByOne);
-			if (prev_state != b_emitOneByOne) {
-				m_particleCount = 0;
-				_simulateElapsedTime = 0.f;
-			}
-			ImGui::DragFloat("Emission Rate (per second)", &m_emissionRate, 0.1f);
-			m_emissionRate = m_emissionRate < 0.0f ? 0.0f : m_emissionRate;
-			ImGui::SliderAngle("Emission Angle", &m_emissionAngle, 0.f, 89.f);
-			
 			const char* shapes[] = { "Box", "Cone", "Sphere" };
 			EmitterShape prev_shape = m_shape;
 			ImGui::Combo("Shape", (int*)&m_shape, shapes, IM_ARRAYSIZE(shapes));
 			if (prev_shape != m_shape) {
 				FillVolume();
 			}
-			ImGui::SliderInt("Particle Cutoff", &m_particleCutoff, 0, MAX_PARTICLES);
-			ImGui::SliderFloat("Particle Size", &m_particleSize, 0.f, 1.f);
-			ImGui::SliderAngle("Particle Orientation", &m_particleOrientation, 0.f, 360.f);
-			ImVec2 previewSize(24, 24);
-			Texture2D* notFound = TextureLibrary::Placeholder();
-			if (ImGui::ImageButton(m_particleTexture ? m_particleTexture->Get() : notFound->Get(), previewSize)) {
-				std::string path = FileSystem::OpenFileDialog();
-				if (!path.empty()) {
-					m_particleTexture = TextureLibrary::Use(path.c_str());
+			ImGui::Spacing();
+
+			if(ImGui::TreeNode("Emission")) {
+				bool prev_state = b_emitOneByOne;
+				ImGui::Checkbox("Emit One By One?", &b_emitOneByOne);
+				if (prev_state != b_emitOneByOne) {
+					m_particleCount = 0;
+					_simulateElapsedTime = 0.f;
 				}
+				ImGui::DragFloat("Emission Rate (per second)", &m_emissionRate, 0.1f);
+				m_emissionRate = m_emissionRate < 0.0f ? 0.0f : m_emissionRate;
+				ImGui::SliderAngle("Emission Angle", &m_emissionAngle, 0.f, 89.f);
+				ImGui::TreePop();
 			}
-			ImGui::SameLine();
-			ImGui::Text("Particle Texture");
+
+			if (ImGui::TreeNode("Transition")) {
+				ImGui::ColorEdit4("Start Color", glm::value_ptr(m_colorStartTransition));
+				ImGui::ColorEdit4("End Color", glm::value_ptr(m_colorEndTransition));
+				ImGui::TreePop();
+			}
+			
+			if (ImGui::TreeNode("Particle")) {
+				ImGui::SliderInt("Cutoff", &m_particleCutoff, 0, MAX_PARTICLES);
+				ImGui::SliderFloat("Size", &m_particleSize, 0.f, 1.f);
+				ImGui::SliderAngle("Orientation", &m_particleOrientation, 0.f, 360.f);
+				ImVec2 previewSize(24, 24);
+				Texture2D* notFound = TextureLibrary::Placeholder();
+				if (ImGui::ImageButton(m_particleTexture ? m_particleTexture->Get() : notFound->Get(), previewSize)) {
+					std::string path = FileSystem::OpenFileDialog();
+					if (!path.empty()) {
+						m_particleTexture = TextureLibrary::Use(path.c_str());
+					}
+				}
+				ImGui::SameLine();
+				ImGui::Text("Particle Texture");
+				ImGui::TreePop();
+			}
 		}
 	}
 

@@ -171,7 +171,7 @@ uniform sampler2D sys_brdfLUTMap;)");
 			INFO("Shader Linking failed: {}", infoLog);
         }
 
-		if (!successVS || !successGS || !successFS || !successLink) {
+		if (!successVS || (b_hasGS && !successGS) || !successFS || !successLink) {
 			return false;
 		}
 

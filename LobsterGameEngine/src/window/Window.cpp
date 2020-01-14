@@ -68,7 +68,7 @@ namespace Lobster
 		glfwSwapInterval((int)b_vsync);	//	Enable VSync
 
 		GLFWimage image; 
-		std::string iconPath = "../icon.png";
+		std::string iconPath = "../lobster.png";
 		if (!iconPath.empty())
 		{
 			std::string path = FileSystem::Path(iconPath);
