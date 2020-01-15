@@ -68,7 +68,7 @@ namespace Lobster
 		glfwSwapInterval((int)b_vsync);	//	Enable VSync
 
 		GLFWimage image; 
-		std::string iconPath = "../icon.png";
+		std::string iconPath = "../lobster.png";
 		if (!iconPath.empty())
 		{
 			std::string path = FileSystem::Path(iconPath);
@@ -126,7 +126,7 @@ namespace Lobster
 			EventQueue::GetInstance()->AddEvent<WindowFocusedEvent>((bool)focused);
 		});
 
-		/* Listen for SSF Callback */
+		/* Listen for Lobster Callback */
 		EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {
 			if (e->Key == GLFW_KEY_ESCAPE)
 			{

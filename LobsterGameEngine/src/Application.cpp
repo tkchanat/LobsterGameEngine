@@ -18,9 +18,6 @@
 #include "system/FileSystem.h"
 #include "system/UndoSystem.h"
 
-
-#include "scripts/LuaScript.h"
-
 namespace Lobster
 {
     
@@ -49,8 +46,10 @@ namespace Lobster
     {
 		if (m_renderer) delete m_renderer;
 		if (m_scene) delete m_scene;
+		if (m_undoSystem) delete m_undoSystem;
 		m_renderer = nullptr;
 		m_scene = nullptr;
+		m_undoSystem = nullptr;
     }
 
     void Application::Initialize()
@@ -101,12 +100,12 @@ namespace Lobster
 //			LOG("ThreadPool is working! :D");
 //		});
 
-		GameObject* dance = new GameObject("dance");
-		dance->AddComponent(new MeshComponent(FileSystem::Path("meshes/dance.fbx").c_str()));
-		dance->transform.LocalScale *= 0.025;
-		dance->AddChild(new GameObject("child 1"));
-		dance->AddChild(new GameObject("child 2"));
-		m_scene->AddGameObject(dance);
+		//GameObject* dance = new GameObject("dance");
+		//dance->AddComponent(new MeshComponent(FileSystem::Path("meshes/dance.fbx").c_str()));
+		//dance->transform.LocalScale *= 0.025;
+		//dance->AddChild(new GameObject("child 1"));
+		//dance->AddChild(new GameObject("child 2"));
+		//m_scene->AddGameObject(dance);
 
 // 		GameObject* barrel = new GameObject("barrel");
 // 		barrel->AddComponent(new MeshComponent(FileSystem::Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat"));
@@ -117,6 +116,11 @@ namespace Lobster
 // 		barrel->AddChild(new GameObject("child 1"));
 // 		barrel->AddChild(new GameObject("child 2"));
 // 		m_scene->AddGameObject(barrel);
+
+		GameObject* particle = new GameObject("Particle System");
+		particle->AddComponent(new ParticleComponent());
+		//particle->transform.WorldPosition = glm::vec3(0, 3, 3);
+		m_scene->AddGameObject(particle);
 
 		//for (int i = 0; i < 5; ++i)
 		//{

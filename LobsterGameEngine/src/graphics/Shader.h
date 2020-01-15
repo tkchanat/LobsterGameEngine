@@ -19,12 +19,14 @@ namespace Lobster
     private:
         uint m_id;
         uint m_vsId;
+		uint m_gsId;
         uint m_fsId;
 		std::string m_name;
         std::string m_path;
 		std::unordered_map<std::string, int> m_uniformLocationMap;
 		std::vector<UniformDeclaration> m_uniformDeclarations;
 		bool b_compileSuccess;
+		bool b_hasGS;
     public:
 		Shader() = delete;
         ~Shader();

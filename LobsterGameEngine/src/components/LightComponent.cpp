@@ -3,6 +3,8 @@
 #include "imgui/ImGuiScene.h"
 #include "objects/Transform.h"
 #include "physics/Rigidbody.h"
+#include "system/Input.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster
 {
@@ -49,21 +51,49 @@ namespace Lobster
 		{
 			// Light type
 			const char* types[] = { "Directional", "Point" };
-			LightType prev_type = m_type;
+			m_prevType = m_type;
 			ImGui::Combo("Type", (int*)&m_type, types, IM_ARRAYSIZE(types));
-			if (prev_type != m_type) {
-				LightLibrary::RemoveLight(this, prev_type);
-				LightLibrary::AddLight(this, m_type);
-				b_dirty = true;
+			if (m_prevType != m_type) {
+				UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_type, m_prevType, m_type, "Set light type to " + std::string(types[m_type]) + " for " + GetOwner()->GetName(), &LightComponent::ChangeLightType));
+				ChangeLightType();
 			}
 
 			// Light color
 			ImGui::ColorEdit3("Color", glm::value_ptr(m_color), 0);
+			if (ImGui::IsItemActive()) {
+				m_isChanging = 0;
+			}
+			if (m_isChanging != 0) {
+				m_prevColor = m_color;
+			} else if (m_isChanging == 0 && ImGui::IsItemActive() == false) {
+				if (m_prevColor != m_color) {
+					UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_color, m_prevColor, m_color, "Set light color to " + StringOps::ToColorString(m_color) + " for " + GetOwner()->GetName()));
+				}
+				m_isChanging = -1;
+			}
 
 			// Light intensity
-			ImGui::SliderFloat("Intensity", &m_intensity, 0.f, 1.f);
+			if (ImGui::SliderFloat("Intensity", &m_intensity, 0.f, 1.f)) {
+				m_isChanging = 1;
+			}
+			if (m_isChanging != 1) {
+				m_prevIntensity = m_intensity;
+			} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+				if (m_prevIntensity != m_intensity) {
+					UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_intensity, m_prevIntensity, m_intensity, "Set light intensity to " + StringOps::ToString(m_intensity) + " for " + GetOwner()->GetName()));
+				}
+				m_isChanging = -1;
+			}
 		}
 	}
+
+	void LightComponent::ChangeLightType() {
+		LightLibrary::RemoveLight(this, m_prevType);
+		LightLibrary::AddLight(this, m_type);
+		m_prevType = m_type;
+		b_dirty = true;
+	}
+
 
     void LightComponent::Serialize(cereal::JSONOutputArchive& oarchive)
     {

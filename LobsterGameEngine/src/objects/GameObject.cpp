@@ -140,6 +140,7 @@ namespace Lobster
 		if (!physics || !physics->IsEnabled()) {
 			if (ImGui::Button("Add Rigidbody")) {
 				physics->SetEnabled(true);
+
 			}
 		} else {
 			if (ImGui::Button("Add Collider")) {
@@ -261,7 +262,8 @@ namespace Lobster
 			return GetComponent<MeshComponent>()->GetBound();
 		}
 		else {
-			return { glm::vec3(0, 0, 0), glm::vec3(0.01, 0.01, 0.01) };
+			// the size ImGuiGizmo icon
+			return { glm::vec3(-0.5, -0.5, -0.5), glm::vec3(0.5, 0.5, 0.5) };
 		}
 	}
 
@@ -272,7 +274,7 @@ namespace Lobster
 			i++;
 		}
 
-		delete comp;
+		//delete comp;
 	}
 
 

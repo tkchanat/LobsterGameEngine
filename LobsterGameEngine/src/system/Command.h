@@ -11,6 +11,9 @@ namespace Lobster {
 
 	class Command {
 	public:
+		//	When a command could no longer be undo again.
+		virtual ~Command() {};
+
 		//	We will execute a command with the given details.
 		virtual void Exec() = 0;
 
@@ -33,5 +36,107 @@ namespace Lobster {
 		GameObject* m_object;
 		Transform m_original;
 		Transform m_new;
+	};
+
+	//	Deletion of a game object.
+	class DestroyObjectCommand : public Command {
+	public:
+		virtual ~DestroyObjectCommand() override;
+
+		DestroyObjectCommand(GameObject* object, Scene* scene);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		GameObject* m_object;
+		Scene* m_scene;
+		bool b_isDeleted;
+	};
+
+	//	Creation of a game object.
+	class CreateObjectCommand : public Command {
+	public:
+		virtual ~CreateObjectCommand() override;
+
+		CreateObjectCommand(GameObject* object, Scene* scene);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		GameObject* m_object;
+		Scene* m_scene;
+		bool b_isDeleted;
+	};
+
+	//	Deletion of a component.
+	class DestroyComponentCommand : public Command {
+	public:
+		virtual ~DestroyComponentCommand() override;
+
+		DestroyComponentCommand(Component* component, GameObject* object);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		Component* m_component;
+		GameObject* m_object;
+		bool b_isDeleted;
+	};
+
+	//	Creation of a component.
+	class CreateComponentCommand : public Command {
+	public:
+		virtual ~CreateComponentCommand() override;
+
+		CreateComponentCommand(Component* component, GameObject* object);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		Component* m_component;
+		GameObject* m_object;
+		bool b_isDeleted;
+	};
+
+	//	Setting property on a component.
+	template <typename T, typename U = Component>
+	class PropertyAssignmentCommand : public Command {
+	public:
+		PropertyAssignmentCommand(Component* component, T* prop, T originalValue, T newValue, std::string action, void(U::*f) () = nullptr) :
+			m_component(component),
+			m_prop(prop),
+			m_original(originalValue),
+			m_new(newValue),
+			m_action(action),
+			m_func(f)
+		{
+			LOG("{}", action);	//	Debug purpose
+		}
+
+		void Exec() override {
+			*m_prop = m_new;
+			if (m_func != nullptr && dynamic_cast<U*>(m_component)) ((dynamic_cast<U*>(m_component))->*m_func)();
+		}
+
+		void Undo() override {
+			*m_prop = m_original;
+			if (m_func != nullptr && dynamic_cast<U*>(m_component)) ((dynamic_cast<U*>(m_component))->*m_func)();
+		}
+
+		std::string ToString() const override {
+			return m_action;
+		}
+
+	private:
+		Component* m_component;
+		T* m_prop;
+		T m_original;
+		T m_new;
+		std::string m_action;
+		void(U::*m_func) (void);
 	};
 }

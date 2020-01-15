@@ -7,7 +7,7 @@ namespace Lobster {
 	class PhysicsComponent : public Component {
 	public:
 		static const char* PhysicsBodyTypes[];
-		const static char* PhysicsType[];
+		static const char* PhysicsType[];
 
 		PhysicsComponent() : Component(PHYSICS_COMPONENT) {}
 		virtual ~PhysicsComponent() override {

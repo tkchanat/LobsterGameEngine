@@ -4,6 +4,7 @@
 #include "layer/EditorLayer.h"
 #include "graphics/Scene.h"
 #include "objects/GameObject.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster 
 {
@@ -21,7 +22,8 @@ namespace Lobster
 				if (!gameObject->GetComponent<CameraComponent>()) {
 					if (ImGui::MenuItem("Destroy", "", false)) {
 						GetScene()->RemoveGameObject(EditorLayer::s_selectedGameObject);
-						EditorLayer::s_selectedGameObject->Destroy();						
+						UndoSystem::GetInstance()->Push(new DestroyObjectCommand(EditorLayer::s_selectedGameObject, GetScene()));
+						//EditorLayer::s_selectedGameObject->Destroy();						
 						EditorLayer::s_selectedGameObject = nullptr;
 					}
 				}

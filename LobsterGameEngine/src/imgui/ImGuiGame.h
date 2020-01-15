@@ -26,9 +26,13 @@ namespace Lobster {
 
 			// draw scene
 			CameraComponent* camera = CameraComponent::GetActiveCamera();
-			camera->ResizeProjection(window_size.x, window_size.y);
 			void* image = camera->GetFrameBuffer()->Get();
-			ImGui::GetWindowDrawList()->AddImage(image, ImVec2(window_pos.x, window_pos.y), ImVec2(window_pos.x + window_size.x, window_pos.y + window_size.y), ImVec2(0, 1), ImVec2(1, 0));
+			float aspectRatio = camera->GetFrameBuffer()->GetAspectRatio();
+			float imageHeight = window_size.x / aspectRatio;
+			float startingHeight = window_pos.y + window_size.y / 2.f - imageHeight / 2.f;
+			ImVec2 imageMin = ImVec2(window_pos.x, startingHeight);
+			ImVec2 imageMax = ImVec2(window_pos.x + window_size.x, startingHeight + imageHeight);
+			ImGui::GetWindowDrawList()->AddImage(image, imageMin, imageMax, ImVec2(0, 1), ImVec2(1, 0));
 
 			// TODO user-defined actions
 

@@ -24,6 +24,8 @@ namespace Lobster
 		static bool IsMouseDown(int button);
 		static bool IsMouseHold(int button);
 		static void GetMousePos(double& x, double& y);
+		static double GetMousePosX();
+		static double GetMousePosY();
 		inline static glm::vec2 GetLastScroll() { return m_lastScroll; }
 		inline static glm::vec2 GetMouseDelta() { return m_mouseDelta; }
     };

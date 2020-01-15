@@ -7,7 +7,9 @@
 #include "objects/GameObject.h"
 #include "imgui/ImGuiConsole.h"
 #include "components/AudioComponent.h"
+#include "system/UndoSystem.h"
 #include "scripts/Script.h"
+#include "components/ParticleComponent.h"
 
 namespace Lobster
 {
@@ -37,10 +39,14 @@ namespace Lobster
 					{
 						if (ImGui::BeginMenu("Audio")) {
 							if (ImGui::MenuItem("Audio Listener")) {
-								selectedGO->AddComponent(new AudioListener());
+								AudioListener* audioListener = new AudioListener();
+								selectedGO->AddComponent(audioListener);
+								UndoSystem::GetInstance()->Push(new CreateComponentCommand(audioListener, selectedGO));
 							}
 							if (ImGui::MenuItem("Audio Source")) {
-								selectedGO->AddComponent(new AudioSource());
+								AudioSource* audioSource = new AudioSource();
+								selectedGO->AddComponent(audioSource);
+								UndoSystem::GetInstance()->Push(new CreateComponentCommand(audioSource, selectedGO));
 							}
 							ImGui::EndMenu();
 						}
@@ -60,6 +66,9 @@ namespace Lobster
 								}
 							}
 							ImGui::EndMenu();
+						}
+						if (ImGui::Selectable("Particle System")) {
+							selectedGO->AddComponent(new ParticleComponent());
 						}
 						if (ImGui::Selectable("Script")) {
 							selectedGO->AddComponent(new Script());

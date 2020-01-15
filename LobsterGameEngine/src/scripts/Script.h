@@ -6,6 +6,10 @@
 
 namespace Lobster
 {
+
+	class EventHandler {
+
+	};
     
 	//	This class is a component for user to define custom scripts with Lua.
     class Script : public Component {

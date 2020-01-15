@@ -13,6 +13,7 @@ typedef unsigned char byte;
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <numeric>
 #include <regex>
 #include <string>
 #include <sstream>
@@ -77,12 +78,14 @@ extern "C" {
 #include "utils/StringOps.h"
 
 //  Custom Defines
+#define M_PI 3.14159265358979323846
 #define MAX_TEXTURE_UNIT 16
 #define MAX_UNIFORM_BUFFER 16
 #define MAX_BONES 64
 #define MAX_BONE_INFLUENCE 4
 #define MAX_DIRECTIONAL_LIGHTS 4
 #define MAX_POINT_LIGHTS 64
+#define MAX_PARTICLES 1024
 
 #define PATH_AUDIO "audio"
 #define PATH_MESHES "meshes"

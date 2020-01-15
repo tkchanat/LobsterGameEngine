@@ -34,7 +34,7 @@ namespace Lobster
 		ImGuizmo::MODE m_mode = ImGuizmo::LOCAL;
 		glm::vec3 m_originalScale;
 		// Custom gizmos
-		static std::queue<GizmosCommand> m_gizmosQueue;
+		static std::vector<GizmosCommand> m_gizmosQueue;
 		// camera staring point
 		glm::vec3 at = glm::vec3(0, 0, 0);
 		// grid line
@@ -45,6 +45,7 @@ namespace Lobster
 		// profiler
 		bool b_showProfiler;
 		// boolean to indicate whether we are moving object in previous frame
+		bool b_gizmoUsing = false;
 		bool b_isMoving = false;
 		bool b_mouseDownSelect = false;		
 		// transform object storing previous state of the game object prior to move
@@ -77,7 +78,7 @@ namespace Lobster
 		}
 		
 		inline CameraComponent* GetCamera() { return m_editorCamera->GetComponent<CameraComponent>(); }
-		static void SubmitGizmos(GizmosCommand command) { m_gizmosQueue.push(command); }
+		static void SubmitGizmos(GizmosCommand command) { m_gizmosQueue.push_back(command); }
 
 		// Check if moues is inside the "scene" window 
 		bool insideWindow(const ImVec2& mouse, const ImVec2& pos, const ImVec2& size) {
@@ -132,26 +133,25 @@ namespace Lobster
 		void SelectObject(glm::vec3 pos, glm::vec3 dir) {
 			const std::vector<GameObject*>& gameObjects = GetScene()->GetGameObjects();
 			GameObject* nearestGameObject = nullptr; 
-			float tmin = 9999999.f;			
+			float tmin = FLT_MAX;
 			for (GameObject* gameObject : gameObjects) {
+				// not to check Gizmo icon in this way
+				if (gameObject->GetComponent<CameraComponent>() || gameObject->GetComponent<LightComponent>())
+					continue;
 				PhysicsComponent* physics = gameObject->GetComponent<PhysicsComponent>();
 				if (!physics) continue;
-
 				Collider* component = physics->GetBoundingBox();
 				if (component) {
-					float t = 9999999.f;
+					float t = FLT_MAX;
 					bool hit = component->Intersects(pos, dir, t);
 					if (hit && t < tmin) {
 						tmin = t;
 						nearestGameObject = gameObject;
-					}					
+					}
 				}
 			}	
 			// check gizmos
-            while(!m_gizmosQueue.empty())
-            {
-                const GizmosCommand& cm = m_gizmosQueue.front();
-                m_gizmosQueue.pop();
+			for (const GizmosCommand& cm : m_gizmosQueue) {
 				glm::vec3 dist = cm.position - pos;
 				float len = glm::length(dir);
 				float distlen = glm::length(dist);
@@ -161,8 +161,8 @@ namespace Lobster
 				if (glm::length(closePt - cm.position) < threshold && distlen < tmin) {
 					tmin = distlen;
 					nearestGameObject = cm.source;
-				}
-			}
+				}				
+			}						
 			if (nearestGameObject) EditorLayer::s_selectedGameObject = nearestGameObject;
 		}
 
@@ -176,73 +176,15 @@ namespace Lobster
 			window_pos = ImGui::GetWindowPos();
 			window_size = ImGui::GetWindowSize();
 
-			// right-click settings pop up
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
-			if (ImGui::BeginPopupContextItem()) {
-				ImGui::Checkbox("Show Reference Grid", &b_showGrid);
-				ImGui::Separator();
-				ImGui::Text("Grid Color");
-				ImGui::ColorEdit3("", glm::value_ptr(m_gridColor), 0);
-				m_gridMaterial->SetRawUniform("color", glm::value_ptr(m_gridColor));
-				ImGui::EndPopup();
-			}
-			ImGui::PopStyleVar();
-
 			// draw scene
 			CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
 			camera->ResizeProjection(window_size.x, window_size.y);
 			void* image = camera->GetFrameBuffer()->Get();
 			ImGui::GetWindowDrawList()->AddImage(image, ImVec2(window_pos.x, window_pos.y), ImVec2(window_pos.x + window_size.x, window_pos.y + window_size.y), ImVec2(0, 1), ImVec2(1, 0));						
 						
-			// Control the camera ONLY IF window is focused and mouse on the window			
-			{
-				float deltaTime = ImGui::GetIO().DeltaTime;
-				if (ImGui::IsWindowFocused() && insideWindow(ImGui::GetIO().MousePos, ImGui::GetWindowPos(), ImGui::GetWindowSize()))
-				{
-					glm::vec2 lastScroll = Input::GetLastScroll();
-					glm::vec2 mouseDelta = Input::GetMouseDelta();
-					// distinguish drag and click
-					if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) 
-						b_mouseDownSelect = false;
-					// Cast ray and select object (only activated by click but not drag)
-					if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !b_mouseDownSelect) {
-						// Need to initialize imguizmo earlier
-						glm::vec3 pos, dir;
-						ComputeCameraRay(pos, dir);
-						SelectObject(pos, dir);
-						b_mouseDownSelect = true;
-					}
-					// Free Look
-					else if (Input::IsKeyDown(GLFW_KEY_SPACE) && Input::IsMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
-					{
-						m_editorCamera->transform.RotateEuler(-mouseDelta.y * 10.0f * deltaTime, m_editorCamera->transform.Right());
-						m_editorCamera->transform.RotateEuler(-mouseDelta.x * 10.0f * deltaTime, glm::vec3(0, 1, 0));
-					}
-					// Rotate and Look-At
-					else if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_RIGHT)) {
-						float dx = -mouseDelta.x * deltaTime * 10.f;
-						float dy = -mouseDelta.y * deltaTime * 10.f;
-						m_editorCamera->transform.RotateAround(dy, m_editorCamera->transform.Right(), at);
-						m_editorCamera->transform.RotateAround(dx, glm::vec3(0, 1, 0), at);
-					}
-					// Pan
-					else if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_MIDDLE)) {
-						glm::vec3 pan = -mouseDelta.x * m_editorCamera->transform.Right() + mouseDelta.y * m_editorCamera->transform.Up();
-						glm::vec3 t = pan * deltaTime * 2.0f;
-						m_editorCamera->transform.WorldPosition += t;
-						at += t;
-					}
-					// Zoom
-					else if (lastScroll.y != 0 && insideWindow(ImGui::GetIO().MousePos, ImGui::GetWindowPos(), ImGui::GetWindowSize())) {
-						glm::vec3 zoom = -lastScroll.y * m_editorCamera->transform.Forward();
-						m_editorCamera->transform.WorldPosition += zoom * 50.0f * deltaTime;
-					}
-				}
-			}
-			
 			// ImGuizmo
-			DrawCustomGizmos();			
-			{							
+			DrawCustomGizmos();
+			{
 				if (gameObject)
 				{
 					glm::mat4 transformMatrix = gameObject->transform.GetMatrix();
@@ -281,17 +223,18 @@ namespace Lobster
 					}
 
 					// check with IsUsing if we are trying to edit an item.
-					bool isMoving = ImGuizmo::IsUsing();
+					b_gizmoUsing = ImGuizmo::IsUsing();
 
 					// store the item transform details if we plan to move (ie: mouse over) but hadn't move yet.
-					if (!b_isMoving && !isMoving && ImGuizmo::IsOver()) {
+					if (!b_isMoving && !b_gizmoUsing && ImGuizmo::IsOver()) {
 						m_transform = gameObject->transform;
 					}
-					
+
 					// keep track of whether we are moving, and when we stopped moving, send an undo event.
-					if (!b_isMoving && isMoving) {
+					if (!b_isMoving && b_gizmoUsing) {
 						b_isMoving = true;
-					} else if (b_isMoving && !isMoving) {
+					}
+					else if (b_isMoving && !b_gizmoUsing) {
 						b_isMoving = false;
 
 						// only send event if transform is updated.
@@ -299,8 +242,66 @@ namespace Lobster
 							UndoSystem::GetInstance()->Push(new TransformCommand(gameObject, m_transform, gameObject->transform));
 						}
 					}
-				}						
+				}
 			}
+
+			// Control the camera ONLY IF window is focused and mouse on the window			
+			{
+				float deltaTime = ImGui::GetIO().DeltaTime;
+				if (ImGui::IsWindowFocused() && insideWindow(ImGui::GetIO().MousePos, ImGui::GetWindowPos(), ImGui::GetWindowSize()))
+				{
+					glm::vec2 lastScroll = Input::GetLastScroll();
+					glm::vec2 mouseDelta = Input::GetMouseDelta();
+					// distinguish drag and click
+					if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) 
+						b_mouseDownSelect = false;
+					// Cast ray and select object (only activated by click but not drag)
+					if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !b_mouseDownSelect && !b_gizmoUsing) {
+						glm::vec3 pos, dir;
+						ComputeCameraRay(pos, dir);
+						SelectObject(pos, dir);
+						b_mouseDownSelect = true;
+					}
+					// Free Look
+					else if (Input::IsKeyDown(GLFW_KEY_SPACE) && Input::IsMouseDown(GLFW_MOUSE_BUTTON_RIGHT))
+					{
+						m_editorCamera->transform.RotateEuler(-mouseDelta.y * 10.0f * deltaTime, m_editorCamera->transform.Right());
+						m_editorCamera->transform.RotateEuler(-mouseDelta.x * 10.0f * deltaTime, glm::vec3(0, 1, 0));
+					}
+					// Rotate and Look-At
+					else if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_RIGHT)) {
+						float dx = -mouseDelta.x * deltaTime * 10.f;
+						float dy = -mouseDelta.y * deltaTime * 10.f;
+						m_editorCamera->transform.RotateAround(dy, m_editorCamera->transform.Right(), at);
+						m_editorCamera->transform.RotateAround(dx, glm::vec3(0, 1, 0), at);
+					}
+					// Pan
+					else if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_MIDDLE)) {
+						glm::vec3 pan = -mouseDelta.x * m_editorCamera->transform.Right() + mouseDelta.y * m_editorCamera->transform.Up();
+						glm::vec3 t = pan * deltaTime * 2.0f;
+						m_editorCamera->transform.WorldPosition += t;
+						at += t;
+					}
+					// Zoom
+					else if (lastScroll.y != 0 && insideWindow(ImGui::GetIO().MousePos, ImGui::GetWindowPos(), ImGui::GetWindowSize())) {
+						glm::vec3 zoom = -lastScroll.y * m_editorCamera->transform.Forward();
+						m_editorCamera->transform.WorldPosition += zoom * 50.0f * deltaTime;
+					}
+				}
+			}
+		
+			// right-click settings pop up
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
+			if (ImGui::BeginPopupContextItem()) {
+				ImGui::Checkbox("Show Reference Grid", &b_showGrid);
+				ImGui::Separator();
+				ImGui::Text("Grid Color");
+				ImGui::ColorEdit3("", glm::value_ptr(m_gridColor), 0);
+				m_gridMaterial->SetRawUniform("color", glm::value_ptr(m_gridColor));
+				ImGui::EndPopup();
+			}
+			ImGui::PopStyleVar();
+
 			ImGui::End();
 			ImGui::PopStyleVar();
 
@@ -327,7 +328,9 @@ namespace Lobster
 				}
 				ImGui::End();
 				ImGui::PopStyleVar();
-			}								
+			}
+			// clear queue for gizmos
+			m_gizmosQueue.clear(); 
 		}
 
 		private:
@@ -337,16 +340,12 @@ namespace Lobster
 				// get view and projection matrix
 				CameraComponent* editorCamera = m_editorCamera->GetComponent<CameraComponent>();
 				glm::mat4 viewProjectionMatrix = editorCamera->GetProjectionMatrix() * editorCamera->GetViewMatrix();
-                int i = 0;
-                while(!m_gizmosQueue.empty())
-				{
-					GizmosCommand command = m_gizmosQueue.front();
-                    m_gizmosQueue.pop();
+                for (GizmosCommand& command : m_gizmosQueue)
+				{					
 					// select texture and specify world position
 					void* customGizmo = TextureLibrary::Use(command.texture.c_str())->Get();
 					glm::vec4 pos = viewProjectionMatrix * glm::vec4(command.position, 1);
 					ImVec2 size = command.size;
-                    i++;
                     
 					if (pos.w <= 0.0) continue;
 					constexpr auto remap = [](float value, float start1, float stop1, float start2, float stop2) {

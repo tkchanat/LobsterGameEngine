@@ -81,4 +81,17 @@ namespace Lobster
 		glfwGetCursorPos(window, &x, &y);
 	}
 
+	double Input::GetMousePosX() {
+		GLFWwindow* window = Application::GetInstance()->GetWindow()->GetPtr();
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		return x;
+	}
+
+	double Input::GetMousePosY() {
+		GLFWwindow* window = Application::GetInstance()->GetWindow()->GetPtr();
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		return y;
+	}
 }

@@ -4,6 +4,17 @@
 
 namespace Lobster
 {
+	//	Maps a component enum to a string.
+	std::string Component::componentName[] = {
+		"Unknown",
+		"Mesh Component",
+		"Camera Component",
+		"Light Component",
+		"Physics Component",
+		"Script Component",
+		"Audio Source Component",
+		"Audio Listener Component"
+	};
 
 	void Component::RemoveComponent(Component* comp) 
 	{
@@ -26,6 +37,8 @@ namespace Lobster
 			return new AudioSource();
 		case ComponentType::AUDIO_LISTENER_COMPONENT:
 			return new AudioListener();
+		case ComponentType::PARTICLE_COMPONENT:
+			return new ParticleComponent();
 		default:
 			assert(false && "Please register your own typeName-to-component conversion here!");
 			break;

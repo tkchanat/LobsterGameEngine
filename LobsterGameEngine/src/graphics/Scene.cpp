@@ -148,8 +148,9 @@ namespace Lobster
 		auto index = std::find(m_gameObjects.begin(), m_gameObjects.end(), gameObject);
 		if (index != m_gameObjects.end()) {
 			m_gameObjects.erase(index);
-			delete gameObject;
-			gameObject = nullptr;
+			//UndoSystem::GetInstance()->Push(new DestroyObjectCommand(gameObject, this));
+			//delete gameObject;
+			//gameObject = nullptr;
 		}
 		return this;
 	}

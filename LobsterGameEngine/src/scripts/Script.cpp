@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Script.h"
 #include "graphics/Scene.h"
+#include "system/Input.h"
 #include <LuaBridge/Vector.h>
 
 using namespace luabridge;
@@ -104,8 +105,15 @@ namespace Lobster {
 	}
 
 	void Script::Bind() {
+		// Class/function binding
 		getGlobalNamespace(L)
 			.beginNamespace("Lobster")
+			// Input events
+			.addFunction("IsKeyDown", Input::IsKeyDown)
+			.addFunction("GetMousePosX", Input::GetMousePosX)
+			.addFunction("GetMousePosY", Input::GetMousePosY)
+			.addFunction("IsMouseDown", Input::IsMouseDown)
+			.addFunction("IsMouseHold", Input::IsMouseHold)
 			// glm::vec3
 			.beginClass<glm::vec3>("Vec3")
 			.addProperty("x", &glm::vec3::x)
@@ -115,7 +123,13 @@ namespace Lobster {
 			// Transform
 			.beginClass<Transform>("Transform")
 			.addProperty("WorldPosition", &Transform::WorldPosition)
-			.addProperty("WorldRotation", &Transform::WorldRotation)
+			.addProperty("LocalPosition", &Transform::LocalPosition)
+			.addFunction("Up", &Transform::Up)
+			.addFunction("Right", &Transform::Right)
+			.addFunction("Forward", &Transform::Forward)
+			.addFunction("RotateEuler", &Transform::RotateEuler)
+			.addFunction("RotateAround", &Transform::RotateAround)
+			.addFunction("LookAt", &Transform::LookAt)
 			.endClass()
 			// Component
 			.beginClass<Component>("Component")
@@ -139,10 +153,10 @@ namespace Lobster {
 			.addFunction("GetGameObjects", &Scene::GetGameObjects)
 			.endClass()
 			.endNamespace();
-		// push the transform to Lua
+		getGlobalNamespace(L).beginNamespace("Lobster").endNamespace();
+		// Object passing
 		push(L, transform); // pointer to 'Transform', C++ lifetime
 		lua_setglobal(L, "transform");
-		// push the object
 		push(L, gameObject); // pointer to 'GameObject', C++ lifetime
 		lua_setglobal(L, "this");
 	}

@@ -147,12 +147,14 @@ namespace Lobster
 			Renderer::SetFaceCulling(true, CULL_BACK);
 		}
 
-		// Opaque
+		// Opaque		
 		Renderer::DrawQueue(camera, m_opaqueQueue);
-		// Transparent(sorted)
+		// Transparent(sorted)		
 		Renderer::SetAlphaBlend(true);
+		glDepthMask(GL_FALSE);
 		Renderer::DrawQueue(camera, m_transparentQueue);
-		Renderer::SetAlphaBlend(false);		
+		glDepthMask(GL_TRUE);
+		Renderer::SetAlphaBlend(false);				
 		// from front to back order
 		// Overlay
 		m_spriteShader->Bind();

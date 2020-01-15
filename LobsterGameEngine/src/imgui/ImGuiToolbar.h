@@ -16,11 +16,11 @@ namespace Lobster
 	{
 	private:
 		const float spacer_width = 10.f;
-		const static int numIco = 11;		
+		const static int numIco = 12;		
 		std::string image_path[numIco] = { 
 			"textures/ui/undo.png", "textures/ui/undo_grey.png", "textures/ui/redo.png", "textures/ui/redo_grey.png",
-			"textures/ui/plane.png", "textures/ui/cube.png", "textures/ui/sphere.png", "textures/ui/pt_light.png",
-			"textures/ui/dir_light.png", "textures/ui/play.png", "textures/ui/stop.png" };
+			"textures/ui/plane.png", "textures/ui/cube.png", "textures/ui/sphere.png", "textures/ui/particles.png",
+			"textures/ui/pt_light.png", "textures/ui/dir_light.png", "textures/ui/play.png", "textures/ui/stop.png" };
 		Texture2D* m_tex[numIco];
 		static GameObject* selectedObj;
 		ImGuiGame* m_gameView = nullptr;
@@ -79,6 +79,7 @@ namespace Lobster
 				GameObject* plane = new GameObject("Plane");
 				plane->AddComponent(new MeshComponent(MeshFactory::Plane(), glm::vec3(-1, -1, 0), glm::vec3(1, 1, 0)));
 				scene->AddGameObject(plane);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(plane, scene));
 			}
 			ImGui::SameLine();
 			// Cube Generation =============
@@ -86,6 +87,7 @@ namespace Lobster
 				GameObject* cube = new GameObject("Cube");
 				cube->AddComponent(new MeshComponent(MeshFactory::Cube(), glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)));
 				scene->AddGameObject(cube);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(cube, scene));
 			}
 			ImGui::SameLine();
 			// Sphere Generation =============
@@ -93,29 +95,42 @@ namespace Lobster
 				GameObject* sphere = new GameObject("Sphere");
 				sphere->AddComponent(new MeshComponent(MeshFactory::Sphere(1, 32, 32)));
 				scene->AddGameObject(sphere);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(sphere, scene));
+			}
+			ImGui::SameLine();
+			ImGui::Dummy(ImVec2(spacer_width, 0.0f));
+			ImGui::SameLine();
+			// Particle System =============
+			if (ImGui::ImageButton(m_tex[7]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
+				GameObject* ps = new GameObject("Particle System");
+				ps->AddComponent(new ParticleComponent());
+				scene->AddGameObject(ps);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(ps, scene));
 			}
 			ImGui::SameLine();
 			ImGui::Dummy(ImVec2(spacer_width, 0.0f));
 			ImGui::SameLine();
 			// Point Light =============
-			if (ImGui::ImageButton(m_tex[7]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
+			if (ImGui::ImageButton(m_tex[8]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
 				GameObject* light = new GameObject("Point Light");
 				light->AddComponent(new LightComponent(LightType::POINT_LIGHT));
 				scene->AddGameObject(light);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(light, scene));
 			}
 			ImGui::SameLine();
 			// Directional Light =============
-			if (ImGui::ImageButton(m_tex[8]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
+			if (ImGui::ImageButton(m_tex[9]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
 				GameObject* light = new GameObject("Directional Light");
 				light->AddComponent(new LightComponent(LightType::DIRECTIONAL_LIGHT));
 				scene->AddGameObject(light);
+				UndoSystem::GetInstance()->Push(new CreateObjectCommand(light, scene));
 			}
 			ImGui::SameLine();
 			ImGui::Dummy(ImVec2(spacer_width, 0.0f));
 			ImGui::SameLine();
 			// Simulate =============
 			if (Application::GetMode() == EDITOR) {
-				if (ImGui::ImageButton(m_tex[9]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
+				if (ImGui::ImageButton(m_tex[10]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
 					Application::SwitchMode(SIMULATION);
 					// TODO save scene TODO
 					// ...
@@ -131,7 +146,7 @@ namespace Lobster
 			}			
 			else if (Application::GetMode() == SIMULATION) {
 				// either press stop button or close the tab
-				if (!m_showGameView || ImGui::ImageButton(m_tex[10]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
+				if (!m_showGameView || ImGui::ImageButton(m_tex[11]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
 					Application::SwitchMode(EDITOR);
 					// clearup of all gameobjects and components
 					for (GameObject* gameObject : scene->GetGameObjects()) {

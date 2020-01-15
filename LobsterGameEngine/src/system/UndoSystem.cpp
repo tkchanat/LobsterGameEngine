@@ -13,6 +13,17 @@ namespace Lobster {
 		m_instance = this;
 	}
 
+	UndoSystem::~UndoSystem() {
+		while (!m_undo.empty()) {
+			delete m_undo.pop_front();
+		}
+
+		while (!m_redo.empty()) {
+			delete m_redo.top();
+			m_redo.pop();
+		}
+	}
+
 	int UndoSystem::UndosRemaining() const {
 		return m_undo.size();
 	}
@@ -29,6 +40,7 @@ namespace Lobster {
 		Command* event = nullptr;
 		for (int i = 0; i < steps; i++) {
 			event = m_undo.pop_front();
+			m_undo_str.pop_front();
 			m_redo.push(event);
 			event->Undo();
 			LOG("Undo performed. Description: {}", event->ToString());
@@ -67,9 +79,15 @@ namespace Lobster {
 	}
 
 	void UndoSystem::Push(Command* command) {
-		while (!m_redo.empty()) m_redo.pop();
+		while (!m_redo.empty()) {
+			delete m_redo.top();
+			m_redo.pop();
+		}
 
-		m_undo.push(command);
+		//	Push into undo system, free memory if needed due to buffer being full.
+		Command* c = m_undo.push(command);
+		if (c != nullptr) delete c;
+
 		m_undo_str.push(command->ToString());
 	}
 }

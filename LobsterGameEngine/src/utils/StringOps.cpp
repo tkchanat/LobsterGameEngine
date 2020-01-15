@@ -74,5 +74,24 @@ namespace Lobster
 			ss << std::fixed << std::setprecision(dec) << '<' << vec.x << ',' << vec.y << ',' << vec.z << '>';
 			return ss.str();
 		}
+
+		std::string ToColorString(glm::vec3 vec) {
+			char color[] = { 'R', 'G', 'B' };
+			std::string colorStr = "";
+			for (int i = 0; i < 3; i++) {
+				colorStr.push_back(color[i]);
+				colorStr += ": " + std::to_string((int)round(vec[i] * 255));
+				if (i != 2) colorStr += ", ";
+			}
+			LOG("{}", colorStr);
+			return colorStr;
+		}
+
+		std::string ToString(float val, int decimals) {
+			int dec = (decimals > 0 ? decimals : 0);
+			std::stringstream ss;
+			ss << std::fixed << std::setprecision(dec) << val;
+			return ss.str();
+		}
 	}
 }
