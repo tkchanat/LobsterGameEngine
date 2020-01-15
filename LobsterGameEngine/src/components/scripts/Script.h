@@ -15,8 +15,8 @@ namespace Lobster
     public:
 		Script() : Component(SCRIPT_COMPONENT) {}
         ~Script() = default;
-        virtual void OnUpdate(double deltaTime) = 0;
-		virtual void OnImGuiRender() = 0;
+        virtual void OnUpdate(double deltaTime);
+		virtual void OnImGuiRender();
     };
     
 }

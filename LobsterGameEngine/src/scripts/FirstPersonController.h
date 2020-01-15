@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Script.h"
-
 namespace Lobster
 {
     
@@ -11,6 +9,7 @@ namespace Lobster
 	//	This class is inherit from the class Script.
 	//	Basically it allows the player to navigate the game world using a first person perspective.
 	//	Using WASD to move and mouse to look around. Just like typical FPS games.
+	/*
     class FirstPersonController : public Script
     {
     public:
@@ -26,5 +25,6 @@ namespace Lobster
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
     };
+	*/
     
 }

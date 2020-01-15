@@ -44,6 +44,7 @@ namespace Lobster
 		virtual ~Component() {}
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
+		virtual void OnBegin() {}
         virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender() = 0;
 		virtual void OnSimulationBegin() {}

@@ -37,6 +37,12 @@ namespace Lobster
 		if (m_skybox) delete m_skybox;
 		m_skybox = nullptr;
     }
+
+	void Scene::OnBegin() {
+		for (GameObject* gameObject : m_gameObjects) {
+			gameObject->OnBegin();
+		}
+	}
     
     void Scene::OnUpdate(double deltaTime)
     {

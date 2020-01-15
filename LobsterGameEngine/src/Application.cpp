@@ -18,6 +18,9 @@
 #include "system/FileSystem.h"
 #include "system/UndoSystem.h"
 
+
+#include "scripts/LuaScript.h"
+
 namespace Lobster
 {
     
@@ -38,7 +41,7 @@ namespace Lobster
         {
             LOG("Application already created! Don't create another one, you stupid.");
             return;
-        }
+        }		
         m_instance = this;
     }
     

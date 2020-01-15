@@ -40,7 +40,22 @@ namespace Lobster
 			m_parent->m_children.erase(index);
         }
 	}
-    
+
+	void GameObject::OnBegin() {
+		// initialize transform
+		transform.UpdateMatrix();
+		// initialize all enabled components
+		for (Component* component : m_components) {
+			if (component->IsEnabled()) {
+				component->OnBegin();
+			}
+		}
+		// initialize all children
+		for (GameObject* child : m_children) {
+			child->OnBegin();
+		}
+	}
+
     void GameObject::OnUpdate(double deltaTime)
     {
 		//  First, update transform
@@ -195,7 +210,7 @@ namespace Lobster
 	void GameObject::OnSimulationBegin() {
 		for (Component* component : m_components) {
 			component->OnSimulationBegin();
-		}
+		}		
 	}
 
 	void GameObject::OnSimulationEnd() {

@@ -124,6 +124,7 @@ namespace Lobster
 					m_showGameView = true;
 					// initialize all gameobjects and components
 					for (GameObject* gameObject : scene->GetGameObjects()) {
+						gameObject->OnBegin(); // this should be in actual game, not here
 						gameObject->OnSimulationBegin();
 					}
 				}

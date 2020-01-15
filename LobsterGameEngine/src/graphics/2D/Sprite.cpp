@@ -290,9 +290,9 @@ namespace Lobster {
 			ImGui::EndCombo();
 		}
 		// font size
-		ImGui::InputFloat("Font size", &fontSize, 1.f, 1.f, "%.1f");
+		ImGui::InputFloat("Font Size", &fontSize, 1.f, 1.f, "%.1f");
 		// color picker
-		if (ImGui::ColorEdit4("Font color", color)) {
+		if (ImGui::ColorEdit3("Font Color", color)) {
 			getTexture(true);
 		}
 		ImGui::Separator();

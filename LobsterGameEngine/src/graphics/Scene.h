@@ -21,6 +21,7 @@ namespace Lobster
     public:
         Scene(const char* scenePath);
         ~Scene();
+		void OnBegin();
         void OnUpdate(double deltaTime);
 		void OnPhysicsUpdate(double deltaTime);
 		std::stringstream Serialize();

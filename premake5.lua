@@ -170,7 +170,8 @@ project "LobsterGameEngine"
 	libdirs	{
 		"%{prj.location}/vendor/assimp/lib",
 		"%{prj.location}/vendor/openal/libs/Win64",
-		"%{prj.location}/vendor/freetype/win64"
+		"%{prj.location}/vendor/freetype/win64",
+		"%{prj.location}/vendor/lua535/lua"
 	}
 
 	files {
@@ -192,6 +193,7 @@ project "LobsterGameEngine"
 		"%{prj.location}/vendor/spdlog/include",
 		"%{prj.location}/vendor/openal/include",
 		"%{prj.location}/vendor/freetype/include",
+		"%{prj.location}/vendor/lua535"
 	}
 
 	filter "system:windows"
@@ -211,11 +213,12 @@ project "LobsterGameEngine"
 			"GLAD",
 			"opengl32",
 			"OpenAL32",
-			"freetype",
+			"freetype"
 		}
 
 		prebuildcommands {
-			"{COPY} vendor/assimp/lib/ ../bin/%{cfg.buildcfg}"
+			"{COPY} vendor/assimp/lib/ ../bin/%{cfg.buildcfg}",
+			"{COPY} vendor/lua535/lua/dll/ ../bin/%{cfg.buildcfg}"
 		}
 
 		defines {

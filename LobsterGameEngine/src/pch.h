@@ -54,6 +54,17 @@ typedef unsigned char byte;
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+// lua script
+extern "C" {
+#include <lua/include/lua.h>
+#include <lua/include/lauxlib.h>
+#include <lua/include/lualib.h>
+}
+#ifdef _WIN32
+#pragma comment(lib, "liblua53.a")
+#endif
+#include <LuaBridge/LuaBridge.h>
+
 //  Custom includes
 #include "events/EventCollection.h"
 #include "events/EventDispatcher.h"
@@ -80,6 +91,7 @@ typedef unsigned char byte;
 #define PATH_TEXTURES "textures"
 #define PATH_SPRITES "sprites"
 #define PATH_FONT "textures/font"
+#define PATH_SCRIPTS "scripts"
 
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)

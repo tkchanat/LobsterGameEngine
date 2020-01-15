@@ -7,6 +7,7 @@
 #include "objects/GameObject.h"
 #include "imgui/ImGuiConsole.h"
 #include "components/AudioComponent.h"
+#include "scripts/Script.h"
 
 namespace Lobster
 {
@@ -26,8 +27,10 @@ namespace Lobster
 					// All attributes of components
 					selectedGO->OnImGuiRender();
 
-					// Add Component
-					if (ImGui::Button("Add Component")) {
+					// align the "Add Component" button at center horizontally
+					ImGui::SetCursorPosX(ImGui::GetWindowSize().x * 0.1);
+					float sizeX = ImGui::GetWindowSize().x * 0.8;
+					if (ImGui::Button("Add Component", ImVec2(sizeX, 24))) {
 						ImGui::OpenPopup("Add Component Popup");
 					}
 					if (ImGui::BeginPopup("Add Component Popup"))
@@ -57,6 +60,9 @@ namespace Lobster
 								}
 							}
 							ImGui::EndMenu();
+						}
+						if (ImGui::Selectable("Script")) {
+							selectedGO->AddComponent(new Script());
 						}
 						ImGui::Separator();
 						ImGui::Selectable("Lobster");

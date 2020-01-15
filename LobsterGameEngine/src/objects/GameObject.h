@@ -46,6 +46,7 @@ namespace Lobster
         GameObject(const char* name);
         ~GameObject(); // TODO: private the destructor, forcing users to call Destroy() instead
 		void Destroy();
+		void OnBegin(); // call when the object is initialized in game mode
         void OnUpdate(double deltaTime);
 		void Serialize(cereal::JSONOutputArchive& oarchive);
 		void Deserialize(cereal::JSONInputArchive& iarchive);
