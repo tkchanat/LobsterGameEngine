@@ -29,6 +29,9 @@ namespace Lobster {
 		//	String representation of a glm::vec3 in <x,y,z> form.
 		std::string ToString(glm::vec3 vec, int decimals = 2);
 
+		//	String representation of a glm::vec3 in (RGB) form.
+		std::string ToColorString(glm::vec3 vec);
+
 		//	String representation of a float with decimal precision cap.
 		std::string ToString(float val, int decimals = 3);
 	}

@@ -35,6 +35,11 @@ namespace Lobster
 	{
 		friend class LightLibrary;
 	private:
+		int m_isChanging = -1;		//	Used for undo system. 0 = color, 1 = intensity.
+		LightType m_prevType;		//	Used for undo system.
+		glm::vec3 m_prevColor;		//	Used for undo system.
+		float m_prevIntensity;		//	Used for undo system.
+
 		LightType m_type;
 		glm::vec3 m_color;
 		float m_intensity;
@@ -49,6 +54,8 @@ namespace Lobster
         virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 		inline LightType GetType() const{ return m_type; }
     private:
+		void ChangeLightType();
+
         friend class cereal::access;
         template <class Archive>
         void save(Archive & ar) const
