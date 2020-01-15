@@ -40,6 +40,7 @@ namespace Lobster {
 		Command* event = nullptr;
 		for (int i = 0; i < steps; i++) {
 			event = m_undo.pop_front();
+			m_undo_str.pop_front();
 			m_redo.push(event);
 			event->Undo();
 			LOG("Undo performed. Description: {}", event->ToString());

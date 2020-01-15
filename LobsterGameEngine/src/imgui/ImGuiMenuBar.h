@@ -13,6 +13,8 @@ namespace Lobster
 	{
 	private:
 		ImGuiAbout* m_about;
+		int m_prevHighlightIndex = -1;	//	Used for undo / redo or other multile highlight menu items.
+
 	public:
 		ImGuiMenuBar() : m_about(new ImGuiAbout()) {}
 		virtual void Show(bool* p_open) override
@@ -56,8 +58,63 @@ namespace Lobster
 					if (ImGui::MenuItem("Undo", "Ctrl+Z", false, undo->UndosRemaining() > 0)) {
 						undo->Undo();
 					}
+					if (undo->UndosRemaining() > 0) {
+						if (ImGui::BeginMenu("Undo multiple")) {
+							int i = 0;
+							bool noneSelected = true;
+							for (std::string& item : undo->UndoList()) {
+								if (ImGui::MenuItem(item.c_str(), "", i <= m_prevHighlightIndex)) {
+									undo->Undo(i + 1);
+								}
+								if (ImGui::IsItemHovered()) {
+									m_prevHighlightIndex = i;
+									noneSelected = false;
+								}
+								i++;
+							}
+							ImGui::Separator();
+							if (ImGui::MenuItem("Undo all")) {
+								undo->Undo(undo->UndosRemaining());
+							}
+							if (ImGui::IsItemHovered()) {
+								m_prevHighlightIndex = i;
+								noneSelected = false;
+							}
+							ImGui::EndMenu();
+
+							if (noneSelected) m_prevHighlightIndex = -1;
+						}
+					}
+
 					if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z", false, undo->RedosRemaining() > 0)) {
 						undo->Redo();
+					}
+					if (undo->RedosRemaining() > 0) {
+						if (ImGui::BeginMenu("Redo multiple")) {
+							int i = 0;
+							bool noneSelected = true;
+							for (std::string& item : undo->RedoList()) {
+								if (ImGui::MenuItem(item.c_str(), "", i <= m_prevHighlightIndex)) {
+									undo->Redo(i + 1);
+								}
+								if (ImGui::IsItemHovered()) {
+									m_prevHighlightIndex = i;
+									noneSelected = false;
+								}
+								i++;
+							}
+							ImGui::Separator();
+							if (ImGui::MenuItem("Redo all")) {
+								undo->Redo(undo->RedosRemaining());
+							}
+							if (ImGui::IsItemHovered()) {
+								m_prevHighlightIndex = i;
+								noneSelected = false;
+							}
+							ImGui::EndMenu();
+
+							if (noneSelected) m_prevHighlightIndex = -1;
+						}
 					}
 					ImGui::Separator();
 					if (ImGui::MenuItem("Cut", "Ctrl+X")) {}
