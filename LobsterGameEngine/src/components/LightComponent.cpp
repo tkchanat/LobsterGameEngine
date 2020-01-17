@@ -105,13 +105,13 @@ namespace Lobster
 	}
 
 
-    void LightComponent::Serialize(cereal::JSONOutputArchive& oarchive)
+    void LightComponent::Serialize(cereal::BinaryOutputArchive& oarchive)
     {
         //LOG("Serializing LightComponent");
         oarchive(*this);
     }
 
-    void LightComponent::Deserialize(cereal::JSONInputArchive& iarchive)
+    void LightComponent::Deserialize(cereal::BinaryInputArchive& iarchive)
     {
         //LOG("Deserializing LightComponent");
         try {

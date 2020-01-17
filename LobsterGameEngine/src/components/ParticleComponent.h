@@ -41,8 +41,8 @@ namespace Lobster
 		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
+		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
 	private:
 		void FillVolume();
 		void BoxEmitter(double deltaTime);
@@ -54,14 +54,35 @@ namespace Lobster
 		template <class Archive>
 		void save(Archive & ar) const
 		{
+			ar(m_shape);
+			ar(b_emitOneByOne);
+			ar(m_emissionAngle);
+			ar(m_emissionRate);
 			ar(m_particleCount);
+			ar(m_particleCutoff);
 			ar(m_particleSize);
+			ar(m_colorStartTransition);
+			ar(m_colorEndTransition);
+			ar(m_particleOrientation);
+			std::string textureName = m_particleTexture == nullptr ? "" : m_particleTexture->GetName();
+			ar(textureName);
 		}
 		template <class Archive>
 		void load(Archive & ar)
 		{
+			ar(reinterpret_cast<EmitterShape>(m_shape));
+			ar(b_emitOneByOne);
+			ar(m_emissionAngle);
+			ar(m_emissionRate);
 			ar(m_particleCount);
+			ar(m_particleCutoff);
 			ar(m_particleSize);
+			ar(m_colorStartTransition);
+			ar(m_colorEndTransition);
+			ar(m_particleOrientation);
+			std::string textureName;
+			ar(textureName);
+			m_particleTexture = textureName.empty() ? nullptr : TextureLibrary::Use(textureName.c_str());
 		}
 	};
 

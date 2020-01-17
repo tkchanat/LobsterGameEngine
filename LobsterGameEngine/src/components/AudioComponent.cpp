@@ -26,13 +26,13 @@ namespace Lobster {
 	}
 
 	glm::vec3 AudioSource::GetPosition() {
-		return position;
+		return transform->WorldPosition;
 	}
 
 	void AudioSource::OnUpdate(double deltaTime) {
 		// update source position
 		if (transform && m_clip && m_enable3d) {
-			position = transform->WorldPosition;
+			glm::vec3 position = transform->WorldPosition;
 			alSource3f(m_clip->GetSource(), AL_POSITION, position[0], position[1], position[2]);
 		}
 	}
@@ -170,6 +170,21 @@ namespace Lobster {
 		}		
 	}
 
+	void AudioSource::Serialize(cereal::BinaryOutputArchive & oarchive)
+	{
+		oarchive(*this);
+	}
+
+	void AudioSource::Deserialize(cereal::BinaryInputArchive & iarchive)
+	{
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing AudioSource failed. Reason: {}", e.what());
+		}
+	}
+
 	// ========= Members of AudioListener ==========
 	AudioListener::AudioListener() :
 		Component(AUDIO_LISTENER_COMPONENT)
@@ -188,8 +203,8 @@ namespace Lobster {
 					
 					// set the listener position of OpenAL
 					alSourcei(src->m_clip->GetSource(), AL_SOURCE_RELATIVE, AL_FALSE);
-					m_position = transform->WorldPosition;
-					alListener3f(AL_POSITION, m_position[0], m_position[1], m_position[2]);
+					glm::vec3 position = transform->WorldPosition;
+					alListener3f(AL_POSITION, position[0], position[1], position[2]);
 					
 					// set the listener orientation
 					float ori[6];
@@ -220,6 +235,22 @@ namespace Lobster {
 				UndoSystem::GetInstance()->Push(new DestroyComponentCommand(this, gameObject));
 			}
 		}
-	}	
+	}
+
+	void AudioListener::Serialize(cereal::BinaryOutputArchive & oarchive)
+	{
+		oarchive(*this);
+	}
+
+	void AudioListener::Deserialize(cereal::BinaryInputArchive & iarchive)
+	{
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing AudioListener failed. Reason: {}", e.what());
+		}
+	}
+
 
 }

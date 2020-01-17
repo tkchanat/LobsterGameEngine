@@ -4,6 +4,10 @@ namespace Lobster
 {
     
     class VertexArray;
+
+	enum class PrimitiveShape : uint {
+		CUBE, SPHERE, PLANE
+	};
     
     class MeshFactory
     {

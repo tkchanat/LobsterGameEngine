@@ -117,11 +117,13 @@ namespace Lobster
 // 		barrel->AddChild(new GameObject("child 2"));
 // 		m_scene->AddGameObject(barrel);
 
-		GameObject* particle = new GameObject("Particle System");
-		particle->AddComponent(new ParticleComponent());
-		//particle->transform.WorldPosition = glm::vec3(0, 3, 3);
-		m_scene->AddGameObject(particle);
+		//GameObject* particle = new GameObject("Particle System");
+		//particle->AddComponent(new ParticleComponent());
+		//m_scene->AddGameObject(particle);
 
+		//GameObject* sphere = new GameObject("sphere");
+		//sphere->AddComponent(new MeshComponent(FileSystem::Path("meshes/sphere.obj").c_str()));
+		//m_scene->AddGameObject(sphere);
 		//for (int i = 0; i < 5; ++i)
 		//{
 		//	GameObject* sphere = (new GameObject(std::to_string(i).c_str()));
@@ -148,14 +150,7 @@ namespace Lobster
 #ifdef LOBSTER_BUILD_DEBUG
 		m_GUILayer = new GUILayer();
 		m_editorLayer = new EditorLayer();
-#endif		
-
-		EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {
-			if (e->Key == GLFW_KEY_O)
-			{
-				OpenScene("scenes/test.lobster");
-			}
-		}));
+#endif
     }
 
 	// Updates subsystem chronologically in a fixed timestep, i.e. order does matter

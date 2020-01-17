@@ -26,8 +26,8 @@ namespace Lobster {
 		inline std::vector<Collider*> GetColliders() const { return m_colliders; }
 
 		bool Intersects(PhysicsComponent* other);
-		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
+		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
 		virtual void OnPhysicsUpdate(double deltaTime) = 0;
 		virtual void OnPhysicsLateUpdate(double deltaTime) = 0;
 

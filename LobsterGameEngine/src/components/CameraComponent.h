@@ -38,8 +38,8 @@ namespace Lobster
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnSimulationBegin() override;
-		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
+		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
 		glm::mat4 GetViewMatrix() const;
         inline glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 		inline glm::mat4 GetOrthoMatrix() const { return m_orthoMatrix; }
@@ -49,14 +49,18 @@ namespace Lobster
 	private:
 		friend class cereal::access;
 		template <class Archive>
-		void serialize(Archive & ar)
+		void save(Archive & ar) const
 		{
 			ar(m_fieldOfView);
-			ar(m_nearPlane);
-			ar(m_farPlane);
-			//ar(m_type);
-			//ar(m_viewMatrix);
-			//ar(m_projectionMatrix);
+			ar(m_nearPlane, m_farPlane);
+			//gameUI->Serialize();
+		}
+		template <class Archive>
+		void load(Archive & ar)
+		{
+			ar(m_fieldOfView);
+			ar(m_nearPlane, m_farPlane);
+			//gameUI->Deserialize();
 		}
     };
     

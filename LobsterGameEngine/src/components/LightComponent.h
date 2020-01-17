@@ -54,8 +54,8 @@ namespace Lobster
 		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-        virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
-        virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
+        virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
+        virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
 		inline LightType GetType() const{ return m_type; }
     private:
 		void ChangeLightType();
@@ -66,12 +66,14 @@ namespace Lobster
         {
             ar(m_type);
             ar(m_color);
+			ar(m_intensity);
         }
         template <class Archive>
         void load(Archive & ar)
         {
-            ar(m_type);
+            ar(reinterpret_cast<LightType>(m_type));
             ar(m_color);
+			ar(m_intensity);
         }
 	};
 

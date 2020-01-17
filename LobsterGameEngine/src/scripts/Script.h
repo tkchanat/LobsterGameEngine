@@ -30,6 +30,8 @@ namespace Lobster
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnSimulationBegin() override;
+		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override {}
+		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override {}
     };
     
 }
