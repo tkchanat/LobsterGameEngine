@@ -2,6 +2,7 @@
 #include "Component.h"
 #include "graphics/VertexArray.h"
 #include "graphics/Material.h"
+#include "graphics/meshes/MeshFactory.h"
 #include "physics/AABB.h"
 #include "system/FileSystem.h"
 
@@ -54,7 +55,7 @@ namespace Lobster
     public:
 		MeshComponent() : Component(MESH_COMPONENT) {}
         MeshComponent(const char* meshPath, const char* materialPath = nullptr);
-		MeshComponent(VertexArray* mesh, std::pair<glm::vec3, glm::vec3> minMax = {glm::vec3(-.5, -.5, -.5), glm::vec3(.5, .5, .5)}, const char* materialPath = nullptr);
+		MeshComponent(PrimitiveShape primitive);
         virtual ~MeshComponent() override;
 		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
@@ -68,6 +69,7 @@ namespace Lobster
 		AnimationInfo LoadAnimation(const char* path);
 		void SaveAnimation(int animation);
 		void LoadFromFile(const char* meshPath, const char* materialPath);
+		void LoadFromPrimitive(PrimitiveShape primitive);
 		void UpdateBoneTransforms(const BoneNode & node, const glm::mat4 & parentTransform, const glm::mat4& globalInverseTransform);
 		glm::vec3 InterpolatePosition(double animationTime, const ChannelInfo& channel) const;
 		glm::quat InterpolateRotation(double animationTime, const ChannelInfo& channel) const;
@@ -101,7 +103,10 @@ namespace Lobster
 			ar(m_meshPath);
 			std::vector<std::string> materialNames;
 			ar(materialNames);
-			for (auto name : materialNames) m_meshInfo.Materials.push_back(MaterialLibrary::Use(name.c_str()));
+			for (auto name : materialNames) {
+				if (name == "RAW_MATERIAL") continue;
+				m_meshInfo.Materials.push_back(MaterialLibrary::Use(name.c_str()));
+			}
 			
 			// Animations
 			std::vector<std::string> animationNames;
