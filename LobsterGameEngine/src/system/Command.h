@@ -38,7 +38,7 @@ namespace Lobster {
 		Transform m_new;
 	};
 
-	//	Deletion of a game object.
+	//	Deletion of a game object at root level.
 	class DestroyObjectCommand : public Command {
 	public:
 		virtual ~DestroyObjectCommand() override;
@@ -54,7 +54,7 @@ namespace Lobster {
 		bool b_isDeleted;
 	};
 
-	//	Creation of a game object.
+	//	Creation of a game object at root level.
 	class CreateObjectCommand : public Command {
 	public:
 		virtual ~CreateObjectCommand() override;
@@ -67,6 +67,38 @@ namespace Lobster {
 	private:
 		GameObject* m_object;
 		Scene* m_scene;
+		bool b_isDeleted;
+	};
+
+	//	Deletion of a game object with a parent.
+	class DestroyChildCommand : public Command {
+	public:
+		virtual ~DestroyChildCommand() override;
+
+		DestroyChildCommand(GameObject* object, GameObject* parent);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		GameObject* m_object;
+		GameObject* m_parent;
+		bool b_isDeleted;
+	};
+
+	//	Creation of a game object at root level.
+	class CreateChildCommand : public Command {
+	public:
+		virtual ~CreateChildCommand() override;
+
+		CreateChildCommand(GameObject* object, GameObject* parent);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		GameObject* m_object;
+		GameObject* m_parent;
 		bool b_isDeleted;
 	};
 
@@ -114,7 +146,7 @@ namespace Lobster {
 			m_action(action),
 			m_func(f)
 		{
-			LOG("{}", action);	//	Debug purpose
+
 		}
 
 		void Exec() override {

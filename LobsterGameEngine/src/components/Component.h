@@ -41,12 +41,19 @@ namespace Lobster
         GameObject* gameObject;
         Transform* transform;
 
+		//	Used to handle virtual create / delete. For components that doesn't need this feture, this variable will constantly stay at false.
+		bool b_isVirtuallyDeleted = false;
+
 		//	Used to handle closing.
 		bool m_show = true;
 		void RemoveComponent(Component* comp);
 
     public:
 		virtual ~Component() {}
+
+		virtual void VirtualCreate() {}
+		virtual void VirtualDelete() {}
+
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
 		virtual void OnBegin() {}

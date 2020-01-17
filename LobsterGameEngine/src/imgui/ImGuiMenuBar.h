@@ -58,7 +58,7 @@ namespace Lobster
 					if (ImGui::MenuItem("Undo", "Ctrl+Z", false, undo->UndosRemaining() > 0)) {
 						undo->Undo();
 					}
-					if (undo->UndosRemaining() > 0) {
+					if (undo->UndosRemaining() > 1) {
 						if (ImGui::BeginMenu("Undo multiple")) {
 							int i = 0;
 							bool noneSelected = true;
@@ -89,7 +89,7 @@ namespace Lobster
 					if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z", false, undo->RedosRemaining() > 0)) {
 						undo->Redo();
 					}
-					if (undo->RedosRemaining() > 0) {
+					if (undo->RedosRemaining() > 1) {
 						if (ImGui::BeginMenu("Redo multiple")) {
 							int i = 0;
 							bool noneSelected = true;

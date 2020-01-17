@@ -47,6 +47,10 @@ namespace Lobster
 	public:
 		LightComponent(LightType type = DIRECTIONAL_LIGHT);
 		~LightComponent();
+
+		virtual void VirtualCreate() override;
+		virtual void VirtualDelete() override;
+
 		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;

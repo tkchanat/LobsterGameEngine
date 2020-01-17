@@ -20,6 +20,16 @@ namespace Lobster
 
 	LightComponent::~LightComponent()
 	{
+		if (b_isVirtuallyDeleted == false) LightLibrary::RemoveLight(this, m_type);
+	}
+
+	void LightComponent::VirtualCreate() {
+		b_isVirtuallyDeleted = false;
+		LightLibrary::AddLight(this, m_type);
+	}
+
+	void LightComponent::VirtualDelete() {
+		b_isVirtuallyDeleted = true;
 		LightLibrary::RemoveLight(this, m_type);
 	}
 
