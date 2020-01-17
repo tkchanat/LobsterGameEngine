@@ -25,24 +25,14 @@ namespace Lobster
 		}
     }
 
-	MeshComponent::MeshComponent(VertexArray * mesh, const char * materialPath) :
+	MeshComponent::MeshComponent(VertexArray * mesh, std::pair<glm::vec3, glm::vec3> minMax, const char* materialPath) :
 		Component(MESH_COMPONENT),
 		m_meshPath(""),
 		m_meshInfo(MeshInfo())
 	{
 		m_meshInfo.Meshes.push_back(mesh);
 		m_meshInfo.Materials.push_back(materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault());
-		m_meshInfo.Bound = { glm::vec3(0, 0, 0), glm::vec3(0.01, 0.01, 0.01) };
-	}
-
-	MeshComponent::MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char * materialPath) :
-		Component(MESH_COMPONENT),
-		m_meshPath(""),
-		m_meshInfo(MeshInfo())
-	{
-		m_meshInfo.Meshes.push_back(mesh);
-		m_meshInfo.Materials.push_back(materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault());
-		m_meshInfo.Bound = { min, max };
+		m_meshInfo.Bound = minMax;
 	}
 
 	void MeshComponent::CrossfadeAnimation(int animation, double fadeDuration)

@@ -190,11 +190,10 @@ namespace Lobster
 		vb.push_back(vertexBuffer);
 		ib.push_back(indexBuffer);
 		// free memory
-		/*
 		if (vertices) delete[] vertices;
 		if (indices) delete[] indices;
 		vertices = nullptr;
-		indices = nullptr;*/
+		indices = nullptr;
 		return new VertexArray(layout, vb, ib, PrimitiveType::TRIANGLES);
 	}
 

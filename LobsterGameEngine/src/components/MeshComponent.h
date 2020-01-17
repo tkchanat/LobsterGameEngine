@@ -54,8 +54,7 @@ namespace Lobster
     public:
 		MeshComponent() : Component(MESH_COMPONENT) {}
         MeshComponent(const char* meshPath, const char* materialPath = nullptr);
-        MeshComponent(VertexArray* mesh, const char* materialPath = nullptr);
-		MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char* materialPath = nullptr);
+		MeshComponent(VertexArray* mesh, std::pair<glm::vec3, glm::vec3> minMax = {glm::vec3(-.5, -.5, -.5), glm::vec3(.5, .5, .5)}, const char* materialPath = nullptr);
         virtual ~MeshComponent() override;
 		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
