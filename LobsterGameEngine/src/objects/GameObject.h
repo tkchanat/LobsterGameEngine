@@ -56,6 +56,8 @@ namespace Lobster
 		virtual void OnSimulationEnd();
 		GameObject* AddComponent(Component* component);
 		GameObject* AddChild(GameObject* child);
+		void RemoveChild(GameObject* child);
+		void RemoveChildByName(std::string& name);
 		template<typename T> T* GetComponent();
 		std::pair<glm::vec3, glm::vec3> GetBound();
 		inline unsigned long long GetId() { return m_id; }

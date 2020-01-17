@@ -5,6 +5,7 @@
 #include "graphics/Scene.h"
 #include "objects/GameObject.h"
 #include "system/UndoSystem.h"
+#include "physics/Rigidbody.h"
 
 namespace Lobster 
 {
@@ -15,15 +16,28 @@ namespace Lobster
 		void ShowPopupContext(GameObject* gameObject) {
 			if (ImGui::BeginPopupContextItem()) {
 				EditorLayer::s_selectedGameObject = gameObject;
+				if (ImGui::MenuItem("Add Child", "")) {
+					int cnt = gameObject->GetChildrenCount() + 1;
+					char name[16]; sprintf(name, "Child %d", cnt);
+					GameObject* child = new GameObject(name);
+					PhysicsComponent* phys = new Rigidbody();
+					phys->SetEnabled(false);
+					gameObject->AddChild(child->AddComponent(phys));
+					// TODO: Undo system call
+				}
 				// TODO: Clone GameObject
 				if (ImGui::MenuItem("Clone", "", false)) {
 					ImGui::CloseCurrentPopup();
 				}
 				if (!gameObject->GetComponent<CameraComponent>()) {
 					if (ImGui::MenuItem("Destroy", "", false)) {
-						GetScene()->RemoveGameObject(EditorLayer::s_selectedGameObject);
-						UndoSystem::GetInstance()->Push(new DestroyObjectCommand(EditorLayer::s_selectedGameObject, GetScene()));
-						//EditorLayer::s_selectedGameObject->Destroy();						
+						if (EditorLayer::s_selectedGameObject->GetParent()) {
+							EditorLayer::s_selectedGameObject->Destroy();
+						}
+						else {
+							GetScene()->RemoveGameObject(EditorLayer::s_selectedGameObject);
+						}						
+						UndoSystem::GetInstance()->Push(new DestroyObjectCommand(EditorLayer::s_selectedGameObject, GetScene()));					
 						EditorLayer::s_selectedGameObject = nullptr;
 					}
 				}

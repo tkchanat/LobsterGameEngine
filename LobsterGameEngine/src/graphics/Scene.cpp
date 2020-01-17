@@ -132,25 +132,22 @@ namespace Lobster
         return this;
     }
 
-	// Only remove the FIRST object with name
-	Scene* Scene::RemoveGameObject(std::string name) {
-		for (int i = 0; i < m_gameObjects.size(); i++) {
-			if (m_gameObjects[i]->GetName().compare(name) == 0) {
-				m_gameObjects.erase(m_gameObjects.begin() + i);
-				break;
-			}
-		}
-		return this;
-	}
-
 	Scene* Scene::RemoveGameObject(GameObject* gameObject) {
 		if (!gameObject) return this;
 		auto index = std::find(m_gameObjects.begin(), m_gameObjects.end(), gameObject);
 		if (index != m_gameObjects.end()) {
 			m_gameObjects.erase(index);
-			//UndoSystem::GetInstance()->Push(new DestroyObjectCommand(gameObject, this));
-			//delete gameObject;
-			//gameObject = nullptr;
+		}
+		return this;
+	}
+
+	// Only remove the FIRST object with name
+	Scene* Scene::RemoveGameObjectByName(std::string name) {
+		for (int i = 0; i < m_gameObjects.size(); i++) {
+			if (m_gameObjects[i]->GetName() == name) {
+				m_gameObjects.erase(m_gameObjects.begin() + i);
+				break;
+			}
 		}
 		return this;
 	}

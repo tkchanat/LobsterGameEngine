@@ -140,7 +140,6 @@ namespace Lobster {
 		for (GameObject* c : colliding) {
 			if (std::find(collided.begin(), collided.end(), c) == collided.end()) {
 				gameObject->OnEnter(c);
-
 				gameObject->OnCollide(c);
 			}
 		}
