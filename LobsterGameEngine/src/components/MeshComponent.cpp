@@ -382,13 +382,13 @@ namespace Lobster
 		return finalScale;
 	}
 
-	void MeshComponent::Serialize(cereal::JSONOutputArchive & oarchive)
+	void MeshComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
 	{
 		//LOG("Serializing MeshComponent {}", m_meshPath);
 		oarchive(*this);
 	}
 
-	void MeshComponent::Deserialize(cereal::JSONInputArchive & iarchive)
+	void MeshComponent::Deserialize(cereal::BinaryInputArchive & iarchive)
 	{
 		//LOG("Deserializing MeshComponent {}", m_meshPath);
 		try {

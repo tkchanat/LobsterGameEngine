@@ -29,28 +29,59 @@ namespace Lobster {
 		float m_minDistance = 1.f;		// the distance starting to weaken volume
 		float m_maxDistance = 100.f;	// the distance with zero volume
 		VolumeRolloff m_rolloff = INVERSE_SQUARE;
-		// parameters to keep track of
-		glm::vec3 position;
 	private:
 		void SetMinMaxDistance();
 	public:
 		AudioSource();
 		~AudioSource();
 		void SetSource(AudioClip* ac);
-		glm::vec3 GetPosition();		
+		glm::vec3 GetPosition();
 		virtual void OnUpdate(double deltaTime);
 		virtual void OnImGuiRender();
 		virtual void OnSimulationBegin();
 		virtual void OnSimulationEnd();
+		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+	private:
+		friend class cereal::access;
+		template <class Archive>
+		void save(Archive & ar) const
+		{
+			ar(m_clipName);
+			ar(m_muted);
+			ar(m_gain);
+			ar(m_pitch);
+			ar(m_enable3d);
+			ar(m_minDistance, m_maxDistance);
+			ar(m_rolloff);
+		}
+		template <class Archive>
+		void load(Archive & ar)
+		{
+			ar(m_clipName);
+			ar(m_muted);
+			ar(m_gain);
+			ar(m_pitch);
+			ar(m_enable3d);
+			ar(m_minDistance, m_maxDistance);
+			ar(reinterpret_cast<VolumeRolloff>(m_rolloff));
+		}
 	};
 
 	class AudioListener : public Component {
 		bool m_open = true;		// Remove the component when this is false
-		glm::vec3 m_position;
 	public:
 		AudioListener();
 		virtual void OnUpdate(double deltaTime);
 		virtual void OnImGuiRender();
+		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+	private:
+		friend class cereal::access;
+		template <class Archive>
+		void serialize(Archive & ar)
+		{
+		}
 	};
 
 }

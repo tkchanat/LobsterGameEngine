@@ -164,12 +164,12 @@ namespace Lobster
 		}
 	}
 
-	void ParticleComponent::Serialize(cereal::JSONOutputArchive & oarchive)
+	void ParticleComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
 	{
 		oarchive(*this);
 	}
 
-	void ParticleComponent::Deserialize(cereal::JSONInputArchive & iarchive)
+	void ParticleComponent::Deserialize(cereal::BinaryInputArchive & iarchive)
 	{
 		try {
 			iarchive(*this);

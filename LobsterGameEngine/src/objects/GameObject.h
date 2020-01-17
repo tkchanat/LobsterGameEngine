@@ -48,8 +48,8 @@ namespace Lobster
 		void Destroy();
 		void OnBegin(); // call when the object is initialized in game mode
         void OnUpdate(double deltaTime);
-		void Serialize(cereal::JSONOutputArchive& oarchive);
-		void Deserialize(cereal::JSONInputArchive& iarchive);
+		void Serialize(cereal::BinaryOutputArchive& oarchive);
+		void Deserialize(cereal::BinaryInputArchive& iarchive);
 		//	To update ImGui components that describes this game object's attributes
 		virtual void OnImGuiRender();
 		virtual void OnSimulationBegin();

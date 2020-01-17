@@ -19,12 +19,12 @@ namespace Lobster {
 		return false;
 	}
 
-	void PhysicsComponent::Serialize(cereal::JSONOutputArchive & oarchive)
+	void PhysicsComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
 	{
 		oarchive(*this);
 	}
 
-	void PhysicsComponent::Deserialize(cereal::JSONInputArchive & iarchive)
+	void PhysicsComponent::Deserialize(cereal::BinaryInputArchive & iarchive)
 	{
 		try {
 			iarchive(*this);

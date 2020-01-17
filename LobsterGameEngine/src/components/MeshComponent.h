@@ -74,8 +74,8 @@ namespace Lobster
 		glm::vec3 InterpolatePosition(double animationTime, const ChannelInfo& channel) const;
 		glm::quat InterpolateRotation(double animationTime, const ChannelInfo& channel) const;
 		glm::vec3 InterpolateScale(double animationTime, const ChannelInfo& channel) const;
-		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
+		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
 	private:
 		friend class cereal::access;
 		template <class Archive>

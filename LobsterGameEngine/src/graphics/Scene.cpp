@@ -108,7 +108,7 @@ namespace Lobster
 		//LOG("Serializing Scene");
 		std::stringstream ss;
 		{
-			cereal::JSONOutputArchive oarchive(ss);
+			cereal::BinaryOutputArchive oarchive(ss);
 			oarchive(*this);
 		}
 		INFO("Scene saved!");
@@ -117,7 +117,7 @@ namespace Lobster
 
 	void Scene::Deserialize(std::stringstream& ss) {
 		//LOG("Deserializing Scene");
-		cereal::JSONInputArchive iarchive(ss);
+		cereal::BinaryInputArchive iarchive(ss);
 		try {
 			iarchive(*this);
 		}
