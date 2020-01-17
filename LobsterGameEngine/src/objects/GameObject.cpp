@@ -32,13 +32,11 @@ namespace Lobster
 	void GameObject::Destroy()
 	{
 		if (m_parent) {
-			auto index = std::find(m_parent->m_children.begin(), m_parent->m_children.end(), this);
-			if (index == m_parent->m_children.end()) {
-				throw std::runtime_error("Attempting to destroy an invalid GameObject");
-				return;
-			}
-			m_parent->m_children.erase(index);
+			m_parent->RemoveChild(this);
         }
+		else {
+			// TODO search in first layer of scene
+		}
 	}
 
 	void GameObject::OnBegin() {
@@ -257,13 +255,23 @@ namespace Lobster
 		return this;
 	}
 
+	void GameObject::RemoveChild(GameObject* child) {
+		m_children.erase(std::remove(m_children.begin(), m_children.end(), child));
+	}
+
+	void GameObject::RemoveChildByName(std::string& name) {
+		m_children.erase(std::remove_if(m_children.begin(), m_children.end(), [&](GameObject* c) -> bool {
+			return (c->GetName() == name);
+		}), m_children.end());
+	}
+
 	std::pair<glm::vec3, glm::vec3> GameObject::GetBound() {
 		if (GetComponent<MeshComponent>()) {
 			return GetComponent<MeshComponent>()->GetBound();
 		}
 		else {
 			// the size ImGuiGizmo icon
-			return { glm::vec3(-0.5, -0.5, -0.5), glm::vec3(0.5, 0.5, 0.5) };
+			return { glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1) };
 		}
 	}
 

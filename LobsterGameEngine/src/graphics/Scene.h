@@ -26,9 +26,9 @@ namespace Lobster
 		void OnPhysicsUpdate(double deltaTime);
 		std::stringstream Serialize();
 		void Deserialize(std::stringstream& ss);
-        Scene* AddGameObject(GameObject* gameObject);
-		Scene* RemoveGameObject(std::string name);
+        Scene* AddGameObject(GameObject* gameObject);		
 		Scene* RemoveGameObject(GameObject* gameObject);
+		Scene* RemoveGameObjectByName(std::string name);
 		const std::vector<GameObject*>& GetGameObjects();
 		GameObject* GetGameObject(GameObject* gameObject);
 		bool IsObjectNameDuplicated(std::string name, std::string except = "");
