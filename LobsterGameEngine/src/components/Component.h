@@ -44,7 +44,7 @@ namespace Lobster
 		//	Used to handle virtual create / delete. For components that doesn't need this feture, this variable will constantly stay at false.
 		bool b_isVirtuallyDeleted = false;
 
-		//	Used to handle closing.
+		//	Used to handle closing. Remove the component when m_show = false.
 		bool m_show = true;
 		void RemoveComponent(Component* comp);
 
@@ -71,6 +71,8 @@ namespace Lobster
 		inline std::string GetTypeName() const { return componentName[m_type]; }
         inline bool IsEnabled() { return m_enabled; }
 		inline void SetEnabled(bool enabled) { m_enabled = enabled; }
+		inline bool IsShowing() { return m_show; }
+		inline void SetShowing(bool show) { m_show = show; }
     protected:
         explicit Component(ComponentType type) : m_type(type), m_enabled(true), gameObject(nullptr), transform(nullptr) {}
     };

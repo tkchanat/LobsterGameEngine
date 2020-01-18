@@ -68,7 +68,9 @@ namespace Lobster
 							ImGui::EndMenu();
 						}
 						if (ImGui::Selectable("Particle System")) {
-							selectedGO->AddComponent(new ParticleComponent());
+							ParticleComponent* particleComp = new ParticleComponent();
+							selectedGO->AddComponent(particleComp);
+							UndoSystem::GetInstance()->Push(new CreateComponentCommand(particleComp, selectedGO));
 						}
 						if (ImGui::Selectable("Script")) {
 							selectedGO->AddComponent(new Script());

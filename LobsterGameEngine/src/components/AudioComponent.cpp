@@ -38,7 +38,7 @@ namespace Lobster {
 	}
 
 	void AudioSource::OnImGuiRender() {
-		if (ImGui::CollapsingHeader("Audio Source", &m_open, ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader("Audio Source", &m_show, ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			std::string prevClipName = m_clipName;
 			if (ImGui::BeginCombo("Audio Clip", m_clipName.c_str())) {
@@ -133,17 +133,9 @@ namespace Lobster {
 				ImGui::TreePop();
 			}
 		}
-		
-		// Remove the component upon the cross button click
-		if (!m_open) {
-			m_open = true;
-			gameObject->RemoveComponent(this);
-			UndoSystem::GetInstance()->Push(new DestroyComponentCommand(this, gameObject));
-		}
 	}
 
 	void AudioSource::SetMinMaxDistance() {
-		LOG("debug we called dis");
 		if (m_clip) {
 			alSourcef(m_clip->GetSource(), AL_REFERENCE_DISTANCE, m_minDistance);
 			alSourcef(m_clip->GetSource(), AL_MAX_DISTANCE, m_maxDistance);
@@ -223,17 +215,8 @@ namespace Lobster {
 	}
 
 	void AudioListener::OnImGuiRender() {
-		if (ImGui::CollapsingHeader("Audio Listener", &m_open, ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader("Audio Listener", &m_show, ImGuiTreeNodeFlags_DefaultOpen)) {
 			ImGui::Text("Hi I am listening");
-		}
-
-		// Remove the component upon the cross button click
-		if (!m_open) {
-			if (!m_open) {
-				m_open = true;
-				gameObject->RemoveComponent(this);
-				UndoSystem::GetInstance()->Push(new DestroyComponentCommand(this, gameObject));
-			}
 		}
 	}
 

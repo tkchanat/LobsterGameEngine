@@ -200,6 +200,13 @@ namespace Lobster
 		{
 			ImGui::PushID(component);
 			component->OnImGuiRender();
+
+			// Remove the component upon the cross button click
+			if (!component->IsShowing()) {
+				component->SetShowing(true);
+				RemoveComponent(component);
+				UndoSystem::GetInstance()->Push(new DestroyComponentCommand(component, this));
+			}
 			ImGui::Separator();
 			ImGui::PopID();
 		}

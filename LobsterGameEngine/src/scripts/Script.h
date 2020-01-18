@@ -17,7 +17,6 @@ namespace Lobster
 		lua_State* L;
 		std::string filename;
 		std::string errmsg;	// error message of the script (if any)
-		bool m_open = true;
 
 		// Load or reload a Lua script in relative path into the object.
 		void loadScript(const char* file);

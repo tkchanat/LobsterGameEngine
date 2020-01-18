@@ -83,8 +83,11 @@ namespace Lobster
 				colorStr += ": " + std::to_string((int)round(vec[i] * 255));
 				if (i != 2) colorStr += ", ";
 			}
-			LOG("{}", colorStr);
 			return colorStr;
+		}
+
+		std::string ToDegreeString(float val) {
+			return std::to_string((int) round(val * 180 / M_PI)) + " deg";
 		}
 
 		std::string ToString(float val, int decimals) {

@@ -20,7 +20,6 @@ namespace Lobster {
 		AudioClip* m_clip = nullptr;
 		std::string m_clipName = "None";// to record the audio name for further loading
 		// basic setting
-		bool m_open = true;				// remove the component when this is false
 		bool m_muted = false;
 		float m_gain = 1.0;
 		float m_pitch = 1.0;		
@@ -69,7 +68,6 @@ namespace Lobster {
 	};
 
 	class AudioListener : public Component {
-		bool m_open = true;		// Remove the component when this is false
 	public:
 		AudioListener();
 		virtual void OnUpdate(double deltaTime);

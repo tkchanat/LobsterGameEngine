@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "system/Command.h"
 #include "graphics/Scene.h"
+#include "layer/EditorLayer.h"
 #include "objects/GameObject.h"
 
 namespace Lobster {
@@ -58,6 +59,8 @@ namespace Lobster {
 		m_scene->RemoveGameObject(m_object);
 		b_isDeleted = true;
 		m_object->ToggleVirtualDelete();
+
+		if (EditorLayer::s_selectedGameObject == m_object) EditorLayer::s_selectedGameObject = nullptr;
 	}
 
 	//	By performing an undo on destroy command, the object should come back to live.
@@ -97,6 +100,8 @@ namespace Lobster {
 		m_scene->RemoveGameObject(m_object);
 		b_isDeleted = true;
 		m_object->ToggleVirtualDelete();
+
+		if (EditorLayer::s_selectedGameObject == m_object) EditorLayer::s_selectedGameObject = nullptr;
 	}
 
 	std::string CreateObjectCommand::ToString() const {

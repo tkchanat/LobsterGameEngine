@@ -13,7 +13,8 @@ namespace Lobster
 		"Physics Component",
 		"Script Component",
 		"Audio Source Component",
-		"Audio Listener Component"
+		"Audio Listener Component",
+		"Particle Component"
 	};
 
 	void Component::RemoveComponent(Component* comp) 

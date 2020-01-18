@@ -24,7 +24,6 @@ namespace Lobster
 					phys->SetEnabled(false);
 					gameObject->AddChild(child->AddComponent(phys));
 					UndoSystem::GetInstance()->Push(new CreateChildCommand(child, gameObject));
-					// TODO: Undo system call
 				}
 				// TODO: Clone GameObject
 				if (ImGui::MenuItem("Clone", "", false)) {
