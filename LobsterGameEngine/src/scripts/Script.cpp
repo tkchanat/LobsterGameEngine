@@ -32,7 +32,7 @@ namespace Lobster {
 
 	void Script::OnImGuiRender() {
 		// combo box of scripts
-		if (ImGui::CollapsingHeader("Script", &m_open, ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader("Script", &m_show, ImGuiTreeNodeFlags_DefaultOpen)) {
 			if (ImGui::BeginCombo("Source", filename.c_str())) {
 				// None
 				if (ImGui::Selectable("None", filename.size() == 0)) {
@@ -65,11 +65,6 @@ namespace Lobster {
 				}
 			}
 			ImGui::EndChild();
-		}
-
-		// Remove the component upon the cross button click
-		if (!m_open) {
-			gameObject->RemoveComponent(this);
 		}
 	}
 

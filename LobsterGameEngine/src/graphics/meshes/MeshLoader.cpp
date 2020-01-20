@@ -209,7 +209,7 @@ namespace Lobster
 			vbData[i].bitangent[1] = (mesh->mTextureCoords[0]) ? mesh->mBitangents[i].y : 0.0f;
 			vbData[i].bitangent[2] = (mesh->mTextureCoords[0]) ? mesh->mBitangents[i].z : 0.0f;
 
-			//INFO("{:.1f}, {:.1f}, {:.1f},    {:.1f}, {:.1f}, {:.1f},    {:.1f}, {:.1f},", vbData[i * 8 + 0], vbData[i * 8 + 1], vbData[i * 8 + 2], vbData[i * 8 + 3], vbData[i * 8 + 4], vbData[i * 8 + 5], vbData[i * 8 + 6], vbData[i * 8 + 7]);
+			//INFO("{:.4f}, {:.4f}, {:.4f},    {:.4f}, {:.4f}, {:.4f},    {:.4f}, {:.4f},", vbData[i].position[0], vbData[i].position[1], vbData[i].position[2], vbData[i].normal[0], vbData[i].normal[1], vbData[i].normal[2], vbData[i].texcoord[0], vbData[i].texcoord[1]);
 			glm::vec3& min = meshInfo.Bound.first;
 			glm::vec3& max = meshInfo.Bound.second;
 			min.x = mesh->mVertices[i].x < min.x ? mesh->mVertices[i].x : min.x;
@@ -229,7 +229,7 @@ namespace Lobster
             ibData[i * 3 + 0] = mesh->mFaces[i].mIndices[0];
             ibData[i * 3 + 1] = mesh->mFaces[i].mIndices[1];
             ibData[i * 3 + 2] = mesh->mFaces[i].mIndices[2];
-			//INFO("{}, {}, {}", ibData[i * 3 + 0], ibData[i * 3 + 1], ibData[i * 3 + 2]);
+			//INFO("{}, {}, {},", ibData[i * 3 + 0], ibData[i * 3 + 1], ibData[i * 3 + 2]);
         }
         ib->SetData(ibData, numIndices);
 
@@ -336,7 +336,7 @@ namespace Lobster
 				vbData[i].boneWeight[3] = boneData[i].Weights[3];
 			}
 
-			//INFO("{:.1f}, {:.1f}, {:.1f},    {:.1f}, {:.1f}, {:.1f},    {:.1f}, {:.1f},", vbData[i * 8 + 0], vbData[i * 8 + 1], vbData[i * 8 + 2], vbData[i * 8 + 3], vbData[i * 8 + 4], vbData[i * 8 + 5], vbData[i * 8 + 6], vbData[i * 8 + 7]);
+			//INFO("{:.4f}, {:.4f}, {:.4f},    {:.4f}, {:.4f}, {:.4f},    {:.4f}, {:.4f},", vbData[i].position[0], vbData[i].position[1], vbData[i].position[2], vbData[i].normal[0], vbData[i].normal[1], vbData[i].normal[2], vbData[i].texcoord[0], vbData[i].texcoord[1]);
 			glm::vec3& min = meshInfo.Bound.first;
 			glm::vec3& max = meshInfo.Bound.second;
 			min.x = mesh->mVertices[i].x < min.x ? mesh->mVertices[i].x : min.x;

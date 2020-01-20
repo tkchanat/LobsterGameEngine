@@ -77,6 +77,7 @@ namespace Lobster
 
     void AABB::Draw()
     {
+		LOG("we called draw");
 #ifdef LOBSTER_BUILD_DEBUG
         // validate data, and return if we haven't define game object yet
 		if (!physics) return;

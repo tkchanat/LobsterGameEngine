@@ -5,9 +5,12 @@
 #include "graphics/IndexBuffer.h"
 #include "graphics/VertexLayout.h"
 #include "objects/GameObject.h"
+#include "system/Input.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster
 {
+	const char* ParticleComponent::shapes[] = { "Box", "Cone", "Sphere" };
 
 	ParticleComponent::ParticleComponent() :
 		Component(PARTICLE_COMPONENT),
@@ -61,7 +64,6 @@ namespace Lobster
 
 	void ParticleComponent::OnAttach()
 	{
-		LOG("{} {}", gameObject->GetBound().first.x, gameObject->GetBound().second.x);
 		PhysicsComponent* physics = new Rigidbody();
 		physics->SetEnabled(false);
 		gameObject->AddComponent(physics);
@@ -116,46 +118,130 @@ namespace Lobster
 
 	void ParticleComponent::OnImGuiRender()
 	{
-		if (ImGui::CollapsingHeader("Particle System", ImGuiTreeNodeFlags_DefaultOpen))
+		if (ImGui::CollapsingHeader("Particle System", &m_show, ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::Checkbox("Simulate On Begin", &b_animated);
-			const char* shapes[] = { "Box", "Cone", "Sphere" };
-			EmitterShape prev_shape = m_shape;
+			if (ImGui::Checkbox("Simulate On Begin", &b_animated)) {
+				UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &b_animated, !b_animated, b_animated, std::string(b_animated ? "Enabled" : "Disabled") + " animation of particle system for " + GetOwner()->GetName()));
+			}
+			EmitterShape prevShape = m_shape;
+
 			ImGui::Combo("Shape", (int*)&m_shape, shapes, IM_ARRAYSIZE(shapes));
-			if (prev_shape != m_shape) {
+			if (prevShape != m_shape) {
 				FillVolume();
+				UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_shape, prevShape, m_shape, "Set particle shape mode to " + std::string(shapes[(int)m_shape]) + " for " + GetOwner()->GetName(), &ParticleComponent::FillVolume));
 			}
 			ImGui::Spacing();
 
 			if(ImGui::TreeNode("Emission")) {
-				bool prev_state = b_emitOneByOne;
-				ImGui::Checkbox("Emit One By One?", &b_emitOneByOne);
-				if (prev_state != b_emitOneByOne) {
-					m_particleCount = 0;
-					_simulateElapsedTime = 0.f;
+				if (ImGui::Checkbox("Emit One By One?", &b_emitOneByOne)) {
+					ResetParticleCount();
+					UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &b_emitOneByOne, !b_emitOneByOne, b_emitOneByOne, std::string(b_emitOneByOne ? "Enable" : "Disable") + " particle one-to-one emission mode for " + GetOwner()->GetName(), &ParticleComponent::ResetParticleCount));
 				}
-				ImGui::DragFloat("Emission Rate (per second)", &m_emissionRate, 0.1f);
+
+				if (ImGui::DragFloat("Emission Rate (per second)", &m_emissionRate, 0.1f)) {
+					m_isChanging = 0;
+				}
+
 				m_emissionRate = m_emissionRate < 0.0f ? 0.0f : m_emissionRate;
-				ImGui::SliderAngle("Emission Angle", &m_emissionAngle, 0.f, 89.f);
+				if (m_isChanging != 0) {
+					m_prevProp[0] = m_emissionRate;
+				} else if (ImGui::IsItemActive() == false) {
+					if (m_prevProp[0] != m_emissionRate) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_emissionRate, m_prevProp[0], m_emissionRate, "Set particle emission rate to " + StringOps::ToString(m_emissionRate) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
+
+				if (ImGui::SliderAngle("Emission Angle", &m_emissionAngle, 0.f, 89.f)) {
+					m_isChanging = 1;
+				}
+				if (m_isChanging != 1) {
+					m_prevProp[1] = m_emissionAngle;
+				} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+					if (m_prevProp[1] != m_emissionAngle) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_emissionAngle, m_prevProp[1], m_emissionAngle, "Set particle emission angle to " + StringOps::ToDegreeString(m_emissionAngle) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
 				ImGui::TreePop();
 			}
 
 			if (ImGui::TreeNode("Transition")) {
 				ImGui::ColorEdit4("Start Color", glm::value_ptr(m_colorStartTransition));
+				if (ImGui::IsItemActive()) {
+					m_isChangingColor = 0;
+				}
+				if (m_isChangingColor != 0) {
+					m_prevColor[0] = m_colorStartTransition;
+				} else if (m_isChangingColor == 0 && ImGui::IsItemActive() == false) {
+					if (m_prevColor[0] != m_colorStartTransition) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_colorStartTransition, m_prevColor[0], m_colorStartTransition, "Set transition start color to " + StringOps::ToColorString(m_colorStartTransition) + " for " + GetOwner()->GetName()));
+					}
+					m_isChangingColor = -1;
+				}
+
 				ImGui::ColorEdit4("End Color", glm::value_ptr(m_colorEndTransition));
+				if (ImGui::IsItemActive()) {
+					m_isChangingColor = 1;
+				}
+				if (m_isChangingColor != 1) {
+					m_prevColor[1] = m_colorEndTransition;
+				} else if (m_isChangingColor == 1 && ImGui::IsItemActive() == false) {
+					if (m_prevColor[1] != m_colorEndTransition) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_colorEndTransition, m_prevColor[1], m_colorEndTransition, "Set transition end color to " + StringOps::ToColorString(m_colorEndTransition) + " for " + GetOwner()->GetName()));
+					}
+					m_isChangingColor = -1;
+				}
+
 				ImGui::TreePop();
 			}
 			
 			if (ImGui::TreeNode("Particle")) {
-				ImGui::SliderInt("Cutoff", &m_particleCutoff, 0, MAX_PARTICLES);
-				ImGui::SliderFloat("Size", &m_particleSize, 0.f, 1.f);
-				ImGui::SliderAngle("Orientation", &m_particleOrientation, 0.f, 360.f);
+				if (ImGui::SliderInt("Cutoff", &m_particleCutoff, 0, MAX_PARTICLES)) {
+					m_isChanging = 2;
+				}
+				if (m_isChanging != 2) {
+					m_prevProp[2] = m_particleCutoff;
+				} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+					if (m_prevProp[2] != m_particleCutoff) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_particleCutoff, (int) round(m_prevProp[2]), m_particleCutoff, "Set particle cutoff to " + std::to_string(m_particleCutoff) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
+
+				if (ImGui::SliderFloat("Size", &m_particleSize, 0.f, 1.f)) {
+					m_isChanging = 3;
+				}
+				if (m_isChanging != 3) {
+					m_prevProp[3] = m_particleSize;
+				} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+					if (m_prevProp[3] != m_particleSize) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_particleSize, m_prevProp[3], m_particleSize, "Set particle size to " + StringOps::ToString(m_particleSize) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
+
+				if (ImGui::SliderAngle("Orientation", &m_particleOrientation, 0.f, 360.f)) {
+					m_isChanging = 4;
+				}
+				if (m_isChanging != 4) {
+					m_prevProp[4] = m_particleOrientation;
+				} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+					if (m_prevProp[1] != m_particleOrientation) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_particleOrientation, m_prevProp[4], m_particleOrientation, "Set particle orientation angle to " + StringOps::ToDegreeString(m_particleOrientation) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
 				ImVec2 previewSize(24, 24);
 				Texture2D* notFound = TextureLibrary::Placeholder();
 				if (ImGui::ImageButton(m_particleTexture ? m_particleTexture->Get() : notFound->Get(), previewSize)) {
 					std::string path = FileSystem::OpenFileDialog();
 					if (!path.empty()) {
-						m_particleTexture = TextureLibrary::Use(path.c_str());
+						Texture2D* texture = TextureLibrary::Use(path.c_str());
+						if (m_particleTexture != texture) {
+							UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_particleTexture, m_particleTexture, texture, "Set particle texture for " + GetOwner()->GetName()));
+							m_particleTexture = texture;
+						}
 					}
 				}
 				ImGui::SameLine();
@@ -165,12 +251,17 @@ namespace Lobster
 		}
 	}
 
-	void ParticleComponent::Serialize(cereal::JSONOutputArchive & oarchive)
+	void ParticleComponent::ResetParticleCount() {
+		m_particleCount = 0;
+		_simulateElapsedTime = 0.f;
+	}
+
+	void ParticleComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
 	{
 		oarchive(*this);
 	}
 
-	void ParticleComponent::Deserialize(cereal::JSONInputArchive & iarchive)
+	void ParticleComponent::Deserialize(cereal::BinaryInputArchive & iarchive)
 	{
 		try {
 			iarchive(*this);

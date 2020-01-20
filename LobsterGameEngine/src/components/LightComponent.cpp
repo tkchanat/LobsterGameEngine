@@ -20,6 +20,16 @@ namespace Lobster
 
 	LightComponent::~LightComponent()
 	{
+		if (b_isVirtuallyDeleted == false) LightLibrary::RemoveLight(this, m_type);
+	}
+
+	void LightComponent::VirtualCreate() {
+		b_isVirtuallyDeleted = false;
+		LightLibrary::AddLight(this, m_type);
+	}
+
+	void LightComponent::VirtualDelete() {
+		b_isVirtuallyDeleted = true;
 		LightLibrary::RemoveLight(this, m_type);
 	}
 
@@ -95,13 +105,13 @@ namespace Lobster
 	}
 
 
-    void LightComponent::Serialize(cereal::JSONOutputArchive& oarchive)
+    void LightComponent::Serialize(cereal::BinaryOutputArchive& oarchive)
     {
         //LOG("Serializing LightComponent");
         oarchive(*this);
     }
 
-    void LightComponent::Deserialize(cereal::JSONInputArchive& iarchive)
+    void LightComponent::Deserialize(cereal::BinaryInputArchive& iarchive)
     {
         //LOG("Deserializing LightComponent");
         try {

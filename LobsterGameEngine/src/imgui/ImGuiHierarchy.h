@@ -23,7 +23,7 @@ namespace Lobster
 					PhysicsComponent* phys = new Rigidbody();
 					phys->SetEnabled(false);
 					gameObject->AddChild(child->AddComponent(phys));
-					// TODO: Undo system call
+					UndoSystem::GetInstance()->Push(new CreateChildCommand(child, gameObject));
 				}
 				// TODO: Clone GameObject
 				if (ImGui::MenuItem("Clone", "", false)) {
@@ -33,11 +33,13 @@ namespace Lobster
 					if (ImGui::MenuItem("Destroy", "", false)) {
 						if (EditorLayer::s_selectedGameObject->GetParent()) {
 							EditorLayer::s_selectedGameObject->Destroy();
+							UndoSystem::GetInstance()->Push(new DestroyChildCommand(EditorLayer::s_selectedGameObject, EditorLayer::s_selectedGameObject->GetParent()));
 						}
 						else {
 							GetScene()->RemoveGameObject(EditorLayer::s_selectedGameObject);
-						}						
-						UndoSystem::GetInstance()->Push(new DestroyObjectCommand(EditorLayer::s_selectedGameObject, GetScene()));					
+							UndoSystem::GetInstance()->Push(new DestroyObjectCommand(EditorLayer::s_selectedGameObject, GetScene()));
+						}
+						EditorLayer::s_selectedGameObject->ToggleVirtualDelete();
 						EditorLayer::s_selectedGameObject = nullptr;
 					}
 				}

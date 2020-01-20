@@ -29,6 +29,22 @@ namespace Lobster
 		}
     }
 
+	void GameObject::ToggleVirtualDelete() {
+		b_isVirtuallyDeleted = !b_isVirtuallyDeleted;
+		
+		//	First call the function for its child
+		for (GameObject* child : m_children) child->ToggleVirtualDelete();
+
+		//	Then call the function for its components.
+		for (Component* comp : m_components) {
+			if (b_isVirtuallyDeleted) {
+				comp->VirtualDelete();
+			} else {
+				comp->VirtualCreate();
+			}
+		}
+	}
+
 	void GameObject::Destroy()
 	{
 		if (m_parent) {
@@ -184,18 +200,25 @@ namespace Lobster
 		{
 			ImGui::PushID(component);
 			component->OnImGuiRender();
+
+			// Remove the component upon the cross button click
+			if (!component->IsShowing()) {
+				component->SetShowing(true);
+				RemoveComponent(component);
+				UndoSystem::GetInstance()->Push(new DestroyComponentCommand(component, this));
+			}
 			ImGui::Separator();
 			ImGui::PopID();
 		}
 	}
 
-	void GameObject::Serialize(cereal::JSONOutputArchive& oarchive)
+	void GameObject::Serialize(cereal::BinaryOutputArchive& oarchive)
 	{
 		//LOG("Serializing GameObject {}", m_name);
 		oarchive(*this);
 	}
 
-	void GameObject::Deserialize(cereal::JSONInputArchive& iarchive)
+	void GameObject::Deserialize(cereal::BinaryInputArchive& iarchive)
 	{
 		//LOG("Deserializing GameObject {}", m_name);
 		try {

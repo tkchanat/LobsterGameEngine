@@ -41,12 +41,19 @@ namespace Lobster
         GameObject* gameObject;
         Transform* transform;
 
-		//	Used to handle closing.
+		//	Used to handle virtual create / delete. For components that doesn't need this feture, this variable will constantly stay at false.
+		bool b_isVirtuallyDeleted = false;
+
+		//	Used to handle closing. Remove the component when m_show = false.
 		bool m_show = true;
 		void RemoveComponent(Component* comp);
 
     public:
 		virtual ~Component() {}
+
+		virtual void VirtualCreate() {}
+		virtual void VirtualDelete() {}
+
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
 		virtual void OnBegin() {}
@@ -54,8 +61,8 @@ namespace Lobster
         virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender() = 0;
 		virtual void SetOwner(GameObject* owner) { gameObject = owner; }
-		virtual void Serialize(cereal::JSONOutputArchive& oarchive) {}
-		virtual void Deserialize(cereal::JSONInputArchive& iarchive) {}
+		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) = 0;
+		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) = 0;
         inline virtual void SetOwnerTransform(Transform* t) { transform = t; }
         inline void RemoveOwner() { gameObject = nullptr; }
 		inline GameObject* GetOwner() { return gameObject; }	//	TODO: Discuss if this class is needed, used for print intersection result only for now.
@@ -63,6 +70,8 @@ namespace Lobster
 		inline std::string GetTypeName() const { return componentName[m_type]; }
         inline bool IsEnabled() { return m_enabled; }
 		inline void SetEnabled(bool enabled) { m_enabled = enabled; }
+		inline bool IsShowing() { return m_show; }
+		inline void SetShowing(bool show) { m_show = show; }
     protected:
         explicit Component(ComponentType type) : m_type(type), m_enabled(true), gameObject(nullptr), transform(nullptr) {}
     };

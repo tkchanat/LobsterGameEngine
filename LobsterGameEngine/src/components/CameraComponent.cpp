@@ -109,13 +109,13 @@ namespace Lobster
 
 	}
 		
-	void CameraComponent::Serialize(cereal::JSONOutputArchive & oarchive)
+	void CameraComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
 	{
 		//LOG("Serializing CameraComponent");
 		oarchive(*this);
 	}
 
-	void CameraComponent::Deserialize(cereal::JSONInputArchive & iarchive)
+	void CameraComponent::Deserialize(cereal::BinaryInputArchive & iarchive)
 	{
 		//LOG("Deserializing CameraComponent");
 		try {

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "system/Command.h"
 #include "graphics/Scene.h"
+#include "layer/EditorLayer.h"
 #include "objects/GameObject.h"
 
 namespace Lobster {
@@ -57,12 +58,16 @@ namespace Lobster {
 	void DestroyObjectCommand::Exec() {
 		m_scene->RemoveGameObject(m_object);
 		b_isDeleted = true;
+		m_object->ToggleVirtualDelete();
+
+		if (EditorLayer::s_selectedGameObject == m_object) EditorLayer::s_selectedGameObject = nullptr;
 	}
 
 	//	By performing an undo on destroy command, the object should come back to live.
 	void DestroyObjectCommand::Undo() {
 		m_scene->AddGameObject(m_object);
 		b_isDeleted = false;
+		m_object->ToggleVirtualDelete();
 	}
 
 	std::string DestroyObjectCommand::ToString() const {
@@ -87,16 +92,84 @@ namespace Lobster {
 	void CreateObjectCommand::Exec() {
 		m_scene->AddGameObject(m_object);
 		b_isDeleted = false;
+		m_object->ToggleVirtualDelete();
 	}
 
 	//	By performing an undo on create command, the object should be deleted.
 	void CreateObjectCommand::Undo() {
 		m_scene->RemoveGameObject(m_object);
 		b_isDeleted = true;
+		m_object->ToggleVirtualDelete();
+
+		if (EditorLayer::s_selectedGameObject == m_object) EditorLayer::s_selectedGameObject = nullptr;
 	}
 
 	std::string CreateObjectCommand::ToString() const {
 		return "Created " + m_object->GetName();
+	}
+
+	DestroyChildCommand::DestroyChildCommand(GameObject* object, GameObject* parent) :
+		m_object(object),
+		m_parent(parent),
+		b_isDeleted(true)
+	{
+
+	}
+
+	DestroyChildCommand::~DestroyChildCommand() {
+		if (b_isDeleted) delete m_object;
+		m_object = nullptr;
+		m_parent = nullptr;
+	}
+
+	//	Executing a destroy command is to soft delete an object.
+	void DestroyChildCommand::Exec() {
+		m_parent->RemoveChild(m_object);
+		b_isDeleted = true;
+		m_object->ToggleVirtualDelete();
+	}
+
+	//	By performing an undo on destroy command, the object should come back to live.
+	void DestroyChildCommand::Undo() {
+		m_parent->AddChild(m_object);
+		b_isDeleted = false;
+		m_object->ToggleVirtualDelete();
+	}
+
+	std::string DestroyChildCommand::ToString() const {
+		return "Destroyed " + m_object->GetName() + " inside " + m_parent->GetName();
+	}
+
+	CreateChildCommand::CreateChildCommand(GameObject* object, GameObject* parent) :
+		m_object(object),
+		m_parent(parent),
+		b_isDeleted(false)
+	{
+
+	}
+
+	CreateChildCommand::~CreateChildCommand() {
+		if (b_isDeleted) delete m_object;
+		m_object = nullptr;
+		m_parent = nullptr;
+	}
+
+	//	Executing a create command is to bring an object to live.
+	void CreateChildCommand::Exec() {
+		m_parent->AddChild(m_object);
+		b_isDeleted = false;
+		m_object->ToggleVirtualDelete();
+	}
+
+	//	By performing an undo on create command, the object should be deleted.
+	void CreateChildCommand::Undo() {
+		m_parent->RemoveChild(m_object);
+		b_isDeleted = true;
+		m_object->ToggleVirtualDelete();
+	}
+
+	std::string CreateChildCommand::ToString() const {
+		return "Created " + m_object->GetName() + " inside " + m_parent->GetName();
 	}
 
 	DestroyComponentCommand::DestroyComponentCommand(Component* component, GameObject* object) :
@@ -117,12 +190,14 @@ namespace Lobster {
 	void DestroyComponentCommand::Exec() {
 		m_object->RemoveComponent(m_component);
 		b_isDeleted = true;
+		m_component->VirtualDelete();
 	}
 
 	//	By performing an undo on destroy command, the component should come back to live.
 	void DestroyComponentCommand::Undo() {
 		m_object->AddComponent(m_component);
 		b_isDeleted = false;
+		m_component->VirtualCreate();
 	}
 
 	std::string DestroyComponentCommand::ToString() const {
@@ -147,12 +222,14 @@ namespace Lobster {
 	void CreateComponentCommand::Exec() {
 		m_object->AddComponent(m_component);
 		b_isDeleted = false;
+		m_component->VirtualCreate();
 	}
 
 	//	By performing an undo on create command, the component should be deleted.
 	void CreateComponentCommand::Undo() {
 		m_object->RemoveComponent(m_component);
 		b_isDeleted = true;
+		m_component->VirtualDelete();
 	}
 
 	std::string CreateComponentCommand::ToString() const {

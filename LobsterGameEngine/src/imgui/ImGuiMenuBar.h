@@ -58,7 +58,7 @@ namespace Lobster
 					if (ImGui::MenuItem("Undo", "Ctrl+Z", false, undo->UndosRemaining() > 0)) {
 						undo->Undo();
 					}
-					if (undo->UndosRemaining() > 0) {
+					if (undo->UndosRemaining() > 1) {
 						if (ImGui::BeginMenu("Undo multiple")) {
 							int i = 0;
 							bool noneSelected = true;
@@ -89,7 +89,7 @@ namespace Lobster
 					if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z", false, undo->RedosRemaining() > 0)) {
 						undo->Redo();
 					}
-					if (undo->RedosRemaining() > 0) {
+					if (undo->RedosRemaining() > 1) {
 						if (ImGui::BeginMenu("Redo multiple")) {
 							int i = 0;
 							bool noneSelected = true;
@@ -136,19 +136,19 @@ namespace Lobster
 					{						
 						if (ImGui::MenuItem("Cube", "", false)) {
 							GameObject* cube = new GameObject("Cube");
-							cube->AddComponent(new MeshComponent(MeshFactory::Cube(), glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)));
+							cube->AddComponent(new MeshComponent(PrimitiveShape::CUBE));
 							scene->AddGameObject(cube);
 							UndoSystem::GetInstance()->Push(new CreateObjectCommand(cube, scene));
 						}
 						if (ImGui::MenuItem("Sphere", "", false)) {
 							GameObject* sphere = new GameObject("Sphere");
-							sphere->AddComponent(new MeshComponent(MeshFactory::Sphere(1, 32, 16)));
+							sphere->AddComponent(new MeshComponent(PrimitiveShape::SPHERE));
 							scene->AddGameObject(sphere);
 							UndoSystem::GetInstance()->Push(new CreateObjectCommand(sphere, scene));
 						}
 						if (ImGui::MenuItem("Plane", "", false)) {
 							GameObject* plane = new GameObject("Plane");
-							plane->AddComponent(new MeshComponent(MeshFactory::Plane(), glm::vec3(-1, -1, 0), glm::vec3(1, 1, 0)));
+							plane->AddComponent(new MeshComponent(PrimitiveShape::PLANE));
 							scene->AddGameObject(plane);
 							UndoSystem::GetInstance()->Push(new CreateObjectCommand(plane, scene));
 						}

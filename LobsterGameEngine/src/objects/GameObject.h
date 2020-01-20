@@ -40,17 +40,23 @@ namespace Lobster
 		//	Stores the most recent colliding objects.
 		std::vector<GameObject*> m_lastCollided;
 
+		//	Indicate whether the object is virtually deleted.
+		bool b_isVirtuallyDeleted = false;
+
 		template<typename T, typename ...Args> Component* CreateComponent(Args&&... args);
 
     public:
         GameObject(const char* name);
         ~GameObject(); // TODO: private the destructor, forcing users to call Destroy() instead
+
+		void ToggleVirtualDelete();
+
 		void Destroy();
 		virtual void OnBegin(); // call when the object is initialized in game mode
 		virtual void OnEnd();
         void OnUpdate(double deltaTime);
-		void Serialize(cereal::JSONOutputArchive& oarchive);
-		void Deserialize(cereal::JSONInputArchive& iarchive);
+		void Serialize(cereal::BinaryOutputArchive& oarchive);
+		void Deserialize(cereal::BinaryInputArchive& iarchive);
 		//	To update ImGui components that describes this game object's attributes
 		virtual void OnImGuiRender();		
 		GameObject* AddComponent(Component* component);

@@ -25,24 +25,11 @@ namespace Lobster
 		}
     }
 
-	MeshComponent::MeshComponent(VertexArray * mesh, const char * materialPath) :
+	MeshComponent::MeshComponent(PrimitiveShape primitive) :
 		Component(MESH_COMPONENT),
-		m_meshPath(""),
 		m_meshInfo(MeshInfo())
 	{
-		m_meshInfo.Meshes.push_back(mesh);
-		m_meshInfo.Materials.push_back(materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault());
-		m_meshInfo.Bound = { glm::vec3(0, 0, 0), glm::vec3(0.01, 0.01, 0.01) };
-	}
-
-	MeshComponent::MeshComponent(VertexArray* mesh, glm::vec3 min, glm::vec3 max, const char * materialPath) :
-		Component(MESH_COMPONENT),
-		m_meshPath(""),
-		m_meshInfo(MeshInfo())
-	{
-		m_meshInfo.Meshes.push_back(mesh);
-		m_meshInfo.Materials.push_back(materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault());
-		m_meshInfo.Bound = { min, max };
+		LoadFromPrimitive(primitive);
 	}
 
 	void MeshComponent::CrossfadeAnimation(int animation, double fadeDuration)
@@ -97,6 +84,33 @@ namespace Lobster
 		}
 		// if no materials are defined, use material of our own
 		if (m_meshInfo.Materials.empty()) m_meshInfo.Materials.push_back((materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault()));
+	}
+
+	void MeshComponent::LoadFromPrimitive(PrimitiveShape primitive)
+	{
+		switch (primitive)
+		{
+		case Lobster::PrimitiveShape::CUBE:
+			m_meshPath = "PrimitiveShape::CUBE";
+			m_meshInfo.Meshes.push_back(MeshFactory::Cube());
+			m_meshInfo.Bound = { glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1) };
+			break;
+		case Lobster::PrimitiveShape::SPHERE:
+			m_meshPath = "PrimitiveShape::SPHERE";
+			m_meshInfo.Meshes.push_back(MeshFactory::Sphere(1, 32, 32));
+			m_meshInfo.Bound = { glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1) };
+			break;
+		case Lobster::PrimitiveShape::PLANE:
+			m_meshPath = "PrimitiveShape::PLANE";
+			m_meshInfo.Meshes.push_back(MeshFactory::Plane());
+			m_meshInfo.Bound = { glm::vec3(-1, -1, 0), glm::vec3(1, 1, 0) };
+			break;
+		default:
+			assert(false);
+			break;
+		}
+		if(m_meshInfo.Materials.empty())
+			m_meshInfo.Materials.push_back(MaterialLibrary::UseDefault());
 	}
     
     MeshComponent::~MeshComponent()
@@ -161,7 +175,7 @@ namespace Lobster
 		{
 			ImGui::Indent();
 			std::string animationHeader = fmt::format("Skeletal Animation{}", b_dirty ? "*" : "");
-			if (ImGui::CollapsingHeader(animationHeader.c_str(), ImGuiTreeNodeFlags_DefaultOpen) && !m_animations.empty())
+			if (!m_animations.empty() && ImGui::CollapsingHeader(animationHeader.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				// Animation Controls
 				if (ImGui::Button("Play")) PlayAnimation();
@@ -368,18 +382,35 @@ namespace Lobster
 		return finalScale;
 	}
 
-	void MeshComponent::Serialize(cereal::JSONOutputArchive & oarchive)
+	void MeshComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
 	{
 		//LOG("Serializing MeshComponent {}", m_meshPath);
 		oarchive(*this);
 	}
 
-	void MeshComponent::Deserialize(cereal::JSONInputArchive & iarchive)
+	void MeshComponent::Deserialize(cereal::BinaryInputArchive & iarchive)
 	{
 		//LOG("Deserializing MeshComponent {}", m_meshPath);
 		try {
 			iarchive(*this);
-			LoadFromFile(m_meshPath.c_str(), nullptr);
+			size_t position = m_meshPath.find("PrimitiveShape::");
+			if (position != std::string::npos) {
+				std::string primitive_str = m_meshPath.substr(16);
+				PrimitiveShape primitive;
+				if (primitive_str == "CUBE")
+					primitive = PrimitiveShape::CUBE;
+				else if (primitive_str == "SPHERE")
+					primitive = PrimitiveShape::SPHERE;
+				else if (primitive_str == "PLANE")
+					primitive = PrimitiveShape::PLANE;
+				else {
+					assert(false);
+				}
+				LoadFromPrimitive(primitive);
+			}
+			else {
+				LoadFromFile(m_meshPath.c_str(), nullptr);
+			}
 		}
 		catch (std::exception e) {
 			LOG("Deserializing MeshComponent {} failed. Reason: {}", m_meshPath, e.what());

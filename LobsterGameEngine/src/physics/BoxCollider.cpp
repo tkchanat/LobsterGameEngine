@@ -66,6 +66,7 @@ namespace Lobster {
 	}
 
 	void BoxCollider::Draw() {
+		LOG("fuck ocornut");
 #ifdef LOBSTER_BUILD_DEBUG
 		// validate data, and return if we haven't define game object yet
 		if (!physics) return;

@@ -28,7 +28,6 @@ namespace Lobster
 		lua_State* L;
 		std::string filename;
 		std::string errmsg;	// error message of the script (if any)
-		bool m_open = true;
 
 		// Load or reload a Lua script in relative path into the object.
 		void loadScript(const char* file);
@@ -40,6 +39,9 @@ namespace Lobster
 		virtual void OnBegin() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
+
+		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override {}
+		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override {}
     };
     
 }

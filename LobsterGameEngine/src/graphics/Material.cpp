@@ -22,7 +22,7 @@ namespace Lobster
 	Material::Material(Shader * shader) :
 		m_mode(MODE_OPAQUE),
 		m_shader(shader),
-		m_name("Raw Material From Shader"),
+		m_name("RAW_MATERIAL"),
 		m_uniformData(nullptr),
 		m_uniformDataSize(0),
 		b_dirty(false)
@@ -131,7 +131,7 @@ namespace Lobster
 		};
 		const char* shaders[2] = { "shaders/Phong.glsl", "shaders/PBR.glsl" };
 		static int usedShader = findShaderIndex(shaders, 2);
-		if (usedShader > 0) {
+		if (usedShader >= 0) {
 			int prev_shader = usedShader;
 			ImGui::Combo("Shader", &usedShader, shaders, IM_ARRAYSIZE(shaders));
 			if (prev_shader != usedShader) {
@@ -205,11 +205,45 @@ namespace Lobster
 			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 		}
 		if (ImGui::Button("Save Configurations")) {
-			SaveConfiguration();
+			if (m_name == "RAW_MATERIAL") {
+				ImGui::OpenPopup("New Material");
+			}
+			else {
+				SaveConfiguration();
+			}
 		}
 		if (disableButton) {
 			ImGui::PopItemFlag();
 			ImGui::PopStyleVar();
+		}
+
+		static char rename[128] = "";
+		if (ImGui::BeginPopupModal("New Material", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+			ImGui::Text("Input a name:");
+			ImGui::InputText("", rename, IM_ARRAYSIZE(rename));
+			std::string validName;
+			// Prompt error message (if any)
+			if (rename[0] == '\0') {
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(255, 0, 0, 255));
+				ImGui::Text("Material name cannot be empty.");
+				ImGui::PopStyleColor();
+			}
+			else {
+				validName = "materials/" + StringOps::GetValidFilename(std::string(rename)) + ".mat";
+				ImGui::Text("Material will be named as: %s", validName.c_str());
+			}
+			// Confirm and cancel
+			if (ImGui::Button(" OK ")) {
+				m_name = validName;
+				SaveConfiguration();
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel")) {
+				m_name = "RAW_MATERIAL";
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
 		}
 	}
 
