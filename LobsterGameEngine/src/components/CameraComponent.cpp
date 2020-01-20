@@ -105,7 +105,7 @@ namespace Lobster
 		}
 	}
 
-	void CameraComponent::OnSimulationBegin() {
+	void CameraComponent::OnBegin() {
 
 	}
 		

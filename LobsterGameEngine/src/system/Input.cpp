@@ -6,7 +6,7 @@
 
 namespace Lobster
 {
-
+	bool Input::m_locked = false;
 	glm::vec2 Input::m_lastScroll = { 0.0f, 0.0f };
 	glm::vec2 Input::m_lastMouse = { 0.0f, 0.0f };
 	glm::vec2 Input::m_mouseDelta = { 0.0f, 0.0f };
@@ -24,13 +24,29 @@ namespace Lobster
 		glfwPollEvents();
 
 		// reset scroll
-		m_lastScroll = glm::vec2(0.0f, 0.0f);
+		m_lastScroll = glm::vec2(0.0f, 0.0f);		
 
 		// calculate mouse delta
 		double x, y;
 		glfwGetCursorPos(Application::GetInstance()->GetWindow()->GetPtr(), &x, &y);
 		m_mouseDelta = glm::vec2(x, y) - m_lastMouse;
 		m_lastMouse = glm::vec2(x, y);
+
+		// handle lock
+		if (m_locked) {
+			glfwSetCursorPos(Application::GetInstance()->GetWindow()->GetPtr(), 0, 0);
+			m_lastMouse = glm::vec2(0, 0);
+		}
+	}
+
+	void Input::LockCursor() {
+		glfwSetCursorPos(Application::GetInstance()->GetWindow()->GetPtr(), 0, 0);
+		m_lastMouse = glm::vec2(0, 0);
+		m_locked = true;
+	}
+
+	void Input::UnlockCursor() {
+		m_locked = false;
 	}
 
 	bool Input::IsKeyUp(int key)
@@ -93,5 +109,13 @@ namespace Lobster
 		double x, y;
 		glfwGetCursorPos(window, &x, &y);
 		return y;
+	}
+
+	double Input::GetMouseDeltaX() {
+		return m_mouseDelta.x;
+	}
+
+	double Input::GetMouseDeltaY() {
+		return m_mouseDelta.y;
 	}
 }

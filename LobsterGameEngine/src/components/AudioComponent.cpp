@@ -42,6 +42,9 @@ namespace Lobster {
 		{
 			std::string prevClipName = m_clipName;
 			if (ImGui::BeginCombo("Audio Clip", m_clipName.c_str())) {
+				if (ImGui::Selectable("None", m_clipName == "None")) {
+					m_clipName = "None";
+				}
 				// TODO switch to a more efficient way of display
 				fs::path subdir = FileSystem::Join(FileSystem::GetCurrentWorkingDirectory(), "audio");
 				for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {
@@ -143,14 +146,13 @@ namespace Lobster {
 	}
 
 	void AudioSource::SetMinMaxDistance() {
-		LOG("debug we called dis");
 		if (m_clip) {
 			alSourcef(m_clip->GetSource(), AL_REFERENCE_DISTANCE, m_minDistance);
 			alSourcef(m_clip->GetSource(), AL_MAX_DISTANCE, m_maxDistance);
 		}
 	}
 
-	void AudioSource::OnSimulationBegin() {		
+	void AudioSource::OnBegin() {		
 		// do nothing if no audio is selected
 		if (m_clipName == "None") return;
 		// load audios only when it is not loaded
@@ -159,15 +161,18 @@ namespace Lobster {
 		m_clip = ac;
 	}
 
-	void AudioSource::OnSimulationEnd() {
+	void AudioSource::OnEnd() {
+		if (sourceList.empty()) return;
 		// stop all audios playing
 		for (AudioSource* src : sourceList) {
-			if (src->m_clip)
+			if (src->m_clip) {
 				src->m_clip->Stop();
-			// delete the audio clip as well
-			delete src->m_clip;
-			src->m_clip = nullptr;
-		}		
+				// delete the audio clip as well
+				delete src->m_clip;
+				src->m_clip = nullptr;
+			}			
+		}
+		sourceList.clear();
 	}
 
 	// ========= Members of AudioListener ==========
@@ -179,7 +184,7 @@ namespace Lobster {
 
 	void AudioListener::OnUpdate(double deltaTime) {
 		// play audio
-		if (Application::GetMode() != ApplicationMode::EDITOR) {
+		if (Application::GetMode() == ApplicationMode::GAME) {
 			for (const AudioSource* src : AudioSource::sourceList) {
 				if (!src->m_clip) continue;
 				if (src->m_enable3d) {

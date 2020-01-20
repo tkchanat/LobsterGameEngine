@@ -50,10 +50,9 @@ namespace Lobster
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
 		virtual void OnBegin() {}
+		virtual void OnEnd() {}
         virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender() = 0;
-		virtual void OnSimulationBegin() {}
-		virtual void OnSimulationEnd() {} 
 		virtual void SetOwner(GameObject* owner) { gameObject = owner; }
 		virtual void Serialize(cereal::JSONOutputArchive& oarchive) {}
 		virtual void Deserialize(cereal::JSONInputArchive& iarchive) {}

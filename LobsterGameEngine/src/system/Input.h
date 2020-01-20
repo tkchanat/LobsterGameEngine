@@ -10,6 +10,7 @@ namespace Lobster
     class Input
     {
     private:
+		static bool m_locked;
         static glm::vec2 m_lastScroll;
 		static glm::vec2 m_lastMouse;
 		static glm::vec2 m_mouseDelta;
@@ -17,6 +18,8 @@ namespace Lobster
         //  Interface
 		static void Initialize();
 		static void Update();
+		static void LockCursor();
+		static void UnlockCursor();
 		static bool IsKeyUp(int key);
 		static bool IsKeyDown(int key);
 		static bool IsKeyHold(int key);
@@ -26,6 +29,8 @@ namespace Lobster
 		static void GetMousePos(double& x, double& y);
 		static double GetMousePosX();
 		static double GetMousePosY();
+		static double GetMouseDeltaX();
+		static double GetMouseDeltaY();
 		inline static glm::vec2 GetLastScroll() { return m_lastScroll; }
 		inline static glm::vec2 GetMouseDelta() { return m_mouseDelta; }
     };

@@ -13,7 +13,9 @@ namespace Lobster {
 		for (Collider* collider : m_colliders) {
 			if (collider->IsEnabled()) {
 				collider->OnUpdate(deltaTime);
-				collider->Draw();
+				if (Application::GetMode() != GAME) {
+					collider->Draw();
+				}				
 			}
 		}
 	}
@@ -263,6 +265,8 @@ namespace Lobster {
 				}
 			}
 		}
+		glm::vec3 f = pos * force / m_mass;
+		LOG("x: {}, y: {}, z: {}", f.x, f.y, f.z);
 		m_acceleration += pos * force / m_mass;
 	}
 

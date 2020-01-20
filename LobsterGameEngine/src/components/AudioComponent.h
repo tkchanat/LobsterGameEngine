@@ -15,7 +15,7 @@ namespace Lobster {
 		int m_isChanging = -1;		//	Used for undo system. 0 = gain, 1 = pitch, 2 = minDistance, 3 = maxDistance.
 		float m_prevProp[4];		//	Used for undo system.
 
-		// normally this is not set until OnSimulationBegin(), to specify a file to load,
+		// normally this is not set until OnBegin(), to specify a file to load,
 		// set the name of the audio clip in m_clipName
 		AudioClip* m_clip = nullptr;
 		std::string m_clipName = "None";// to record the audio name for further loading
@@ -35,13 +35,13 @@ namespace Lobster {
 		void SetMinMaxDistance();
 	public:
 		AudioSource();
-		~AudioSource();
+		virtual ~AudioSource();
 		void SetSource(AudioClip* ac);
 		glm::vec3 GetPosition();		
 		virtual void OnUpdate(double deltaTime);
 		virtual void OnImGuiRender();
-		virtual void OnSimulationBegin();
-		virtual void OnSimulationEnd();
+		virtual void OnBegin();
+		virtual void OnEnd();
 	};
 
 	class AudioListener : public Component {
@@ -49,6 +49,7 @@ namespace Lobster {
 		glm::vec3 m_position;
 	public:
 		AudioListener();
+		virtual ~AudioListener() = default;
 		virtual void OnUpdate(double deltaTime);
 		virtual void OnImGuiRender();
 	};

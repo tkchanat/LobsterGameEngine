@@ -70,6 +70,7 @@ namespace Lobster
 	void ParticleComponent::OnUpdate(double deltaTime)
 	{
 		// Update particle position
+		if (Application::GetMode() == EDITOR) return;
 		if (b_animated) {
 			if (!b_emitOneByOne && !_volumeFilled) {
 				m_particleCount = m_particleCutoff;
@@ -117,7 +118,7 @@ namespace Lobster
 	{
 		if (ImGui::CollapsingHeader("Particle System", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			ImGui::Checkbox("Simulate?", &b_animated);
+			ImGui::Checkbox("Simulate On Begin", &b_animated);
 			const char* shapes[] = { "Box", "Cone", "Sphere" };
 			EmitterShape prev_shape = m_shape;
 			ImGui::Combo("Shape", (int*)&m_shape, shapes, IM_ARRAYSIZE(shapes));

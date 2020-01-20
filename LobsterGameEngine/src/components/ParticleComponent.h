@@ -43,6 +43,9 @@ namespace Lobster
 		virtual void OnImGuiRender() override;
 		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
+
+		void Pause() { b_animated = true; }
+		void Simulate() { b_animated = false; }
 	private:
 		void FillVolume();
 		void BoxEmitter(double deltaTime);
