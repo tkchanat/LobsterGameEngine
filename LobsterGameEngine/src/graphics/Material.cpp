@@ -2,12 +2,19 @@
 #include "Material.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "layer/EditorLayer.h"
+#include "objects/GameObject.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster
 {
+	const char* Material::shaders[] = { "Phong Shader", "PBR Shader" };
+	const char* Material::shaderPath[] = { "shaders/Phong.glsl", "shaders/PBR.glsl" };
+	const char* Material::renderModes[] = { "Opaque", "Transparent" };
     
 	Material::Material(const char* path) :
 		m_mode(MODE_OPAQUE),
+		m_chosenShader(0),
 		m_shader(nullptr),
 		m_name(path),
 		m_uniformData(nullptr),
@@ -21,6 +28,7 @@ namespace Lobster
 
 	Material::Material(Shader * shader) :
 		m_mode(MODE_OPAQUE),
+		m_chosenShader(0),
 		m_shader(shader),
 		m_name("RAW_MATERIAL"),
 		m_uniformData(nullptr),
@@ -121,33 +129,25 @@ namespace Lobster
 		ImVec2 previewSize(24, 24);
 		Texture2D* notFound = TextureLibrary::Placeholder();
         static std::string selectedTexture;
+
 		// Shader
-		auto findShaderIndex = [&](const char* shaders[], size_t size) -> int {
-			for (int i = 0; i < size; ++i) {
-				if (m_shader->GetName() == shaders[i])
-					return i;
-			}
-			return -1;
-		};
-		const char* shaders[2] = { "shaders/Phong.glsl", "shaders/PBR.glsl" };
-		static int usedShader = findShaderIndex(shaders, 2);
-		if (usedShader >= 0) {
-			int prev_shader = usedShader;
-			ImGui::Combo("Shader", &usedShader, shaders, IM_ARRAYSIZE(shaders));
-			if (prev_shader != usedShader) {
-				m_shader = ShaderLibrary::Use(shaders[usedShader]);
-				ResizeUniformBuffer(m_shader->GetUniformBufferSize());
-				AssignTextureSlot();
-				b_dirty = true;
-			}
+		int prevChosenShader = m_chosenShader;
+		ImGui::Combo("Shader", &m_chosenShader, shaders, IM_ARRAYSIZE(shaders));
+		if (prevChosenShader != m_chosenShader) {
+			ChangeShaderType();
+			UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_chosenShader, prevChosenShader, m_chosenShader, "Changed shader mode to " + std::string(shaders[m_chosenShader]) + " for " + EditorLayer::s_selectedGameObject->GetName(), &Material::ChangeShaderType));
 		}
+
 		// Rendering Mode
-		const char* modes[] = { "Opaque", "Transparent" };
 		ImGui::PushItemWidth(110);
-		RenderingMode prev_mode = m_mode;
-		ImGui::Combo("Rendering Mode", (int*)&m_mode, modes, IM_ARRAYSIZE(modes));
-		b_dirty |= prev_mode != m_mode;
+		RenderingMode prevMode = m_mode;
+		ImGui::Combo("Rendering Mode", (int*)&m_mode, renderModes, IM_ARRAYSIZE(renderModes));
+		if (prevMode != m_mode) {
+			UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_mode, prevMode, m_mode, "Changed material rendering mode to " + std::string(renderModes[m_mode]) + " for " + EditorLayer::s_selectedGameObject->GetName(), &Material::SetDirty));
+			SetDirty();
+		}
 		ImGui::PopItemWidth();
+
 		// Uniforms
 		auto declaration = m_shader->GetUniformDeclarations();
 		size_t offset = 0;
@@ -290,6 +290,14 @@ namespace Lobster
 		FileSystem::WriteStringStream(FileSystem::Path(m_name).c_str(), ss);
 
 		b_dirty = false;
+	}
+
+	void Material::ChangeShaderType() {
+		m_shader = ShaderLibrary::Use(shaderPath[m_chosenShader]);
+		ResizeUniformBuffer(m_shader->GetUniformBufferSize());
+		AssignTextureSlot();
+		InitializeUniformsFromShader();
+		b_dirty = true;
 	}
 
 	std::stringstream Material::Serialize()

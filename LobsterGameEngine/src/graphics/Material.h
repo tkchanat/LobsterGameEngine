@@ -19,9 +19,14 @@ namespace Lobster
 	class Material
 	{
 		friend class MaterialLibrary;
+	private:
+		static const char* shaders[];
+		static const char* shaderPath[];
+		static const char* renderModes[];
 	protected:
 		std::string m_name;
 		RenderingMode m_mode;
+		int m_chosenShader;
 		Shader* m_shader;
 		std::vector<Texture2D*> m_textures;
 		byte* m_uniformData;
@@ -42,6 +47,9 @@ namespace Lobster
 		inline RenderingMode GetRenderingMode() const { return m_mode; }
 		inline void SetRenderingMode(RenderingMode mode) { m_mode = mode; }
 	private:
+		void ChangeShaderType();
+		inline void SetDirty() { b_dirty = true; }
+
 		friend class cereal::access;
 		template <class Archive>
 		void save(Archive & ar) const

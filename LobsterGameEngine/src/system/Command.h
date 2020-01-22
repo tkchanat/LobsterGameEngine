@@ -135,10 +135,10 @@ namespace Lobster {
 	};
 
 	//	Setting property on a component.
-	template <typename T, typename U = Component>
+	template <typename T, typename U = Component, typename V = Component>
 	class PropertyAssignmentCommand : public Command {
 	public:
-		PropertyAssignmentCommand(Component* component, T* prop, T originalValue, T newValue, std::string action, void(U::*f) () = nullptr) :
+		PropertyAssignmentCommand(U* component, T* prop, T originalValue, T newValue, std::string action, void(V::*f) () = nullptr) :
 			m_component(component),
 			m_prop(prop),
 			m_original(originalValue),
@@ -151,12 +151,12 @@ namespace Lobster {
 
 		void Exec() override {
 			*m_prop = m_new;
-			if (m_func != nullptr && dynamic_cast<U*>(m_component)) ((dynamic_cast<U*>(m_component))->*m_func)();
+			if (m_func != nullptr && dynamic_cast<V*>(m_component)) ((dynamic_cast<V*>(m_component))->*m_func)();
 		}
 
 		void Undo() override {
 			*m_prop = m_original;
-			if (m_func != nullptr && dynamic_cast<U*>(m_component)) ((dynamic_cast<U*>(m_component))->*m_func)();
+			if (m_func != nullptr && dynamic_cast<V*>(m_component)) ((dynamic_cast<V*>(m_component))->*m_func)();
 		}
 
 		std::string ToString() const override {
@@ -164,11 +164,11 @@ namespace Lobster {
 		}
 
 	private:
-		Component* m_component;
+		U* m_component;
 		T* m_prop;
 		T m_original;
 		T m_new;
 		std::string m_action;
-		void(U::*m_func) (void);
+		void(V::*m_func) (void);
 	};
 }
