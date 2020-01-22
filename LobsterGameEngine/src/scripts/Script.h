@@ -7,8 +7,19 @@
 namespace Lobster
 {
 
-	class EventHandler {
-
+	// A helper class to bind functions to Lua through LuaBridge
+	struct FunctionBinder {
+		static void DisableCursor();
+		static void EnableCursor();
+		// glm vector/matrix utilities
+		static glm::vec3 Normalize(glm::vec3 vec);
+		// component getters
+		static AudioSource* GetAudioSource(GameObject* gameObject);
+		static CameraComponent* GetCameraComponent(GameObject* gameObject);		
+		static LightComponent* GetLightComponent(GameObject* gameObject);
+		static MeshComponent* GetMeshComponent(GameObject* gameObject);
+		static ParticleComponent* GetParticleComponent(GameObject* gameObject);
+		static PhysicsComponent* GetPhysicsComponent(GameObject* gameObject);				
 	};
     
 	//	This class is a component for user to define custom scripts with Lua.
@@ -28,7 +39,7 @@ namespace Lobster
 		virtual void OnBegin() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-		virtual void OnSimulationBegin() override;
+
 		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override {}
 		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override {}
     };

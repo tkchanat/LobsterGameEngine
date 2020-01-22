@@ -229,15 +229,9 @@ namespace Lobster
 		}
 	}
 
-	void GameObject::OnSimulationBegin() {
+	void GameObject::OnEnd() {
 		for (Component* component : m_components) {
-			component->OnSimulationBegin();
-		}		
-	}
-
-	void GameObject::OnSimulationEnd() {
-		for (Component* component : m_components) {
-			component->OnSimulationEnd();
+			component->OnEnd();
 		}
 	}
 
@@ -317,19 +311,19 @@ namespace Lobster
 	}
 
 	void GameObject::OnCollide(GameObject* other) {
-		LOG("{} collided with {}", GetName(), other->GetName());
+		//LOG("{} collided with {}", GetName(), other->GetName());
 	}
 
 	void GameObject::OnEnter(GameObject* other) {
-		LOG("{} and {} entered each other", GetName(), other->GetName());
+		//LOG("{} and {} entered each other", GetName(), other->GetName());
 	}
 
 	void GameObject::OnOverlap(GameObject* other) {
-		LOG("{} and {} is overlapping each other", GetName(), other->GetName());
+		//LOG("{} and {} is overlapping each other", GetName(), other->GetName());
 	}
 
 	void GameObject::OnLeave(GameObject* other) {
-		LOG("{} and {} left each other", GetName(), other->GetName());
+		//LOG("{} and {} left each other", GetName(), other->GetName());
 	}
 
 	bool GameObject::IsOverlap(GameObject* other) {

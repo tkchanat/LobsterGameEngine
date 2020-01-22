@@ -115,10 +115,10 @@ namespace Lobster
 			alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 			break;
 		case INVERSE_SQUARE:
-			alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
+			alDistanceModel(AL_INVERSE_DISTANCE);
 			break;
 		case EXPONENTIAL:
-			alDistanceModel(AL_EXPONENT_DISTANCE_CLAMPED);
+			alDistanceModel(AL_EXPONENT_DISTANCE);
 			break;
 		}
 	}

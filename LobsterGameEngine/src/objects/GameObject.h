@@ -52,14 +52,13 @@ namespace Lobster
 		void ToggleVirtualDelete();
 
 		void Destroy();
-		void OnBegin(); // call when the object is initialized in game mode
+		virtual void OnBegin(); // call when the object is initialized in game mode
+		virtual void OnEnd();
         void OnUpdate(double deltaTime);
 		void Serialize(cereal::BinaryOutputArchive& oarchive);
 		void Deserialize(cereal::BinaryInputArchive& iarchive);
 		//	To update ImGui components that describes this game object's attributes
-		virtual void OnImGuiRender();
-		virtual void OnSimulationBegin();
-		virtual void OnSimulationEnd();
+		virtual void OnImGuiRender();		
 		GameObject* AddComponent(Component* component);
 		GameObject* AddChild(GameObject* child);
 		void RemoveChild(GameObject* child);

@@ -52,6 +52,10 @@ namespace Lobster
 		virtual void OnImGuiRender() override;
 		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+
+		void Pause() { b_animated = true; }
+		void Simulate() { b_animated = false; }
+
 	private:
 		void FillVolume();
 		void BoxEmitter(double deltaTime);

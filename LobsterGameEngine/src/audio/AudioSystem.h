@@ -24,10 +24,12 @@ namespace Lobster
 		static void Initialize();
 		static void ListAllDevices(const ALCchar* devices);
 		static std::vector<AudioClip*>& GetAudioList();
+		// Add an audio clip in full path
 		static AudioClip* AddAudioClip(const char* file, AudioType type = AudioType::UNKNOWN);
 		static void RemoveAudioClip(AudioClip* target);
 		static void RemoveAudioClip(std::string name);
 		static void SetRolloffType(VolumeRolloff type);
+		// TODO rolloff factor?!
 		
 	private:
 		AudioSystem();

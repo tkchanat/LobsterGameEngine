@@ -72,6 +72,7 @@ namespace Lobster
 	void ParticleComponent::OnUpdate(double deltaTime)
 	{
 		// Update particle position
+		if (Application::GetMode() == EDITOR) return;
 		if (b_animated) {
 			if (!b_emitOneByOne && !_volumeFilled) {
 				m_particleCount = m_particleCutoff;
@@ -119,11 +120,11 @@ namespace Lobster
 	{
 		if (ImGui::CollapsingHeader("Particle System", &m_show, ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			if (ImGui::Checkbox("Simulate?", &b_animated)) {
+			if (ImGui::Checkbox("Simulate On Begin", &b_animated)) {
 				UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &b_animated, !b_animated, b_animated, std::string(b_animated ? "Enabled" : "Disabled") + " animation of particle system for " + GetOwner()->GetName()));
 			}
-
 			EmitterShape prevShape = m_shape;
+
 			ImGui::Combo("Shape", (int*)&m_shape, shapes, IM_ARRAYSIZE(shapes));
 			if (prevShape != m_shape) {
 				FillVolume();

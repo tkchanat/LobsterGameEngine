@@ -31,13 +31,13 @@ namespace Lobster
 
     public:
         CameraComponent();
-        ~CameraComponent();
+        virtual ~CameraComponent();
 		void ResizeProjection(float width, float height);
 		void DrawUI();
 		virtual void OnAttach() override;
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-		virtual void OnSimulationBegin() override;
+		virtual void OnBegin() override;
 		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
 		glm::mat4 GetViewMatrix() const;

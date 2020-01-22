@@ -16,11 +16,12 @@ namespace Lobster
 	{
 	private:
 		const float spacer_width = 10.f;
-		const static int numIco = 12;		
+		const static int numIco = 14;		
 		std::string image_path[numIco] = { 
 			"textures/ui/undo.png", "textures/ui/undo_grey.png", "textures/ui/redo.png", "textures/ui/redo_grey.png",
 			"textures/ui/plane.png", "textures/ui/cube.png", "textures/ui/sphere.png", "textures/ui/particles.png",
-			"textures/ui/pt_light.png", "textures/ui/dir_light.png", "textures/ui/play.png", "textures/ui/stop.png" };
+			"textures/ui/pt_light.png", "textures/ui/dir_light.png", "textures/ui/simulate.png", "textures/ui/simuend.png",
+			"textures/ui/play.png", "textures/ui/stop.png" };
 		Texture2D* m_tex[numIco];
 		static GameObject* selectedObj;
 		ImGuiGame* m_gameView = nullptr;
@@ -129,9 +130,28 @@ namespace Lobster
 			ImGui::Dummy(ImVec2(spacer_width, 0.0f));
 			ImGui::SameLine();
 			// Simulate =============
-			if (Application::GetMode() == EDITOR) {
+			if (Application::GetMode() != SIMULATION) {
 				if (ImGui::ImageButton(m_tex[10]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
 					Application::SwitchMode(SIMULATION);
+					// TODO save scene TODO
+					// ...
+
+					// initialize all gameobjects and components
+					for (GameObject* gameObject : scene->GetGameObjects()) {
+						gameObject->OnBegin();
+					}
+				}
+			}
+			else {
+				if (ImGui::ImageButton(m_tex[11]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
+					Application::SwitchMode(EDITOR);
+				}
+			}
+			ImGui::SameLine();
+			// Play =============
+			if (Application::GetMode() != GAME) {
+				if (ImGui::ImageButton(m_tex[12]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
+					Application::SwitchMode(GAME);
 					// TODO save scene TODO
 					// ...
 
@@ -140,17 +160,17 @@ namespace Lobster
 					// initialize all gameobjects and components
 					for (GameObject* gameObject : scene->GetGameObjects()) {
 						gameObject->OnBegin(); // this should be in actual game, not here
-						gameObject->OnSimulationBegin();
+						gameObject->OnBegin();
 					}
 				}
 			}			
-			else if (Application::GetMode() == SIMULATION) {
+			else {
 				// either press stop button or close the tab
-				if (!m_showGameView || ImGui::ImageButton(m_tex[11]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
+				if (!m_showGameView || ImGui::ImageButton(m_tex[13]->Get(), ImVec2(24, 24), ImVec2(0, 0), ImVec2(1, 1), frame_padding, ImColor(0, 0, 0, 255))) {
 					Application::SwitchMode(EDITOR);
 					// clearup of all gameobjects and components
 					for (GameObject* gameObject : scene->GetGameObjects()) {
-						gameObject->OnSimulationEnd();
+						gameObject->OnEnd();
 					}					
 					// reinitialize the game view
 					if (m_gameView) {

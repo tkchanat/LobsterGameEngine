@@ -30,13 +30,6 @@ namespace Lobster {
 		Bind();
 	}
 
-	void Script::OnSimulationBegin() {
-		// TODO reload script?
-		// This is required for resetting all global variables.
-		// If the program does not reset the values, simulation will start from
-		// where it finished last time
-	}
-
 	void Script::OnImGuiRender() {
 		// combo box of scripts
 		if (ImGui::CollapsingHeader("Script", &m_show, ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -76,7 +69,7 @@ namespace Lobster {
 	}
 
 	void Script::OnBegin() {		
-		if (Application::GetMode() == EDITOR) return;
+		if (Application::GetMode() != GAME) return;
 		if (filename.size() == 0 || errmsg.size() > 0) return;
 		LuaRef lua_OnBegin = getGlobal(L, "OnBegin");
 		try {
@@ -88,7 +81,7 @@ namespace Lobster {
 	}
 
 	void Script::OnUpdate(double deltaTime) {
-		if (Application::GetMode() == EDITOR) return;
+		if (Application::GetMode() != GAME) return;
 		if (filename.size() == 0 || errmsg.size() > 0) return;
 		LuaRef lua_OnUpdate = getGlobal(L, "OnUpdate");
 		try {
@@ -98,6 +91,37 @@ namespace Lobster {
 			errmsg += "OnUpdate(): " + std::string(e.what()) + "\n";
 		}
 	}
+	
+	void FunctionBinder::DisableCursor() {
+		glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+
+	void FunctionBinder::EnableCursor() {
+		glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+
+	glm::vec3 FunctionBinder::Normalize(glm::vec3 vec) {
+		return glm::normalize(vec);
+	}
+
+	AudioSource* FunctionBinder::GetAudioSource(GameObject* gameObject) {
+		return gameObject->GetComponent<AudioSource>();
+	}
+	CameraComponent* FunctionBinder::GetCameraComponent(GameObject* gameObject) {
+		return gameObject->GetComponent<CameraComponent>();
+	}
+	LightComponent* FunctionBinder::GetLightComponent(GameObject* gameObject) {
+		return gameObject->GetComponent<LightComponent>();
+	}
+	MeshComponent* FunctionBinder::GetMeshComponent(GameObject* gameObject) {
+		return gameObject->GetComponent<MeshComponent>();
+	}
+	ParticleComponent* FunctionBinder::GetParticleComponent(GameObject* gameObject) {
+		return gameObject->GetComponent<ParticleComponent>();
+	}
+	PhysicsComponent* FunctionBinder::GetPhysicsComponent(GameObject* gameObject) {
+		return gameObject->GetComponent<PhysicsComponent>();
+	}
 
 	void Script::Bind() {
 		// Class/function binding
@@ -105,12 +129,28 @@ namespace Lobster {
 			.beginNamespace("Lobster")
 			// Input events
 			.addFunction("IsKeyDown", Input::IsKeyDown)
+			.addFunction("IsKeyUp", Input::IsKeyUp)
 			.addFunction("GetMousePosX", Input::GetMousePosX)
 			.addFunction("GetMousePosY", Input::GetMousePosY)
+			.addFunction("GetMouseDeltaX", Input::GetMouseDeltaX)
+			.addFunction("GetMouseDeltaY", Input::GetMouseDeltaY)
 			.addFunction("IsMouseDown", Input::IsMouseDown)
 			.addFunction("IsMouseHold", Input::IsMouseHold)
-			// glm::vec3
+			.addFunction("LockCursor", Input::LockCursor)
+			.addFunction("UnlockCursor", Input::UnlockCursor)
+			.addFunction("DisableCursor", FunctionBinder::DisableCursor)
+			.addFunction("EnableCursor", FunctionBinder::EnableCursor)
+			// utilities
+			.addFunction("normalize", FunctionBinder::Normalize)
+			.addFunction("GetAudioSource", FunctionBinder::GetAudioSource)
+			.addFunction("GetCameraComponent", FunctionBinder::GetCameraComponent)
+			.addFunction("GetLightComponent", FunctionBinder::GetLightComponent)
+			.addFunction("GetMeshComponent", FunctionBinder::GetMeshComponent)
+			.addFunction("GetPhysicsComponent", FunctionBinder::GetPhysicsComponent)
+			.addFunction("GetParticleComponent", FunctionBinder::GetParticleComponent)
+			// glm::vec3			
 			.beginClass<glm::vec3>("Vec3")
+			.addConstructor<void(*) (float, float, float)>()
 			.addProperty("x", &glm::vec3::x)
 			.addProperty("y", &glm::vec3::y)
 			.addProperty("z", &glm::vec3::z)
@@ -132,10 +172,14 @@ namespace Lobster {
 			.addFunction("GetOwner", &Component::GetOwner)
 			.addFunction("GetType", &Component::GetType) // LuaBridge does not support enum
 			.endClass()
+			// Physics Component
+			.deriveClass<PhysicsComponent, Component>("PhysicsComponent")
+			.addFunction("ApplyForce", &PhysicsComponent::ApplyForce)
+			.endClass()
 			// GameObject
 			.beginClass<GameObject>("GameObject")
-			.addConstructor<void (*)(const char*)>()
-			.addProperty("transform", &GameObject::transform)
+			.addConstructor<void(*)(const char*)>()
+			.addProperty("transform", &GameObject::transform)			
 			.addFunction("AddComponent", &GameObject::AddComponent)
 			.addFunction("AddChild", &GameObject::AddChild)
 			.addFunction("Intersects", &GameObject::Intersects)

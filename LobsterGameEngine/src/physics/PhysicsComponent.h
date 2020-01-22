@@ -34,6 +34,7 @@ namespace Lobster {
 		//	Block / Overlap / Ignore
 		inline int GetPhysicsType() const { return m_physicsType; }
 		void RemoveCollider(Collider* collider);
+		virtual void ApplyForce(glm::vec3 position, glm::vec3 force) {}
 
 	protected:
 		//	Mass of component.
