@@ -15,7 +15,7 @@ namespace Lobster
 		Component(CAMERA_COMPONENT),
         m_fieldOfView(45.0f),
         m_nearPlane(0.1f),
-        m_farPlane(100.0f),
+        m_farPlane(10000.0f),
         m_viewMatrix(glm::mat4(1.0f)),
         m_projectionMatrix(glm::mat4(1.0f))
     {

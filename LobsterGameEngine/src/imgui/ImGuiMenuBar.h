@@ -30,15 +30,34 @@ namespace Lobster
 					}
 					if (ImGui::MenuItem("Open", "Ctrl+O", false))
 					{
-						Application::GetInstance()->OpenScene("scenes/test.lobster");
+						std::string path = FileSystem::OpenFileDialog();
+						if (!path.empty()) {
+							Application::GetInstance()->OpenScene(path.c_str());
+						}
 					}
 					if (ImGui::MenuItem("Save", "Ctrl+S", false))
 					{
-						std::stringstream ss = GetScene()->Serialize();
-						FileSystem::WriteStringStream(FileSystem::Path("scenes/test.lobster").c_str(), ss);
+						std::string scenePath = Application::GetInstance()->GetScenePath();
+						if (scenePath.empty()) {
+							goto LABEL_SAVEAS; // save as
+						}
+						else {
+							// save by overwrite
+							std::stringstream ss = GetScene()->Serialize();
+							FileSystem::WriteStringStream(scenePath.c_str(), ss);
+							Application::GetInstance()->SetSaved(true);
+						}								
 					}
 					if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false))
 					{
+					LABEL_SAVEAS:
+						std::string fullpath = FileSystem::SaveFileDialog(".");
+						if (!fullpath.empty()) {
+							std::stringstream ss = GetScene()->Serialize();
+							FileSystem::WriteStringStream(fullpath.c_str(), ss);
+							Application::GetInstance()->SetScenePath(fullpath.c_str());
+							Application::GetInstance()->SetSaved(true);
+						}						
 					}
 					if (ImGui::MenuItem("Export...", "", false)) {
 

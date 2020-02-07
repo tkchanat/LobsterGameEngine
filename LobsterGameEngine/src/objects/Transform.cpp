@@ -11,6 +11,7 @@ namespace Lobster
 		LocalPosition(glm::vec3(0, 0, 0)),
 		LocalEulerAngles(glm::vec3(0, 0, 0)),
 		LocalScale(glm::vec3(1, 1, 1)),
+		OverallScale(1.0f),
 		LocalRotation(glm::quat(1, 0, 0, 0)),
 		m_matrix(glm::mat4(1.0f)) {}
 
@@ -23,7 +24,7 @@ namespace Lobster
 	{
 		LocalRotation = glm::quat(glm::radians(LocalEulerAngles));
 		WorldRotation = glm::quat(glm::radians(WorldEulerAngles));
-		m_matrix = glm::mat4_cast(WorldRotation) * glm::translate(WorldPosition) * glm::mat4_cast(LocalRotation) * glm::scale(LocalScale); //  Update world matrix
+		m_matrix = glm::mat4_cast(WorldRotation) * glm::translate(WorldPosition) * glm::mat4_cast(LocalRotation) * glm::scale(OverallScale * LocalScale); //  Update world matrix
 	}
 
 	void Transform::RotateEuler(float degree, glm::vec3 axis)

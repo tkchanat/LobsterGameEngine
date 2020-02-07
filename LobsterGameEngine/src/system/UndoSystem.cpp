@@ -89,5 +89,8 @@ namespace Lobster {
 		if (c != nullptr) delete c;
 
 		m_undo_str.push(command->ToString());
+		
+		// Set the modified flag as true (the asterisk * display in title)
+		Application::GetInstance()->SetSaved(false);
 	}
 }

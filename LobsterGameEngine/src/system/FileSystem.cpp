@@ -135,6 +135,7 @@ namespace Lobster {
 		}
 		return output;
 	}
+
 	std::string FileSystem::OpenFileDialog()
 	{
 		const int FILE_DIALOG_MAX_BUFFER = 1024;
@@ -167,8 +168,6 @@ namespace Lobster {
 		ofn.lStructSize = sizeof(ofn);
 		ofn.hwndOwner = NULL;
 		ofn.lpstrFile = lpBuffer;
-		// Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
-		// use the contents of szFile to initialize itself.
 		ofn.lpstrFile[0] = '\0';
 		ofn.nMaxFile = 260;
 		ofn.lpstrFilter = L"*.*\0";//off\0*.off\0obj\0*.obj\0mp\0*.mp\0";
@@ -188,6 +187,7 @@ namespace Lobster {
 				pos++;
 			}
 		}
+		else return ""; // dialog closed
 		buffer[pos] = 0;
 #else
 
@@ -202,19 +202,91 @@ namespace Lobster {
 			buffer[strlen(buffer) - 1] = 0;
 		}
 		
-#endif
-        
+#endif        
         path = fs::relative(fs::path(buffer), executablePath).string();
-        if(path == ".") return ""; // return empty path since user cancelled dialog
-        path = fs::relative(fs::path(path), fs::path(m_workingDir)).string();
         StringOps::ReplaceAll(path, "\\", "/");
         fs::current_path(executablePath);
 		return path;
 	}
+
+	std::string FileSystem::SaveFileDialog(const char* defaultPath) {
+		const int FILE_DIALOG_MAX_BUFFER = 1024;
+		char buffer[FILE_DIALOG_MAX_BUFFER];
+		std::string path;
+
+		fs::path executablePath = fs::current_path();
+
+#ifdef LOBSTER_PLATFORM_MAC
+		// For apple use applescript hack
+		FILE * output = popen(
+			"osascript -e \""
+			"   tell application \\\"System Events\\\"\n"
+			"           activate\n"
+			"           set existing_file to choose file\n"
+			"   end tell\n"
+			"   set existing_file_path to (POSIX path of (existing_file))\n"
+			"\" 2>/dev/null | tr -d '\n' ", "r");
+		while (fgets(buffer, FILE_DIALOG_MAX_BUFFER, output) != NULL)
+		{
+		}
+#elif defined LOBSTER_PLATFORM_WIN
+
+		// Use native windows file dialog box
+		OPENFILENAME ofn;       // common dialog box structure
+		wchar_t lpBuffer[FILE_DIALOG_MAX_BUFFER];
+
+		// Initialize OPENFILENAME
+		ZeroMemory(&ofn, sizeof(ofn));
+		ofn.lStructSize = sizeof(ofn);
+		ofn.hwndOwner = NULL;
+		ofn.lpstrFile = lpBuffer;
+		ofn.lpstrFile[0] = '\0';
+		ofn.nMaxFile = 260;
+		ofn.lpstrFilter = L"Lobster Scene (*.lobster)\0*.lobster\0All Files (*.*)\0*.*\0";
+		ofn.lpstrDefExt = (LPCWSTR)L"lobster";
+		ofn.nFilterIndex = 1;
+		ofn.lpstrFileTitle = NULL;
+		ofn.nMaxFileTitle = 0;		
+		ofn.lpstrInitialDir = (LPCWSTR)defaultPath;
+		ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;	
+
+		// Display the Open dialog box. 
+		int pos = 0;
+		if (GetSaveFileName(&ofn))
+		{
+			while (ofn.lpstrFile[pos] != '\0')
+			{
+				buffer[pos] = (char)ofn.lpstrFile[pos];
+				pos++;
+			}
+		}
+		else return ""; // dialog closed
+		buffer[pos] = 0;
+#else
+
+		// For linux use zenity
+		FILE * output = popen("/usr/bin/zenity --file-selection", "w");
+		while (fgets(buffer, FILE_DIALOG_MAX_BUFFER, output) != NULL)
+		{
+		}
+
+		if (strlen(buffer) > 0)
+		{
+			buffer[strlen(buffer) - 1] = 0;
+		}
+
+#endif
+		path = buffer;
+		StringOps::ReplaceAll(path, "\\", "/");
+		fs::current_path(executablePath);
+		return path;
+	}
+
 	std::filesystem::file_time_type FileSystem::LastModified(const char * path)
 	{
 		return fs::last_write_time(fs::path(Path(path)));
 	}
+
 	std::stringstream FileSystem::ReadStringStream(const char * path, bool binary)
 	{
 		int flags = std::ios::in;
@@ -227,6 +299,7 @@ namespace Lobster {
 		}
 		return ss;
 	}
+
 	void FileSystem::WriteStringStream(const char * path, const std::stringstream & ss, bool binary)
 	{
 		int flags = std::ios::out;

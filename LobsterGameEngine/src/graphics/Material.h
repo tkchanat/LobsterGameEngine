@@ -90,7 +90,7 @@ namespace Lobster
 		void AssignTextureSlot();
 		void ResizeUniformBuffer(size_t newSize);
 	};
-
+	
 	class MaterialLibrary
 	{
 	private:

@@ -13,8 +13,9 @@ namespace Lobster
 		glm::vec3 WorldEulerAngles;
         glm::vec3 LocalEulerAngles;
 		glm::vec3 LocalPosition;
-        glm::quat LocalRotation;
+        glm::quat LocalRotation;		
 		glm::vec3 LocalScale;
+		float OverallScale;
 	private:
 		glm::mat4 m_matrix;
 	public:
@@ -42,6 +43,7 @@ namespace Lobster
 			ar(LocalPosition);
 			ar(LocalRotation);
 			ar(LocalScale);
+			ar(OverallScale);
 		}
 	};
     

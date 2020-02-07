@@ -30,6 +30,9 @@ namespace Lobster {
 	}
 
 	void AudioSource::OnUpdate(double deltaTime) {
+		// update data for attached clip
+		m_clip->SetGain(m_gain);
+		m_clip->SetPitch(m_pitch);		
 		// update source position
 		if (transform && m_clip && m_enable3d) {
 			glm::vec3 position = transform->WorldPosition;
@@ -63,6 +66,10 @@ namespace Lobster {
 			if (ImGui::Checkbox("Mute", &m_muted)) {
 				if (m_clip) m_clip->Mute(m_muted);
 				UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_muted, !m_muted, m_muted, std::string(m_muted ? "Muted" : "Unmuted") + " audio for " + GetOwner()->GetName()));
+			}
+
+			if (ImGui::Checkbox("Loop", &m_loop)) {
+				UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_loop, !m_loop, m_loop, std::string(m_loop ? "Loop" : "Unloop") + " audio for " + GetOwner()->GetName()));
 			}
 
 			if (ImGui::SliderFloat("Gain", &m_gain, 0.0f, 1.0f)) {
@@ -183,6 +190,30 @@ namespace Lobster {
 		}
 	}
 
+	void AudioSource::Play() {
+		if (m_clip) m_clip->Play();
+	}
+
+	void AudioSource::Stop() {
+		if (m_clip) m_clip->Stop();
+	}
+
+	void AudioSource::Mute() {
+		if (m_clip) m_clip->Mute();
+	}
+
+	void AudioSource::Unmute() {
+		if (m_clip) m_clip->Mute(false);
+	}
+
+	void AudioSource::SetGain(float gain) {
+		m_gain = gain;
+	}
+
+	void AudioSource::SetPitch(float pitch) {
+		m_pitch = pitch;
+	}
+
 	// ========= Members of AudioListener ==========
 	AudioListener::AudioListener() :
 		Component(AUDIO_LISTENER_COMPONENT)
@@ -190,20 +221,24 @@ namespace Lobster {
 
 	}
 
+	void AudioListener::OnBegin() {
+
+	}
+
 	void AudioListener::OnUpdate(double deltaTime) {
-		// play audio
+		// update the positional information and play audio (automatically)
 		if (Application::GetMode() == ApplicationMode::GAME) {
-			for (const AudioSource* src : AudioSource::sourceList) {
+			for (AudioSource* src : AudioSource::sourceList) {
 				if (!src->m_clip) continue;
 				if (src->m_enable3d) {
 					// Note: AudioClip::position will not update itself
 					// so we update it here according to the object's actual position
-					
+
 					// set the listener position of OpenAL
 					alSourcei(src->m_clip->GetSource(), AL_SOURCE_RELATIVE, AL_FALSE);
 					glm::vec3 position = transform->WorldPosition;
 					alListener3f(AL_POSITION, position[0], position[1], position[2]);
-					
+
 					// set the listener orientation
 					float ori[6];
 					ori[0] = transform->Forward()[0]; ori[1] = transform->Forward()[1]; ori[2] = -transform->Forward()[2];
@@ -214,8 +249,11 @@ namespace Lobster {
 					alSourcei(src->m_clip->GetSource(), AL_SOURCE_RELATIVE, AL_TRUE);
 					alSource3f(src->m_clip->GetSource(), AL_POSITION, 0.0f, 0.0f, 0.0f);
 				}
-				if (src->m_clip->GetSourceState() != AL_PLAYING)
+				if (src->m_loop) src->done = false;
+				if (!src->done && src->m_clip->GetSourceState() != AL_PLAYING) {
 					src->m_clip->Play();
+					if (!src->m_loop) src->done = true;
+				}
 			}
 		}
 	}

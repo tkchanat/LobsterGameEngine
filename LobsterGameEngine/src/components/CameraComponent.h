@@ -41,6 +41,7 @@ namespace Lobster
 		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
 		glm::mat4 GetViewMatrix() const;
+		inline GameUI* GetUI() const { return gameUI; }
         inline glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 		inline glm::mat4 GetOrthoMatrix() const { return m_orthoMatrix; }
 		inline glm::vec3 GetPosition() const { return Component::transform->WorldPosition; }

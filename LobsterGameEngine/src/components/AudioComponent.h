@@ -19,7 +19,9 @@ namespace Lobster {
 		// set the name of the audio clip in m_clipName
 		AudioClip* m_clip = nullptr;
 		std::string m_clipName = "None";// to record the audio name for further loading
+		bool done = false;
 		// basic setting
+		bool m_loop = true;		
 		bool m_muted = false;
 		float m_gain = 1.0;
 		float m_pitch = 1.0;		
@@ -32,15 +34,22 @@ namespace Lobster {
 		void SetMinMaxDistance();
 	public:
 		AudioSource();
-		virtual ~AudioSource();
+		virtual ~AudioSource();		
 		void SetSource(AudioClip* ac);
-		glm::vec3 GetPosition();
+		glm::vec3 GetPosition();		
 		virtual void OnUpdate(double deltaTime);
 		virtual void OnImGuiRender();
 		virtual void OnBegin();
 		virtual void OnEnd();
 		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+		// functions provided for Lua call
+		void Play(); // only works when clip is loaded
+		void Stop(); // only works when clip is loaded
+		void Mute();
+		void Unmute();
+		void SetGain(float gain);
+		void SetPitch(float pitch);
 	private:
 		friend class cereal::access;
 		template <class Archive>
@@ -71,8 +80,9 @@ namespace Lobster {
 	public:
 		AudioListener();
 		virtual ~AudioListener() = default;
-		virtual void OnUpdate(double deltaTime);
-		virtual void OnImGuiRender();
+		virtual void OnBegin() override;
+		virtual void OnUpdate(double deltaTime) override;
+		virtual void OnImGuiRender() override;
 		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
 	private:

@@ -29,6 +29,7 @@ namespace Lobster
 		static std::string Path(std::string path);
 		static std::string ReadText(const char* path);
 		static std::string OpenFileDialog();
+		static std::string SaveFileDialog(const char* defaultPath = "");
 		static std::filesystem::file_time_type LastModified(const char* path);
 		static std::stringstream ReadStringStream(const char* path, bool binary = false);
 		static void WriteStringStream(const char* path, const std::stringstream& ss, bool binary = false);

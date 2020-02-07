@@ -258,7 +258,8 @@ namespace Lobster
 			logTime += deltaTime;
 			if (logTime > 1000.0f)
 			{
-				std::string newTitle = m_window->GetTitle() + " (FPS: " + std::to_string(frames) + ")";
+				std::string sceneName = (scenePath.empty() ? "New Project" : fs::path(scenePath).filename().string()) + (m_saved ? "" : "*") + " - ";
+				std::string newTitle = sceneName + m_window->GetTitle() + " (FPS: " + std::to_string(frames) + ")";
 				m_window->SetTitle(newTitle.c_str());
 				logTime -= 1000.0f;
 				frames = 0;
@@ -300,6 +301,16 @@ namespace Lobster
             EditorLayer::s_selectedGameObject = nullptr;
 		}
 		m_scene = new Scene(scenePath);
+		this->scenePath = fs::path(scenePath).string();
+		SetSaved(true);
+	}
+
+	void Application::SetScenePath(const char* scenePath) {
+		this->scenePath = scenePath;
+	}
+
+	void Application::SetSaved(bool saved) {
+		m_saved = saved;
 	}
 
 }

@@ -175,6 +175,8 @@ namespace Lobster
 			isChanging = isChanging || ImGui::IsItemActive();
 			ImGui::DragFloat3("Scale", glm::value_ptr(transform.LocalScale), 0.05f, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 			isChanging = isChanging || ImGui::IsItemActive();
+			ImGui::DragFloat("Overall Scale", &transform.OverallScale, 0.0001f, 0.0001f, 1000.f, "%.03f");
+			isChanging = isChanging || ImGui::IsItemActive();
 		}
 		ImGui::Separator();
 
