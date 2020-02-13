@@ -3,11 +3,38 @@
 #include "objects/GameObject.h"
 
 namespace Lobster {
-	//	Thank you C++ for forcing me to create a cpp for these few line.
-	//	We made const char* static members for ImGui dropdown box.
-	//	If we found other workarounds, feel free to delete this line (and file).
 	const char* PhysicsComponent::PhysicsBodyTypes[] = { "Rigid body", "Non-rigid body" };
 	const char* PhysicsComponent::PhysicsType[] = { "Block", "Overlap", "Ignore" };
+
+	PhysicsComponent::PhysicsComponent() : Component(PHYSICS_COMPONENT),
+		m_velocity(glm::vec3(0, 0, 0)),
+		m_acceleration(glm::vec3(0, 0, 0)),
+		m_angularVelocity(glm::vec3(0, 0, 0)),
+		m_angularAcceleration(glm::vec3(0, 0, 0))
+	{
+		PhysicsSystem::GetInstance()->AddPhysicsComp(this);
+	}
+
+	PhysicsComponent::~PhysicsComponent() {
+		if (m_boundingBox) delete m_boundingBox;
+		m_boundingBox = nullptr;
+		for (Collider* collider : m_colliders) {
+			if (collider) delete collider;
+			collider = nullptr;
+		}
+
+		if (!b_isVirtuallyDeleted) PhysicsSystem::GetInstance()->RemovePhysicsComp(this);
+	}
+
+	void PhysicsComponent::VirtualCreate() {
+		b_isVirtuallyDeleted = false;
+		PhysicsSystem::GetInstance()->AddPhysicsComp(this);
+	}
+
+	void PhysicsComponent::VirtualDelete() {
+		b_isVirtuallyDeleted = true;
+		PhysicsSystem::GetInstance()->RemovePhysicsComp(this);
+	}
 
 	bool PhysicsComponent::Intersects(PhysicsComponent* other) {
 		for (Collider* c1 : m_colliders) {

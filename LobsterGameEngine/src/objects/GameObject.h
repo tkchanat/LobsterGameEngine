@@ -33,6 +33,9 @@ namespace Lobster
 		//	Transform object to store previous state of game object prior to change.
 		Transform m_transPrev;
 
+		//	Stores possible objects to collide.
+		std::vector<GameObject*> m_collidingChecklist;
+
 		//	Stores the collided objects right now. Clears at each frame.
 		std::vector<GameObject*> m_colliding;
 		//	Stores the collided objects at the previous frame. Updates over time.
@@ -74,7 +77,9 @@ namespace Lobster
 		void RemoveComponent(Component* comp);
 
 		bool Intersects(GameObject* other);
+
 		//	Functions to register collision or intersection of components.
+		inline std::vector<GameObject*> GetCollidingChecklist() const { return m_collidingChecklist; }
 		inline void HasCollided(GameObject* other) { m_colliding.push_back(other); }
 		inline std::vector<GameObject*> GetCollided() const { return m_collided; }
 		inline std::vector<GameObject*> GetColliding() const { return m_colliding; }
