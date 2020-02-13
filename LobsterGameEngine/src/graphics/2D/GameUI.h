@@ -4,6 +4,7 @@
 namespace Lobster {
 
 	class Sprite2D;
+	class TextSprite2D;
 
 	class GameUI {
 	private:

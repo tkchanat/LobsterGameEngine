@@ -2,6 +2,7 @@
 #include "Sprite.h"
 #include "graphics/Texture.h"
 #include "graphics/Renderer.h"
+#include "system/Input.h"
 
 namespace Lobster {
 
@@ -12,7 +13,7 @@ namespace Lobster {
 	int Sprite2D::zLv = 16;
 	Config Sprite2D::config;
 
-	Sprite2D::Sprite2D(float mouseX, float mouseY) : x(mouseX), y(mouseY) {		
+	Sprite2D::Sprite2D(float mouseX, float mouseY) : x(mouseX), y(mouseY), alpha(1.f) {
 		z = zLv--; // z value count down
 	}
 
@@ -107,6 +108,7 @@ namespace Lobster {
 		else if (ImGui::SliderFloat("Height (px)", &h, 1.f, winSize.y, "%1.f")) {
 			_h = h / winSize.y;
 		}
+		ImGui::SliderFloat("Alpha", &alpha, 0.f, 1.f, "%.2f");
 		ImGui::Separator();
 		// basic functions
 		BasicMenuItem(ui, winSize);
@@ -124,8 +126,19 @@ namespace Lobster {
 		ocommand.y = y * config.height;
 		ocommand.w = w;
 		ocommand.h = h;
+		ocommand.alpha = alpha;
 		ocommand.z = (float) z / 1000.f;
 		Renderer::Submit(ocommand);		
+	}
+
+	bool ImageSprite2D::IsMouseOver() {
+		double mx, my;
+		Input::GetMousePos(mx, my);
+		Config config;
+		float winX = mx / config.width;
+		float winY = my / config.height;
+		if (winX >= x && winX <= x + _w && winY >= y && winY <= y + _h) return true;
+		return false;
 	}
 
 	// ============================================================
@@ -155,10 +168,14 @@ namespace Lobster {
 		// load the texture into it first
 		getTexture();
 	}
-	
-	void TextSprite2D::SetFontSize(int size) {
+
+	void TextSprite2D::SetFontSize(float size) {
 		fontSize = size;
 		FT_Set_Pixel_Sizes(m_face, 0, size);
+	}
+
+	void TextSprite2D::SetColor(float r, float g, float b, float a) {
+		color[0] = r; color[1] = g; color[2] = b; color[3] = a;
 	}
 
 	Texture2D* TextSprite2D::getTexture(bool reload) {
@@ -213,11 +230,10 @@ namespace Lobster {
 	void TextSprite2D::loadFace(std::string fullpath) {
 		// release memory
 		if (m_face) {
-			// TODO is m_face re-initialized properly?
 			FT_Done_Face(m_face);
 			m_face = nullptr;
 		}
-		// reinitialize face
+		// reinitialize face		
 		FT_Error error = FT_New_Face(s_library, fullpath.c_str(), 0, &m_face);
 		if (error == FT_Err_Unknown_File_Format) {
 			ERROR("{}: Unsupported format", fullpath.c_str());
@@ -238,6 +254,7 @@ namespace Lobster {
 		ocommand.y = y * config.height;
 		ocommand.w = fontSize * text.size();
 		ocommand.h = fontSize * 2;
+		ocommand.alpha = alpha;
 		ocommand.z = (float)z / 1000.f;
 		Renderer::Submit(ocommand);
 	}
@@ -295,6 +312,9 @@ namespace Lobster {
 		if (ImGui::ColorEdit3("Font Color", color)) {
 			getTexture(true);
 		}
+		if (ImGui::SliderFloat("Alpha", &alpha, 0.f, 1.f, "%.2f")) {
+			getTexture(true);
+		}
 		ImGui::Separator();
 		// basic functions
 		BasicMenuItem(ui, winSize);
@@ -308,4 +328,14 @@ namespace Lobster {
 		if (y < 0.f) y = 0.f;
 		else if (y + height > 1.f) y = 1.f - height;
 	}
+
+	bool TextSprite2D::IsMouseOver() {
+		double mx, my;
+		Input::GetMousePos(mx, my);
+		float w = fontSize * text.size();
+		float h = fontSize * 2;
+		if (mx >= x && mx <= x + w && my >= y && my <= y + h) return true;
+		return false;
+	}
+
 } 

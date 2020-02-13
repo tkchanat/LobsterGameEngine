@@ -45,7 +45,7 @@ namespace Lobster
 
 		//	Indicate whether the object is virtually deleted.
 		bool b_isVirtuallyDeleted = false;
-
+		
 		template<typename T, typename ...Args> Component* CreateComponent(Args&&... args);
 
     public:

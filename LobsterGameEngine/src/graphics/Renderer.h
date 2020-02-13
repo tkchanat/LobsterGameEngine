@@ -24,6 +24,7 @@ namespace Lobster
 		OverlayType type;
 		float x, y;
 		float w, h;
+		float alpha;
 		int z;
 		RenderOverlayCommand() { memset(this, 0, sizeof(RenderOverlayCommand)); }
 	};

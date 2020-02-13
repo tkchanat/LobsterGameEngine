@@ -168,8 +168,9 @@ namespace Lobster
 			m_spriteShader->SetTexture2D(1, command.UseTexture->Get());			
 			m_spriteShader->SetUniform("sys_world", world);
 			m_spriteShader->SetUniform("sys_projection", camera->GetOrthoMatrix());
+			m_spriteShader->SetUniform("alpha", command.alpha);
 			m_spriteShader->SetUniform("sys_background", 0);
-			m_spriteShader->SetUniform("sys_spriteTexture", 1);
+			m_spriteShader->SetUniform("sys_spriteTexture", 1);			
 			m_spriteMesh->Draw();
 		}
 

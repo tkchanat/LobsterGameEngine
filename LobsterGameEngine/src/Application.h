@@ -36,6 +36,8 @@ namespace Lobster
 		FileSystem* m_fileSystem;
 		UndoSystem* m_undoSystem;
 		std::string originalTitle;
+		std::string scenePath;
+		bool m_saved = false;
 		int m_targetFPS = 60;
 		int m_maxFixedUpdates = 10;
 		// Layers
@@ -52,10 +54,13 @@ namespace Lobster
         void Run();
         void Shutdown();
 		void OpenScene(const char* scenePath);
+		void SetScenePath(const char* scenePath);
+		void SetSaved(bool saved);
         inline Window* GetWindow() { return m_window; }
         inline glm::ivec2 GetWindowSize() { return m_window->GetSize(); }
         inline float GetWindowAspectRatio() { return (float)m_window->GetSize().x / (float)m_window->GetSize().y; }
-        inline static Application* GetInstance() { return m_instance; }	
+		inline std::string GetScenePath() { return scenePath; }		
+		inline static Application* GetInstance() { return m_instance; }			
 		// Can interchange between editor mode and simulation mode
 		static void SwitchMode(ApplicationMode mode);
 		inline static ApplicationMode GetMode() { return mode; }

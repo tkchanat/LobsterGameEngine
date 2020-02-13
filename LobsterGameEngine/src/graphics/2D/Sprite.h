@@ -19,6 +19,7 @@ namespace Lobster {
 	public:
 		float x;	// the x position of the sprite, in percentage [0, 1]
 		float y;	// the y position of the sprite, in percentage [0, 1]
+		float alpha;// alpha value of the sprite, in range [0, 1]
 
 		// constructor for derived classes
 		Sprite2D(float mouseX, float mouseY);
@@ -29,6 +30,7 @@ namespace Lobster {
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) = 0;
 		virtual void OnImGuiRender() = 0;
 		virtual void SubmitDrawCommand();
+		virtual bool IsMouseOver() { return false; }
 		// compare if s2 is in front of s1
 		static bool Compare(Sprite2D* s1, Sprite2D* s2);
 	};
@@ -52,6 +54,7 @@ namespace Lobster {
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) override;
 		virtual void OnImGuiRender() override;
 		virtual void SubmitDrawCommand() override;
+		virtual bool IsMouseOver() override;
 	};
 
 	class TextSprite2D : public Sprite2D {
@@ -60,7 +63,7 @@ namespace Lobster {
 		static const int MAX_TEXT_LENGTH = 128;
 		static FT_Library s_library; // note that FT_Library is a pointer type
 		HorizontalAlignType alignType = Left;
-		FT_Face m_face = nullptr;	// typeface stored for FreeType	
+		FT_Face m_face;
 		float fontSize = 12.f;
 		float color[4] = { 1.f, 1.f, 1.f, 1.f }; // font color, in range [0, 1]
 		std::string text;
@@ -81,11 +84,21 @@ namespace Lobster {
 	public:
 		TextSprite2D(const char* text, const char* typeface, float winW, float winH, float mouseX, float mouseY);
 
-		void SetFontSize(int size);
+		// setter
+		inline void SetText(const char* text) { strcpy(_text, text); this->text = text; }
+		void SetFontSize(float size);
+		void SetColor(float r, float g, float b, float a);
+		// getter
+		inline std::string GetText() { return text; }
+		inline float GetFontSize() { return fontSize; }
+		inline glm::vec4 GetColor() { return glm::vec4(color[0], color[1], color[2], color[3]); }
+		
 		virtual void Clip() override;
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) override;
 		virtual void OnImGuiRender() override;		
 		virtual void SubmitDrawCommand() override;
+		virtual bool IsMouseOver() override;
+
 	};
 
 }
