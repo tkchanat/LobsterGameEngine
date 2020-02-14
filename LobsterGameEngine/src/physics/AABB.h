@@ -39,7 +39,7 @@ namespace Lobster
 
     private:
         void SetVertices(bool initialize);
-        void UpdateRotation(glm::quat rotation, glm::vec3 scale);
+        void UpdateRotation();
     };
 
 }
