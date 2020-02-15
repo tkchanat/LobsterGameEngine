@@ -34,6 +34,12 @@ namespace Lobster
 		TextureCube* Skybox;
 	};
 
+	enum class RenderPipeline : uint
+	{
+		FORWARD,
+		DEFERRED
+	};
+
 	enum BlendFactor : uint 
 	{
 		BLEND_ZERO = GL_ZERO,
@@ -92,6 +98,8 @@ namespace Lobster
 
 		// renderer resources
 		static Renderer* s_instance;
+		RenderPipeline m_pipeline;
+		FrameBuffer* m_GBuffer;
 		SceneEnvironment m_activeSceneEnvironment;
 		std::list<RenderCommand> m_opaqueQueue;
 		std::list<RenderCommand> m_transparentQueue;
@@ -112,6 +120,7 @@ namespace Lobster
 		static void ClearAllQueues();
 	private:
 		void DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue);
+		void DrawQueueDeferred(CameraComponent* camera, std::list<RenderCommand>& queue);
         void Render(CameraComponent* camera);
 		void Clear(float r, float g, float b);
     };

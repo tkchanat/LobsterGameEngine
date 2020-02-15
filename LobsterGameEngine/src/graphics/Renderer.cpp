@@ -13,7 +13,9 @@ namespace Lobster
 
 	Renderer* Renderer::s_instance = nullptr;
     
-    Renderer::Renderer()
+    Renderer::Renderer() :
+		m_pipeline(RenderPipeline::DEFERRED),
+		m_GBuffer(nullptr)
     {
 		// Check if renderer already exists
 		if (s_instance)
@@ -34,6 +36,21 @@ namespace Lobster
 		m_spriteMesh = MeshFactory::Sprite();
 
 		s_instance = this;
+
+		// Create G-buffer for deferred rendering
+		std::vector<RenderTargetDesc> renderTargetsDesc;
+		renderTargetsDesc.push_back({ size.x, size.y, Formats::RGBFormat, Types::FloatType });
+		renderTargetsDesc.push_back({ size.x, size.y, Formats::RGBFormat, Types::FloatType });
+		renderTargetsDesc.push_back({ size.x, size.y, Formats::RGBAFormat, Types::UnsignedByteType });
+		m_GBuffer = new FrameBuffer(size.x, size.y, renderTargetsDesc);
+
+		// listen events
+		EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {
+			if (e->Key == GLFW_KEY_0)
+			{
+				m_pipeline = RenderPipeline::FORWARD;
+			}
+		}));
     }
     
     Renderer::~Renderer()
@@ -110,26 +127,65 @@ namespace Lobster
 			}
 
 			command.UseVertexArray->Draw();
-			//queue.pop_front();
 		}
+	}
+
+	void Renderer::DrawQueueDeferred(CameraComponent * camera, std::list<RenderCommand>& queue)
+	{
+		// G-buffer pass
+		m_GBuffer->Bind();
+		Renderer::Clear(0.2f, 0.3f, 0.3f);
+		Material* boundedMaterial = nullptr;
+		Shader* useShader = ShaderLibrary::Use("shaders/GBuffer.glsl");
+		useShader->Bind();
+		useShader->SetUniform("sys_view", camera->GetViewMatrix());
+		useShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
+		for (std::list<RenderCommand>::iterator it = queue.begin(); it != queue.end(); ++it)
+		{
+			RenderCommand& command = *it;
+			Material* useMaterial = command.UseMaterial;
+			// Vertex shader uniforms
+			useShader->SetUniform("sys_world", command.UseWorldTransform);
+			if (command.UseBoneTransforms) {
+				useShader->SetUniform("sys_bones[0]", MAX_BONES, command.UseBoneTransforms);
+				useShader->SetUniform("sys_animate", true);
+			}
+			else {
+				useShader->SetUniform("sys_animate", false);
+			}
+			//// Fragment shader uniforms
+			//useShader->SetUniform("sys_cameraPosition", camera->GetPosition());
+			//useShader->SetTextureCube(8, m_activeSceneEnvironment.Skybox->GetIrradiance());
+			//useShader->SetTextureCube(9, m_activeSceneEnvironment.Skybox->GetPrefilter());
+			//useShader->SetTexture2D(10, m_activeSceneEnvironment.Skybox->GetBRDF());
+			//useShader->SetUniform("sys_irradianceMap", 8);
+			//useShader->SetUniform("sys_prefilterMap", 9);
+			//useShader->SetUniform("sys_brdfLUTMap", 10);
+
+			if (boundedMaterial != useMaterial) {
+				useMaterial->SetUniforms();
+				boundedMaterial = useMaterial;
+			}
+
+			command.UseVertexArray->Draw();
+		}
+		m_GBuffer->Unbind();
 	}
 
 	void Renderer::Render(CameraComponent* camera)
 	{
 		if (!camera) return;
-
-		// =====================================================
-		// [First Pass] Render the scene to frame buffer
-		// Render order: Background -> Opaque -> Transparent(sorted) -> Overlay
-
-		// Set renderer configurations
 		FrameBuffer* renderTarget = camera->GetFrameBuffer();
 		renderTarget->Bind();
 		Renderer::Clear(0.2f, 0.3f, 0.3f);
 		Renderer::SetFaceCulling(true);
-		
+
 		// Update lightings
 		LightLibrary::SetUniforms();
+
+		// =====================================================
+		// [First Pass] Render the scene to frame buffer
+		// Render order: Background -> Opaque -> Transparent(sorted) -> Overlay
 
 		// Background
 		if (m_activeSceneEnvironment.Skybox)
@@ -146,16 +202,25 @@ namespace Lobster
 			Renderer::SetDepthTest(true, DEPTH_LESS);
 			Renderer::SetFaceCulling(true, CULL_BACK);
 		}
-
-		// Opaque		
-		Renderer::DrawQueue(camera, m_opaqueQueue);
-		// Transparent(sorted)		
+		// Opaque
+		switch (m_pipeline)
+		{
+		case RenderPipeline::FORWARD:
+			Renderer::DrawQueue(camera, m_opaqueQueue);
+			break;
+		case RenderPipeline::DEFERRED:
+			Renderer::DrawQueueDeferred(camera, m_opaqueQueue);
+			break;
+		default:
+			throw std::runtime_error("Invalid RenderPipeline");
+			break;
+		}
+		// Transparent(sorted from back to front order)		
 		Renderer::SetAlphaBlend(true);
 		glDepthMask(GL_FALSE);
 		Renderer::DrawQueue(camera, m_transparentQueue);
 		glDepthMask(GL_TRUE);
-		Renderer::SetAlphaBlend(false);				
-		// from front to back order
+		Renderer::SetAlphaBlend(false);
 		// Overlay
 		m_spriteShader->Bind();
 		for (auto it = m_overlayQueue.rbegin(); it != m_overlayQueue.rend(); ++it)
@@ -164,27 +229,24 @@ namespace Lobster
 			glm::mat4 world = glm::mat4(1.0);
 			world = glm::translate(world, glm::vec3(command.x, command.y, command.z));
 			world = glm::scale(world, glm::vec3(command.w, command.h, 1.0f));
-			m_spriteShader->SetTexture2D(0, renderTarget->Get());
-			m_spriteShader->SetTexture2D(1, command.UseTexture->Get());			
+			m_spriteShader->SetTexture2D(0, renderTarget->Get(0));
+			m_spriteShader->SetTexture2D(1, command.UseTexture->Get());
 			m_spriteShader->SetUniform("sys_world", world);
 			m_spriteShader->SetUniform("sys_projection", camera->GetOrthoMatrix());
 			m_spriteShader->SetUniform("alpha", command.alpha);
 			m_spriteShader->SetUniform("sys_background", 0);
-			m_spriteShader->SetUniform("sys_spriteTexture", 1);			
+			m_spriteShader->SetUniform("sys_spriteTexture", 1);
 			m_spriteMesh->Draw();
 		}
-
 		// Unset renderer configurations
 		Renderer::SetFaceCulling(false);
-
 		renderTarget->Unbind();
-
 		// =====================================================
 		// [Second Pass] Render the stored frame buffer in rect
 		Renderer::Clear(0.1f, 0.2f, 0.3f);
 		Renderer::SetDepthTest(false);
 		m_postProcessShader->Bind();
-		m_postProcessShader->SetTexture2D(0, renderTarget->Get());
+		m_postProcessShader->SetTexture2D(0, renderTarget->Get(0));
 		m_postProcessMesh->Draw();
 		Renderer::SetDepthTest(true);
     }

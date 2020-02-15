@@ -190,4 +190,5 @@ void main()
 
 	vec3 IBLContribution = IBL(f0, Lr, view, albedo, normal, roughness, metallic, ambientOcclusion);
 	out_color = vec4(LightContribution + IBLContribution, 1.0);
+	// out_color = vec4(frag_normal, 1.0);
 } 

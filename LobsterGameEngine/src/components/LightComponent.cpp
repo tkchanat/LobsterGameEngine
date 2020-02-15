@@ -11,7 +11,7 @@ namespace Lobster
 
 	LightComponent::LightComponent(LightType type) :
 		Component(LIGHT_COMPONENT),
-		m_type(DIRECTIONAL_LIGHT),
+		m_type(type),
 		m_color(glm::vec3(1)),
 		m_intensity(1),
 		b_dirty(false)

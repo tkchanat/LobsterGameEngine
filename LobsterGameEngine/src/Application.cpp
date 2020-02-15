@@ -107,15 +107,15 @@ namespace Lobster
 		//dance->AddChild(new GameObject("child 2"));
 		//m_scene->AddGameObject(dance);
 
-// 		GameObject* barrel = new GameObject("barrel");
-// 		barrel->AddComponent(new MeshComponent(FileSystem::Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat"));
-// 		barrel->AddComponent(new AudioSource());
-// 		//barrel->AddComponent(new AABB());
-// 		//barrel->AddComponent(new Rigidbody());
-// 		//barrel->transform.Translate(0, 2, 0);
-// 		barrel->AddChild(new GameObject("child 1"));
-// 		barrel->AddChild(new GameObject("child 2"));
-// 		m_scene->AddGameObject(barrel);
+ 		GameObject* barrel = new GameObject("barrel");
+ 		barrel->AddComponent(new MeshComponent(FileSystem::Path("meshes/Barrel_01.obj").c_str(), "materials/barrel.mat"));
+ 		//barrel->AddComponent(new AudioSource());
+ 		//barrel->AddComponent(new AABB());
+ 		//barrel->AddComponent(new Rigidbody());
+ 		//barrel->transform.Translate(0, 2, 0);
+ 		barrel->AddChild(new GameObject("child 1"));
+ 		barrel->AddChild(new GameObject("child 2"));
+ 		m_scene->AddGameObject(barrel);
 
 		//GameObject* particle = new GameObject("Particle System");
 		//particle->AddComponent(new ParticleComponent());

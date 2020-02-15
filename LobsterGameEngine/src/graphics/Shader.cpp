@@ -337,14 +337,12 @@ uniform sampler2D sys_brdfLUTMap;)");
 
 	void Shader::SetTexture2D(uint slot, void * texture2D)
 	{
-		glUseProgram(m_id);
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_2D, (intptr_t)texture2D);
 	}
     
 	void Shader::SetTextureCube(uint slot, void * textureCube)
 	{
-		glUseProgram(m_id);
 		glActiveTexture(GL_TEXTURE0 + slot);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, (intptr_t)textureCube);
 	}

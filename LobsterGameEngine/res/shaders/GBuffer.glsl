@@ -38,44 +38,23 @@ void main()
 }
 
 ///FragmentShader
+layout (location = 0) out vec3 gPosition;
+layout (location = 1) out vec3 gNormal;
+layout (location = 2) out vec4 gAlbedo;
 in vec3 frag_position;
 in vec3 frag_normal;
 in vec2 frag_texcoord;
 in mat3 frag_TBN;
 
-out vec4 FragColor;
-
-uniform float AmbientStrength = 0.25;
 uniform sampler2D AlbedoMap;
 uniform sampler2D NormalMap;
-uniform vec4 DiffuseColor = vec4(0, 1, 0, 1);
-uniform vec4 SpecularColor = vec4(1, 1, 1, 1);
-uniform float Shininess = 0.5;
-
-vec4 CalcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir) 
-{
-    vec3 lightDir = normalize(light.direction);
-    // diffuse shading
-    float intensity = max(dot(normal, lightDir), AmbientStrength);
-    // specular shading
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float multiplier = pow(max(dot(viewDir, reflectDir), 0.0), 16.0 * (Shininess + EPSILON));
-    // combine results
-    vec4 diffuse = TextureExists(AlbedoMap) ? texture(AlbedoMap, frag_texcoord) * DiffuseColor : DiffuseColor;
-    vec4 specular = Shininess * multiplier * SpecularColor;
-    vec3 color = (diffuse * intensity + specular).rgb;
-    return vec4(color, diffuse.a);
-}
 
 void main()
-{
-    // calculate normal in tangent space
-    vec3 normal = TextureExists(NormalMap) ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
-    vec3 viewDir = normalize(sys_cameraPosition - frag_position);
-
-    vec4 result = vec4(0.0);
-    for(int i = 0; i < Lights.directionalLightCount; ++i) {
-        result += CalcDirectionalLight(Lights.directionalLights[i], normal, viewDir);
-    }
-    FragColor = vec4(result);
-}
+{    
+    // store the fragment position vector in the first gbuffer texture
+    gPosition = frag_position;
+    // also store the per-fragment normals into the gbuffer
+    gNormal = TextureExists(NormalMap) ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
+    // and the diffuse per-fragment color
+    gAlbedo = texture(AlbedoMap, frag_texcoord);
+}  

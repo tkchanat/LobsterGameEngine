@@ -3,6 +3,31 @@
 namespace Lobster
 {
 
+	enum class Formats : int
+	{
+		AlphaFormat = GL_ALPHA,
+		RedFormat = GL_RED, 
+		RedIntFormat = GL_RED_INTEGER,
+		RGFormat = GL_RG, 
+		RGIntFormat = GL_RG_INTEGER,
+		RGBFormat = GL_RGB, 
+		RGBIntFormat = GL_RGB_INTEGER,
+		RGBAFormat = GL_RGBA, 
+		RGBAIntFormat = GL_RGBA_INTEGER
+	};
+
+	enum class Types : int
+	{
+		UnsignedByteType = GL_UNSIGNED_BYTE,
+		ByteType = GL_BYTE,
+		ShortType = GL_SHORT,
+		UnsignedShortType = GL_UNSIGNED_SHORT,
+		IntType = GL_INT,
+		UnsignedIntType = GL_UNSIGNED_INT,
+		FloatType = GL_FLOAT,
+		HalfFloatType = GL_HALF_FLOAT
+	};
+
 	class VertexArray;
 
 	class Texture
