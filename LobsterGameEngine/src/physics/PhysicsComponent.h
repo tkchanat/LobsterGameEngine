@@ -16,7 +16,10 @@ namespace Lobster {
 		virtual void VirtualCreate() override;
 		virtual void VirtualDelete() override;
 
-		void AddCollider(Collider* collider) {
+		//	Callback function to register the event of setting enabled / disabled (through ImGui) to undo system.
+		void SetEnabledCallback();
+
+		inline void AddCollider(Collider* collider) {
 			m_colliders.push_back(collider);
 		}
 		inline Collider* GetBoundingBox() const { return m_boundingBox; }

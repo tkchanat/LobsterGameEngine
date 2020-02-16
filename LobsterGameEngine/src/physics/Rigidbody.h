@@ -17,6 +17,9 @@ namespace Lobster {
 		void OnPhysicsUpdate(double deltaTime) override;
 
 	private:
+		int m_isChanging = -1;		//	Used for undo system. 0 = mass, 1 = linear damping, 2 = angular damping, 3 = elasticity.
+		float m_prevProp[4];		//	Used for undo system.
+
 		//	Variables used for position estimation.
 		glm::vec3 m_prevLinearPos;
 		glm::vec3 m_prevAngularPos;

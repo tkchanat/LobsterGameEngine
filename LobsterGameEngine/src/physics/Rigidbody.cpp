@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "physics/Rigidbody.h"
 #include "objects/GameObject.h"
+#include "system/Input.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster {
 	//	Sunny: This value is open to change.
@@ -36,17 +38,68 @@ namespace Lobster {
 
 		if (statement) {
 			if (ImGui::CollapsingHeader("PhysicsComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
-				ImGui::Checkbox("Enabled?", &m_enabled);
-				ImGui::Checkbox("Simulate Physics", &m_simulate);
+				if (ImGui::Checkbox("Enabled?", &m_enabled)) {
+					UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_enabled, !m_enabled, m_enabled, std::string(m_enabled ? "Enabled" : "Disabled") + " physics for " + GetOwner()->GetName()));
+				}
 
-				ImGui::DragFloat("Mass", &m_mass, 1.0f, 0.0001f, 100000.0f);
+				if (ImGui::Checkbox("Simulate Physics", &m_simulate)) {
+					UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_simulate, !m_simulate, m_simulate, std::string(m_simulate ? "Enabled" : "Disabled") + " physics simulation for " + GetOwner()->GetName()));
+				}
 
-				ImGui::SliderFloat("Linear Damping", &m_linearDamping, 0.0f, 100.0f);
-				ImGui::SliderFloat("Angular Damping", &m_angularDamping, 0.0f, 100.0f);
+				if (ImGui::DragFloat("Mass", &m_mass, 1.0f, 0.0001f, 100000.0f)) {
+					m_isChanging = 0;
+				}
+				if (m_isChanging != 0) {
+					m_prevProp[0] = m_mass;
+				} else if (ImGui::IsItemActive() == false) {
+					if (m_prevProp[0] != m_mass) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_mass, m_prevProp[0], m_mass, "Set mass to " + StringOps::ToString(m_mass) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
 
-				ImGui::SliderFloat("Elasticity", &m_restitution, 0.0f, 1.0f);
+				if (ImGui::SliderFloat("Linear Damping", &m_linearDamping, 0.0f, 100.0f)) {
+					m_isChanging = 1;
+				}
+				if (m_isChanging != 1) {
+					m_prevProp[1] = m_linearDamping;
+				} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+					if (m_prevProp[1] != m_linearDamping) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_linearDamping, m_prevProp[1], m_linearDamping, "Set linear damping factor to " + StringOps::ToString(m_linearDamping, 2) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
 
-				ImGui::Combo("Physics Type", &m_physicsType, PhysicsType, 3);
+				if (ImGui::SliderFloat("Angular Damping", &m_angularDamping, 0.0f, 100.0f)) {
+					m_isChanging = 2;
+				}
+				if (m_isChanging != 2) {
+					m_prevProp[2] = m_angularDamping;
+				} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+					if (m_prevProp[2] != m_angularDamping) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_angularDamping, m_prevProp[2], m_angularDamping, "Set angular damping factor to " + StringOps::ToString(m_angularDamping, 2) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
+
+				if (ImGui::SliderFloat("Elasticity", &m_restitution, 0.0f, 1.0f)) {
+					m_isChanging = 3;
+				}
+				if (m_isChanging != 3) {
+					m_prevProp[3] = m_restitution;
+				} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+					if (m_prevProp[3] != m_restitution) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_restitution, m_prevProp[3], m_restitution, "Set elasticity factor to " + StringOps::ToString(m_restitution) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
+
+				int prevPhysicsType = m_physicsType;
+				if (ImGui::Combo("Physics Type", &m_physicsType, PhysicsType, 3)) {
+					if (prevPhysicsType != m_physicsType) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_physicsType, prevPhysicsType, m_physicsType, "Set physics type to " + std::string(PhysicsType[m_physicsType]) + " mode for " + GetOwner()->GetName()));
+					}
+				}
 			}
 		}
 
