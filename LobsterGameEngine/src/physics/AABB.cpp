@@ -61,7 +61,6 @@ namespace Lobster
 	}
 
 	void AABB::SetOwner(GameObject* owner) {
-		//gameObject = owner;
 		std::pair<glm::vec3, glm::vec3> pair = owner->GetBound();
 		Min = pair.first;
 		Max = pair.second;

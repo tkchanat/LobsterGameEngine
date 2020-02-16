@@ -2,6 +2,8 @@
 #include <string>
 #include <glm/glm.hpp>
 #include "components/Component.h"
+#include "physics/Collider.h"
+#include "physics/PhysicsComponent.h"
 //#include "objects/GameObject.h"
 #include "objects/Transform.h"
 
@@ -34,6 +36,20 @@ namespace Lobster {
 
 	private:
 		GameObject* m_object;
+		Transform m_original;
+		Transform m_new;
+	};
+
+	//	For all commands that are used to translate, rotate or scale a collider.
+	class TransformColliderCommand : public Command {
+	public:
+		TransformColliderCommand(Collider* collider, Transform t_original, Transform t_new);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		Collider* m_collider;
 		Transform m_original;
 		Transform m_new;
 	};
@@ -134,6 +150,38 @@ namespace Lobster {
 		bool b_isDeleted;
 	};
 
+	//	Deletion of a collider.
+	class DestroyColliderCommand : public Command {
+	public:
+		virtual ~DestroyColliderCommand() override;
+
+		DestroyColliderCommand(Collider* collider, PhysicsComponent* component);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		Collider* m_collider;
+		PhysicsComponent* m_component;
+		bool b_isDeleted;
+	};
+
+	//	Creation of a collider.
+	class CreateColliderCommand : public Command {
+	public:
+		virtual ~CreateColliderCommand() override;
+
+		CreateColliderCommand(Collider* collider, PhysicsComponent* component);
+		void Exec() override;
+		void Undo() override;
+		std::string ToString() const override;
+
+	private:
+		Collider* m_collider;
+		PhysicsComponent* m_component;
+		bool b_isDeleted;
+	};
+
 	//	Setting property on a component.
 	template <typename T, typename U = Component, typename V = Component>
 	class PropertyAssignmentCommand : public Command {
@@ -170,5 +218,41 @@ namespace Lobster {
 		T m_new;
 		std::string m_action;
 		void(V::*m_func) (void);
+	};
+
+	//	Setting property on a component with replacement of component.
+	template <typename T, typename U = Component, typename V = Component>
+	class PropertyReplacementCommand : public Command {
+	public:
+		PropertyReplacementCommand(U* component, T* prop, T originalValue, T newValue, std::string action, U*(V::*f) (int) = nullptr) :
+			m_component(component),
+			m_prop(prop),
+			m_original(originalValue),
+			m_new(newValue),
+			m_action(action),
+			m_func(f)
+		{
+
+		}
+
+		void Exec() override {
+			if (m_func != nullptr && dynamic_cast<V*>(m_component)) m_component = ((dynamic_cast<V*>(m_component))->*m_func)(m_new);
+		}
+
+		void Undo() override {
+			if (m_func != nullptr && dynamic_cast<V*>(m_component)) m_component = ((dynamic_cast<V*>(m_component))->*m_func)(m_original);
+		}
+
+		std::string ToString() const override {
+			return m_action;
+		}
+
+	private:
+		U* m_component;
+		T* m_prop;
+		T m_original;
+		T m_new;
+		std::string m_action;
+		U*(V::*m_func) (int);
 	};
 }

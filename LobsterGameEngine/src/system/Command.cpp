@@ -32,12 +32,50 @@ namespace Lobster {
 		} else if (m_original.LocalEulerAngles != m_new.LocalEulerAngles) {
 			act = "Rotated ";
 			vect = StringOps::ToString(m_new.LocalEulerAngles);
+		} else if (m_original.LocalScale != m_new.LocalScale) {
+			act = "Scaled ";
+			vect = StringOps::ToString(m_new.LocalScale);
+		} else {
+			act = "Set overall scale of ";
+			vect = std::to_string(m_new.OverallScale);
+		}
+		
+		return act + m_object->GetName() + " to " + vect;
+	}
+
+	TransformColliderCommand::TransformColliderCommand(Collider* collider, Transform t_original, Transform t_new) :
+		m_collider(collider),
+		m_original(t_original),
+		m_new(t_new)
+	{
+
+	}
+
+	//	Executing a transformation command is to change the matrix to the new one.
+	void TransformColliderCommand::Exec() {
+		m_collider->m_transform = m_new;
+	}
+
+	//	By performing undo on a transformation, we are essentially changing the transforming matrix back to the original one.
+	void TransformColliderCommand::Undo() {
+		m_collider->m_transform = m_original;
+	}
+
+	std::string TransformColliderCommand::ToString() const {
+		//	act stores the action, vect stores the vector details.
+		std::string act, vect;
+		if (m_original.WorldPosition != m_new.WorldPosition) {
+			act = "Translated ";
+			vect = StringOps::ToString(m_new.WorldPosition);
+		} else if (m_original.LocalEulerAngles != m_new.LocalEulerAngles) {
+			act = "Rotated ";
+			vect = StringOps::ToString(m_new.LocalEulerAngles);
 		} else {
 			act = "Scaled ";
 			vect = StringOps::ToString(m_new.LocalScale);
 		}
-		
-		return act + m_object->GetName() + " to " + vect;
+
+		return act + " a collider in " +  m_collider->GetPhysics()->GetOwner()->GetName() + " by " + vect;
 	}
 
 	DestroyObjectCommand::DestroyObjectCommand(GameObject* object, Scene* scene) :
@@ -234,5 +272,69 @@ namespace Lobster {
 
 	std::string CreateComponentCommand::ToString() const {
 		return "Created " + m_component->GetTypeName() + " in " + m_object->GetName();
+	}
+
+	DestroyColliderCommand::DestroyColliderCommand(Collider* collider, PhysicsComponent* component) :
+		m_collider(collider),
+		m_component(component),
+		b_isDeleted(true)
+	{
+
+	}
+
+	DestroyColliderCommand::~DestroyColliderCommand() {
+		if (b_isDeleted) delete m_collider;
+		m_collider = nullptr;
+		m_component = nullptr;
+	}
+
+	//	Executing a destroy command is to soft delete a collider.
+	void DestroyColliderCommand::Exec() {
+		m_component->RemoveCollider(m_collider);
+		b_isDeleted = true;
+		m_collider->VirtualDelete();
+	}
+
+	//	By performing an undo on destroy command, the collider should come back to live.
+	void DestroyColliderCommand::Undo() {
+		m_component->AddCollider(m_collider);
+		b_isDeleted = false;
+		m_collider->VirtualCreate();
+	}
+
+	std::string DestroyColliderCommand::ToString() const {
+		return "Destroyed a collider in " + m_component->GetOwner()->GetName();
+	}
+
+	CreateColliderCommand::CreateColliderCommand(Collider* collider, PhysicsComponent* component) :
+		m_collider(collider),
+		m_component(component),
+		b_isDeleted(false)
+	{
+
+	}
+
+	CreateColliderCommand::~CreateColliderCommand() {
+		if (b_isDeleted) delete m_collider;
+		m_collider = nullptr;
+		m_component = nullptr;
+	}
+
+	//	Executing a create command is to bring a collider to live.
+	void CreateColliderCommand::Exec() {
+		m_component->AddCollider(m_collider);
+		b_isDeleted = false;
+		m_collider->VirtualCreate();
+	}
+
+	//	By performing an undo on create command, the collider should be deleted.
+	void CreateColliderCommand::Undo() {
+		m_component->RemoveCollider(m_collider);
+		b_isDeleted = true;
+		m_collider->VirtualDelete();
+	}
+
+	std::string CreateColliderCommand::ToString() const {
+		return "Created a collider in " + m_component->GetOwner()->GetName();
 	}
 }
