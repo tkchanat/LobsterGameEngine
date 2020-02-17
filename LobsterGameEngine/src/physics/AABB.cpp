@@ -61,7 +61,6 @@ namespace Lobster
 	}
 
 	void AABB::SetOwner(GameObject* owner) {
-		//gameObject = owner;
 		std::pair<glm::vec3, glm::vec3> pair = owner->GetBound();
 		Min = pair.first;
 		Max = pair.second;
@@ -72,12 +71,11 @@ namespace Lobster
 		// update AABB
 		m_transform.UpdateMatrix();
 		Center = transform->WorldPosition;
-		UpdateRotation(transform->LocalRotation, transform->LocalScale);
+		UpdateRotation();
 	}
 
     void AABB::Draw()
     {
-		LOG("we called draw");
 #ifdef LOBSTER_BUILD_DEBUG
         // validate data, and return if we haven't define game object yet
 		if (!physics) return;
@@ -151,9 +149,8 @@ namespace Lobster
 		}
         m_vertexBuffer->SetData(m_vertexData, sizeof(float) * 24);
     }
-	
-	//	translated indicates whether we translated for once before - if yes, we should use m_debugTranslatedData instead of m_vertexInitialData.
-    void AABB::UpdateRotation(glm::quat rotation, glm::vec3 scale)
+
+    void AABB::UpdateRotation()
     {
 		Min.x = Max.x = (m_vertexInitialData[0] + m_vertexInitialData[18]) / 2.0f;
 		Min.y = Max.y = (m_vertexInitialData[1] + m_vertexInitialData[19]) / 2.0f;
@@ -162,7 +159,7 @@ namespace Lobster
 		for(int i = 0; i < 24; i += 3)
         {
 			glm::vec3 vertices = glm::vec3(m_vertexInitialData[i], m_vertexInitialData[i + 1], m_vertexInitialData[i + 2]);
-			glm::vec3 rotatedCorner = glm::mat3(glm::scale(scale)) * vertices * glm::conjugate(rotation);
+			glm::vec3 rotatedCorner = transform->GetMatrix() * glm::vec4(vertices, 1.0);
 
             Min.x = rotatedCorner.x < Min.x ? rotatedCorner.x : Min.x;
             Min.y = rotatedCorner.y < Min.y ? rotatedCorner.y : Min.y;

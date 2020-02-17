@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "physics/PhysicsComponent.h"
 #include "objects/GameObject.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster {
 	const char* PhysicsComponent::PhysicsBodyTypes[] = { "Rigid body", "Non-rigid body" };
@@ -36,6 +37,10 @@ namespace Lobster {
 		PhysicsSystem::GetInstance()->RemovePhysicsComp(this);
 	}
 
+	void PhysicsComponent::SetEnabledCallback() {
+		UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_enabled, !m_enabled, m_enabled, std::string(m_enabled ? "Enabled" : "Disabled") + " physics for " + GetOwner()->GetName()));
+	}
+
 	bool PhysicsComponent::Intersects(PhysicsComponent* other) {
 		for (Collider* c1 : m_colliders) {
 			if (c1->IsEnabled() == false) continue;
@@ -67,7 +72,5 @@ namespace Lobster {
 			if (c == collider) m_colliders.erase(m_colliders.begin() + i);
 			i++;
 		}
-
-		delete collider;
 	}
 }

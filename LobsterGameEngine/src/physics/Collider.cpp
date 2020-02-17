@@ -3,47 +3,60 @@
 #include "physics/Collider.h"
 #include "objects/GameObject.h"
 #include "physics/PhysicsComponent.h"
+#include "system/UndoSystem.h"
 
 namespace Lobster {
 	const char* Collider::ColliderType[] = { "Axis-aligned Collider", "Box Collider", "Sphere Collider" };
 
 	void Collider::OnImGuiRender() {
+		bool changedColliderType = false;
+
 		ImGui::PushID(this);
 		if (ImGui::CollapsingHeader(ColliderType[m_colliderType], &m_show, ImGuiTreeNodeFlags_DefaultOpen)) {
-			ImGui::Checkbox("Enabled?", &m_enabled);
+
+			if (ImGui::Checkbox("Enabled?", &m_enabled)) {
+				UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_enabled, !m_enabled, m_enabled, std::string(m_enabled ? "Enabled" : "Unabled") + " a collider for " + physics->GetOwner()->GetName()));
+			}
 
 			m_prevColliderType = m_colliderType;
-			ImGui::Combo("Collider Type", &m_colliderType, ColliderType, 3);
+			if (ImGui::Combo("Collider Type", &m_colliderType, ColliderType, 3)) {
+				if (m_prevColliderType != m_colliderType) {
+					//	We will need to delete current object. Defer the change to the end of function.
+					changedColliderType = true;
+				}
+			}
 
 			ImGui::Indent();
+			bool isChanging = false;
 			if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				ImGui::DragFloat3("Position", glm::value_ptr(m_transform.WorldPosition), 0.05f, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+				isChanging = isChanging || ImGui::IsItemActive();
 				//	Only show rotation and scale option for OBB.
 				if (m_colliderType == 1) {
 					ImGui::DragFloat3("Rotation", glm::value_ptr(m_transform.LocalEulerAngles), 1.0f, -360.0f, 360.0f);
+					isChanging = isChanging || ImGui::IsItemActive();
 					ImGui::DragFloat3("Scale", glm::value_ptr(m_transform.LocalScale), 0.05f, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+					isChanging = isChanging || ImGui::IsItemActive();
 				}
 			}
 			ImGui::Unindent();
 
-			//	TODO: When we add support for SphereCollider, add and implement this code to implement switching between Sphere / Box Collider.
-		
-			if (m_colliderType != m_prevColliderType) {
-				//	Only change if collider type changed
+			//	Keep track of transform before we start transforming.
+			if (!b_isChanging) {
+				m_prevTransform = m_transform;
+			}
 
-				Collider* newCollider;
-				if (m_colliderType == 0) {
-					newCollider = new AABB(physics);
-				} else if (m_colliderType == 1) {
-					newCollider = new BoxCollider(physics);
+			//	Now, keep track of whether we are changing, and send undo event after change.
+			if (!b_isChanging && isChanging) {
+				b_isChanging = true;
+			} else if (b_isChanging && !isChanging) {
+				b_isChanging = false;
+
+				//	Only send undo event if transform changed.
+				if (m_prevTransform.GetMatrix() != m_transform.GetMatrix()) {
+					UndoSystem::GetInstance()->Push(new TransformColliderCommand(this, m_prevTransform, m_transform));
 				}
-
-				newCollider->SetOwner(physics->GetOwner());
-				newCollider->SetOwnerTransform(transform);
-
-				physics->AddCollider(newCollider);
-				physics->RemoveCollider(this);
 			}
 		}
 		ImGui::PopID();
@@ -51,7 +64,35 @@ namespace Lobster {
 		//	TODO: Confirmation Window.
 		if (!m_show) {
 			physics->RemoveCollider(this);
+			UndoSystem::GetInstance()->Push(new DestroyColliderCommand(this, physics));
+			return;
 		}
+
+		if (changedColliderType) {
+			Collider* newCollider = UpdateColliderType(m_colliderType);
+			UndoSystem::GetInstance()->Push(new PropertyReplacementCommand(newCollider, &m_colliderType, m_prevColliderType, m_colliderType, "Set collider type to " + std::string(ColliderType[m_colliderType]) + " mode for " + physics->GetOwner()->GetName(), &Collider::UpdateColliderType));
+			return;
+		}
+	}
+
+	Collider* Collider::UpdateColliderType(int colliderType) {
+		Collider* newCollider;
+
+		//	TODO: When we add support for SphereCollider, add and implement this code to implement switching between Sphere / Box Collider.
+		if (colliderType == 0) {
+			newCollider = new AABB(physics);
+		} else if (colliderType == 1) {
+			newCollider = new BoxCollider(physics);
+		}
+
+		newCollider->SetOwner(physics->GetOwner());
+		newCollider->SetOwnerTransform(transform);
+
+		physics->AddCollider(newCollider);
+		physics->RemoveCollider(this);
+		delete this;
+
+		return newCollider;
 	}
 
 	bool Collider::Intersects(Collider* c1, Collider* c2) {

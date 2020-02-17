@@ -55,14 +55,15 @@ namespace Lobster
 							if (!physics || !physics->IsEnabled()) {
 								if (ImGui::Selectable("Enable Rigidbody")) {
 									physics->SetEnabled(true);
+									physics->SetEnabledCallback();
 								}
-							}
-							else {
+							} else {
 								if (ImGui::Selectable("Add Collider")) {
 									BoxCollider* box = new BoxCollider(physics);
 									box->SetOwner(selectedGO);
 									box->SetOwnerTransform(&selectedGO->transform);
 									physics->AddCollider(box);
+									UndoSystem::GetInstance()->Push(new CreateColliderCommand(box, physics));
 								}
 							}
 							ImGui::EndMenu();
@@ -73,7 +74,9 @@ namespace Lobster
 							UndoSystem::GetInstance()->Push(new CreateComponentCommand(particleComp, selectedGO));
 						}
 						if (ImGui::Selectable("Script")) {
-							selectedGO->AddComponent(new Script());
+							Script* script = new Script();
+							selectedGO->AddComponent(script);
+							UndoSystem::GetInstance()->Push(new CreateComponentCommand(script, selectedGO));
 						}
 						ImGui::Separator();
 						ImGui::Selectable("Lobster");
