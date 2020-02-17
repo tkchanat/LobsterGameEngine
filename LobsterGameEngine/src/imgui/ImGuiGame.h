@@ -26,7 +26,7 @@ namespace Lobster {
 
 			// draw scene
 			CameraComponent* camera = CameraComponent::GetActiveCamera();
-			void* image = camera->GetFrameBuffer()->Get();
+			void* image = camera->GetFrameBuffer()->Get(0);
 			float aspectRatio = camera->GetFrameBuffer()->GetAspectRatio();
 			float imageHeight = window_size.x / aspectRatio;
 			float startingHeight = window_pos.y + window_size.y / 2.f - imageHeight / 2.f;

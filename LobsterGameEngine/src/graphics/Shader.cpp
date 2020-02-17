@@ -99,6 +99,7 @@ uniform vec3 sys_cameraPosition;)");
 #define EPSILON 0.0001
 #define MAX_DIRECTIONAL_LIGHTS )" + std::to_string(MAX_DIRECTIONAL_LIGHTS) + R"(
 #define MAX_POINT_LIGHTS )" + std::to_string(MAX_POINT_LIGHTS) + R"(
+#define MAX_DIRECTIONAL_SHADOW )" + std::to_string(MAX_DIRECTIONAL_SHADOW) + R"(
 struct DirectionalLight {
     vec3 direction;
     float intensity;
@@ -114,13 +115,15 @@ struct PointLight {
 layout (std140) uniform ubo_Lights {
     DirectionalLight directionalLights[MAX_DIRECTIONAL_LIGHTS];
 	PointLight pointLights[MAX_POINT_LIGHTS];
+	mat4 lightSpaceMatrix[MAX_DIRECTIONAL_SHADOW];
     int directionalLightCount;
 	int pointLightCount;
 } Lights;
 uniform vec3 sys_cameraPosition;
 uniform samplerCube sys_irradianceMap;
 uniform samplerCube sys_prefilterMap;
-uniform sampler2D sys_brdfLUTMap;)");
+uniform sampler2D sys_brdfLUTMap;
+uniform sampler2D sys_shadowMap[MAX_DIRECTIONAL_SHADOW];)");
 
 		// System defined macro
 		fs = StringOps::RegexReplace(fs, "TextureExists\\((\\w*)\\)", "textureSize($1, 0).x > 1");

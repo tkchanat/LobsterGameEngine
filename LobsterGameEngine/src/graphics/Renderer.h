@@ -113,7 +113,6 @@ namespace Lobster
 	private:
 		void DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue);
         void Render(CameraComponent* camera);
-		void Clear(float r, float g, float b);
     };
     
 }

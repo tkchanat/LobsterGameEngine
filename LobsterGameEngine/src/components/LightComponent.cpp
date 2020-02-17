@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "LightComponent.h"
 #include "imgui/ImGuiScene.h"
+#include "graphics/FrameBuffer.h"
+#include "graphics/Renderer.h"
 #include "objects/Transform.h"
 #include "physics/Rigidbody.h"
 #include "system/Input.h"
@@ -11,11 +13,20 @@ namespace Lobster
 
 	LightComponent::LightComponent(LightType type) :
 		Component(LIGHT_COMPONENT),
-		m_type(DIRECTIONAL_LIGHT),
+		m_type(type),
 		m_color(glm::vec3(1)),
 		m_intensity(1),
-		b_dirty(false)
+		b_dirty(false),
+		m_depthBuffer(nullptr),
+		m_lightSpaceMatrix(glm::mat4(1.0))
 	{
+		std::vector<RenderTargetDesc> renderTargetsDesc;
+		RenderTargetDesc depthDesc;
+		depthDesc.depthOnly = true;
+		depthDesc.format = Formats::DepthComponentFormat;
+		depthDesc.type = Types::FloatType;
+		renderTargetsDesc.push_back(depthDesc);
+		m_depthBuffer = new FrameBuffer(1024, 1024, renderTargetsDesc);
 	}
 
 	LightComponent::~LightComponent()
@@ -35,7 +46,6 @@ namespace Lobster
 
 	void LightComponent::OnAttach()
 	{
-		this->transform->WorldPosition = glm::vec3(0, 2, 3);
 		LightLibrary::AddLight(this, GetType());
 
 		PhysicsComponent* physics = new Rigidbody();
@@ -82,8 +92,9 @@ namespace Lobster
 				m_isChanging = -1;
 			}
 
-			// Light intensity
-			if (ImGui::SliderFloat("Intensity", &m_intensity, 0.f, 1.f)) {
+			// Light intensity/attenuation
+			const char* label = (m_type == POINT_LIGHT) ? "Attenuation" : "Intensity";
+			if (ImGui::SliderFloat(label, &m_intensity, 0.f, 1.f)) {
 				m_isChanging = 1;
 			}
 			if (m_isChanging != 1) {
@@ -102,6 +113,31 @@ namespace Lobster
 		LightLibrary::AddLight(this, m_type);
 		m_prevType = m_type;
 		b_dirty = true;
+	}
+
+	void LightComponent::RenderDepthMap(const std::list<RenderCommand>& queue)
+	{
+		Shader* shader = ShaderLibrary::Use("shaders/ShadowMapping.glsl");
+		shader->Bind();
+		glm::mat4 lightProjection, lightView;
+		float near_plane = 0.1f, far_plane = 20.0f;
+		lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+		lightView = glm::lookAt(transform->WorldPosition, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+		m_lightSpaceMatrix = lightProjection * lightView;
+		shader->SetUniform("lightSpaceMatrix", m_lightSpaceMatrix);
+		// render scene from light's point of view
+		GLint originalViewport[4];
+		glGetIntegerv(GL_VIEWPORT, originalViewport);
+		glViewport(0, 0, 1024, 1024);
+		m_depthBuffer->BindAndClear(ClearFlag::DEPTH);
+		for (auto& command : queue) {
+			shader->SetUniform("model", command.UseWorldTransform);
+			if (command.UseVertexArray)
+				command.UseVertexArray->Draw();
+		}
+		shader->Unbind();
+		m_depthBuffer->Unbind();
+		glViewport(originalViewport[0], originalViewport[1], originalViewport[2], originalViewport[3]);
 	}
 
 
@@ -148,14 +184,14 @@ namespace Lobster
 		switch (type)
 		{
 		case Lobster::DIRECTIONAL_LIGHT:
-			if (s_instance->m_directionalLights.size() + 1 >= MAX_DIRECTIONAL_LIGHTS) {
+			if (s_instance->m_directionalLights.size() + 1 > MAX_DIRECTIONAL_LIGHTS) {
 				WARN("MAX_DIRECTIONAL_LIGHTS exceeded, this new light will be ignored!");
 				return;
 			}
 			s_instance->m_directionalLights.push_back(light);
 			break;
 		case Lobster::POINT_LIGHT:
-			if (s_instance->m_pointLights.size() + 1 >= MAX_POINT_LIGHTS) {
+			if (s_instance->m_pointLights.size() + 1 > MAX_POINT_LIGHTS) {
 				WARN("MAX_POINT_LIGHTS exceeded, this new light will be ignored!");
 				return;
 			}
@@ -181,33 +217,70 @@ namespace Lobster
 		}
 	}
 
-	void LightLibrary::SetUniforms()
+	void LightLibrary::Update(const std::list<RenderCommand>& queue)
 	{
-		ubo_DirectionalLight directionalLightsData[MAX_DIRECTIONAL_LIGHTS];
-		int directionalLightCount = s_instance->m_directionalLights.size();
 		int i = 0; 
 		for (auto dirLight : s_instance->m_directionalLights) {
+			if (i >= MAX_DIRECTIONAL_SHADOW) break;
+			dirLight->RenderDepthMap(queue);
+			i++;
+		}
+		s_instance->SetUniforms();
+	}
+
+	void * LightLibrary::GetDirectionalShadowMap(int index)
+	{
+		if (index < s_instance->m_directionalLights.size()) {
+			int i = 0;
+			for (auto dirShadowMap : s_instance->m_directionalLights) {
+				if (i == index) {
+					return dirShadowMap->m_depthBuffer->Get(0);
+				}
+				i++;
+			}
+		}
+		return nullptr;
+	}
+
+	void LightLibrary::SetUniforms()
+	{
+		// update light information
+		ubo_DirectionalLight directionalLightsData[MAX_DIRECTIONAL_LIGHTS];
+		int directionalLightCount = m_directionalLights.size();
+		int i = 0; 
+		for (auto dirLight : m_directionalLights) {
 			directionalLightsData[i].color = dirLight->m_color;
 			directionalLightsData[i].direction = dirLight->transform->WorldPosition;
 			directionalLightsData[i].intensity = dirLight->m_intensity;
 			i++;
 		}
 		ubo_PointLight pointLightsData[MAX_POINT_LIGHTS];
-		int pointLightCount = s_instance->m_pointLights.size();
+		int pointLightCount = m_pointLights.size();
 		i = 0;
-		for (auto pointLight : s_instance->m_pointLights) {
+		for (auto pointLight : m_pointLights) {
 			pointLightsData[i].color = pointLight->m_color;
 			pointLightsData[i].position = pointLight->transform->WorldPosition;
 			pointLightsData[i].attenuation = pointLight->m_intensity;
 			i++;
 		}
 
+		// update all lightSpaceMatrix
+		glm::mat4 lightSpaceMatrix[MAX_DIRECTIONAL_SHADOW];
+		i = 0;
+		for (auto dirLight : m_directionalLights) {
+			if (i >= MAX_DIRECTIONAL_SHADOW) break;
+			lightSpaceMatrix[i] = dirLight->m_lightSpaceMatrix;
+			i++;
+		}
+
 		size_t offset = 0;
-		glBindBuffer(GL_UNIFORM_BUFFER, s_instance->m_ubo);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_ubo);
 		glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(ubo_DirectionalLight) * MAX_DIRECTIONAL_LIGHTS, directionalLightsData);
 		offset += sizeof(ubo_DirectionalLight) * MAX_DIRECTIONAL_LIGHTS;
 		glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(ubo_PointLight) * MAX_POINT_LIGHTS, pointLightsData);
 		offset += sizeof(ubo_PointLight) * MAX_POINT_LIGHTS;
+		glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(glm::mat4) * MAX_DIRECTIONAL_SHADOW, lightSpaceMatrix);
+		offset += sizeof(glm::mat4) * MAX_DIRECTIONAL_SHADOW;
 		glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(int), &directionalLightCount);
 		offset += sizeof(int);
 		glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(int), &pointLightCount);

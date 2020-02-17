@@ -1,8 +1,11 @@
 #pragma once
 #include "Component.h"
+#include "graphics/Renderer.h"
 
 namespace Lobster
 {
+
+	class FrameBuffer;
 
 	enum LightType : uint
 	{
@@ -27,6 +30,7 @@ namespace Lobster
 	struct ubo_Lights {
 		ubo_DirectionalLight directionalLights[MAX_DIRECTIONAL_LIGHTS];
 		ubo_PointLight pointLights[MAX_POINT_LIGHTS];
+		glm::mat4 lightSpaceMatrix[MAX_DIRECTIONAL_SHADOW];
 		int directionalLightCount;
 		int pointLightCount;
 	};
@@ -44,6 +48,10 @@ namespace Lobster
 		glm::vec3 m_color;
 		float m_intensity;
 		bool b_dirty;
+		
+		// shadow mapping
+		FrameBuffer* m_depthBuffer;
+		glm::mat4 m_lightSpaceMatrix;
 	public:
 		LightComponent(LightType type = DIRECTIONAL_LIGHT);
 		virtual ~LightComponent();
@@ -59,6 +67,7 @@ namespace Lobster
 		inline LightType GetType() const{ return m_type; }
     private:
 		void ChangeLightType();
+		void RenderDepthMap(const std::list<RenderCommand>& queue);
 
         friend class cereal::access;
         template <class Archive>
@@ -88,7 +97,10 @@ namespace Lobster
 		static void Initialize();
 		static void AddLight(LightComponent* light, LightType type);
 		static void RemoveLight(LightComponent* light, LightType type);
-		static void SetUniforms();
+		static void Update(const std::list<RenderCommand>& queue);
+		static void* GetDirectionalShadowMap(int index);
+	private:
+		void SetUniforms();
 	};
 
 }

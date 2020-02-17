@@ -8,7 +8,8 @@ namespace Lobster
 {
     
     Scene::Scene(const char * scenePath) :
-		m_skybox(nullptr)
+		m_skybox(nullptr),
+		m_physicsSystem(new PhysicsSystem())
     {
 		// hard-coded skybox
 		m_skybox = new TextureCube(
@@ -25,8 +26,6 @@ namespace Lobster
 			std::stringstream ss = FileSystem::ReadStringStream(FileSystem::Path(scenePath).c_str());
 			Deserialize(ss);
 		}
-
-		m_physicsSystem = new PhysicsSystem();
     }
 
 	Scene::~Scene()
@@ -65,48 +64,6 @@ namespace Lobster
 			PhysicsComponent* physicsObj = gameObj->GetComponent<PhysicsComponent>();
 			if (physicsObj && physicsObj->IsEnabled()) physicsObj->OnPhysicsUpdate(deltaTime);
 		}
-		//	TODO: Some type of structure to record which pair of game objects / colliders intersected.
-
-		//	Next, find the list of colliders and objects with physics component.
-		//	This is done by finding all active rigidbody components.
-		//std::vector<PhysicsComponent*> physics;
-
-		///**
-		// * Key: now every GameObject has PhysicsComponent. Just iterate every GameObjects.
-		// */
-		//int i = 0;
-		//for (auto g1 : m_gameObjects) {
-		//	//if (!(g1->GetComponent<PhysicsComponent>())) continue;
-		//	
-		//	//physics.push_back(g1->GetComponent<PhysicsComponent>());
-
-		//	int j = 0;
-		//	for (auto g2 : m_gameObjects) {
-		//		if (i <= j) break;
-		//		//if (!(g2->GetComponent<PhysicsComponent>())) continue;
-
-		//		if (g1->Intersects(g2)) {
-		//			g1->HasCollided(g2);
-		//			g2->HasCollided(g1);
-		//		}
-		//		j++;
-		//	}
-		//	i++;
-		//}
-
-		////	Finally, after detecting all collision on this frame -
-		////	Time to update the physics. 
-		////for (PhysicsComponent* physicsObj : physics) {
-		//for(auto go : m_gameObjects) {
-		//	PhysicsComponent* physicsObj = go->GetComponent<PhysicsComponent>();
-		//	if (!physicsObj) continue;
-		//	physicsObj->OnPhysicsLateUpdate(deltaTime);
-		//}
-
-		////	And eventually update the collision frame records.
-		//for (auto g1 : m_gameObjects) {
-		//	g1->frameElapse();
-		//}
 	}
 
 	std::stringstream Scene::Serialize() {

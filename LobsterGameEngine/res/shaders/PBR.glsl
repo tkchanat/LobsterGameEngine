@@ -99,9 +99,7 @@ vec3 DirectionalLighting(DirectionalLight light, vec3 f0, vec3 view, vec3 albedo
 	float nv = max(dot(n, v), 0.0);
 
 	// Radiance
-	float distance = length(light.direction - frag_position);
-	float attenuation = 1.0 / (distance * distance);
-	vec3 radiance = vec3(light.color);// * attenuation;
+	vec3 radiance = vec3(light.color);
 
 	// BRDF
 	vec3 F = Fresnel(f0, max(dot(n, v), 0.0));
@@ -182,12 +180,24 @@ void main()
 	
 	vec3 LightContribution = vec3(0.0);
 	for(int i = 0; i < Lights.directionalLightCount; ++i) {
-		LightContribution += DirectionalLighting(Lights.directionalLights[i], f0, view, albedo, normal, roughness, metallic);
+		// Shadow
+        vec4 lightSpacePosition = Lights.lightSpaceMatrix[i] * vec4(frag_position, 1.0);
+        lightSpacePosition /= lightSpacePosition.w;
+        lightSpacePosition = lightSpacePosition * 0.5 + 0.5;
+        float closestDepth = texture(sys_shadowMap[i], lightSpacePosition.xy).r; 
+        float currentDepth = lightSpacePosition.z;
+        float bias = max(0.05 * (1.0 - dot(normal, Lights.directionalLights[i].direction)), 0.005);
+        float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+        shadow = lightSpacePosition.z > 1.0 ? 0.0 : shadow;
+        if(i > MAX_DIRECTIONAL_SHADOW) shadow = 0.0;
+		// merge lightings
+		LightContribution += (1.0 - shadow) * DirectionalLighting(Lights.directionalLights[i], f0, view, albedo, normal, roughness, metallic);
 	}
 	for(int i = 0; i < Lights.pointLightCount; ++i) {
 		LightContribution += PointLighting(Lights.pointLights[i], f0, view, albedo, normal, roughness, metallic);
 	}
 
 	vec3 IBLContribution = IBL(f0, Lr, view, albedo, normal, roughness, metallic, ambientOcclusion);
-	out_color = vec4(LightContribution + IBLContribution, 1.0);
+	vec4 result = vec4(LightContribution + IBLContribution, 1.0);
+	out_color = vec4(result);
 } 
