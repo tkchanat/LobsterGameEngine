@@ -167,6 +167,8 @@ namespace Lobster {
 
 		//	After 5 iterations, time to resolve collisions (if any).
 		//	If there are collisions, object travelled (ie: timestep != 0), need to resolve.
+		//	Also keep track of center is out of object.
+		bool centerOutOfObject = false;
 		for (PhysicsComponent* obj : collidedObjects) {
 			Rigidbody* other = dynamic_cast<Rigidbody*>(obj);
 			if (!other) continue;
@@ -189,12 +191,13 @@ namespace Lobster {
 				//	Case 2 - Not landing smoothly. (Only check if not satisfying Case 1)
 
 				//	3.1 - Determine if the center of the object falls inside the opposing collider.
-				glm::vec3 normalProjection = obj->GetOwner()->transform.WorldPosition;
-				normalProjection -= glm::dot(obj->GetOwner()->transform.WorldPosition - transform->WorldPosition, normal) * normal;
+				glm::vec3 normalProjection = GetOwner()->transform.WorldPosition;
+				glm::vec3 normNormal = glm::normalize(normal);
+				normalProjection += glm::dot(obj->GetOwner()->transform.WorldPosition - GetOwner()->transform.WorldPosition, normNormal) * normNormal;
 
 				//	3.1 - Try to map this object into another object's coordinate system.
-				glm::vec3 mappedPosition = glm::inverse(transform->GetMatrix()) * glm::vec4(normalProjection, 1.0f);
-				std::pair<glm::vec3, glm::vec3> pairBound = GetOwner()->GetBound();
+				glm::vec3 mappedPosition = glm::inverse(obj->GetOwner()->transform.GetMatrix()) * glm::vec4(normalProjection, 1.0f);
+				std::pair<glm::vec3, glm::vec3> pairBound = obj->GetOwner()->GetBound();
 
 				//	3.1 - Ready to check if center is out of another object.
 				//	displacement (glm::vec3) will record the distance from the boundary,
@@ -202,30 +205,30 @@ namespace Lobster {
 				//	Object need to travel in displacement direction to lose balance.
 				//	centerOutOfObject (boolean) will record if it is outside another object.
 				glm::vec3 displacement = glm::vec3(0, 0, 0);
-				bool centerOutOfObject = false;
+				centerOutOfObject = false;
 
 				//	Check if this object lies outside another obj by checking transformed bounding box.
 				if (pairBound.first.x > mappedPosition.x) {
-					displacement.x += pairBound.first.x - mappedPosition.x;
+					displacement.x -= pairBound.first.x - mappedPosition.x;
 					centerOutOfObject = true;
 				} else if (pairBound.second.x < mappedPosition.x) {
-					displacement.x -= mappedPosition.x - pairBound.second.x;
+					displacement.x += mappedPosition.x - pairBound.second.x;
 					centerOutOfObject = true;
 				}
 
 				if (pairBound.first.y > mappedPosition.y) {
-					displacement.y += pairBound.first.y - mappedPosition.y;
+					displacement.y -= pairBound.first.y - mappedPosition.y;
 					centerOutOfObject = true;
 				} else if (pairBound.second.y < mappedPosition.y) {
-					displacement.y -= mappedPosition.y - pairBound.second.y;
+					displacement.y += mappedPosition.y - pairBound.second.y;
 					centerOutOfObject = true;
 				}
 
 				if (pairBound.first.z > mappedPosition.z) {
-					displacement.z += pairBound.first.z - mappedPosition.z;
+					displacement.z -= pairBound.first.z - mappedPosition.z;
 					centerOutOfObject = true;
 				} else if (pairBound.second.z < mappedPosition.z) {
-					displacement.z -= mappedPosition.z - pairBound.second.z;
+					displacement.z += mappedPosition.z - pairBound.second.z;
 					centerOutOfObject = true;
 				}
 
@@ -300,7 +303,7 @@ namespace Lobster {
 		//	Finally, let the game object travel for the remaining (timestep) amount of time it was supposed to travel.
 		//	Only if it doesn't have angular velocity.
 		float epsilon = 0.0001f;
-		if (glm::length(m_angularVelocity) <= epsilon)
+		if (glm::length(m_angularVelocity) <= epsilon && !centerOutOfObject)
 		Travel(time - timestep, timestep != 0, false);
 
 		//	Invoke functions for collision handling.

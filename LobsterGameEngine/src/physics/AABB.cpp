@@ -159,7 +159,7 @@ namespace Lobster
 		for(int i = 0; i < 24; i += 3)
         {
 			glm::vec3 vertices = glm::vec3(m_vertexInitialData[i], m_vertexInitialData[i + 1], m_vertexInitialData[i + 2]);
-			glm::vec3 rotatedCorner = transform->GetMatrix() * glm::vec4(vertices, 1.0);
+			glm::vec3 rotatedCorner = transform->GetMatrix() * glm::vec4(vertices, 1.0) - glm::vec4(Center, 1.0);
 
             Min.x = rotatedCorner.x < Min.x ? rotatedCorner.x : Min.x;
             Min.y = rotatedCorner.y < Min.y ? rotatedCorner.y : Min.y;
@@ -169,8 +169,6 @@ namespace Lobster
             Max.z = rotatedCorner.z > Max.z ? rotatedCorner.z : Max.z;
         }
 
-		Min += m_transform.WorldPosition;
-		Max += m_transform.WorldPosition;
         SetVertices();
     }
 
