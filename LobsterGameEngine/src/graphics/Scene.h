@@ -14,12 +14,13 @@ namespace Lobster
     class Scene
     {
 		friend class ImGuiHierarchy;
+		friend class ImGuiSkyboxEditor;
     private:
 		TextureCube* m_skybox;
         std::vector<GameObject*> m_gameObjects;
 		std::string m_name;
     public:
-        Scene(const char* scenePath);
+        Scene(const char* scenePath = nullptr);
         ~Scene();
 		void OnBegin();
         void OnUpdate(double deltaTime);

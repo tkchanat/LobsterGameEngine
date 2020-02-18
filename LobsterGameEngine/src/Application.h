@@ -16,10 +16,15 @@ namespace Lobster
 		EDITOR, SIMULATION, GAME
 	};
     
-	// Read from JSON
+	// track the information about the windows
+	// (read from JSON?)
 	struct Config {
-		int width = 1280;
-		int height = 760;
+		int defaultWidth = 1280;
+		int defaultHeight = 760;
+		int width = defaultWidth;
+		int height = defaultHeight;
+		glm::vec2 gameTabPos;
+		glm::vec2 gameTabSize;
 		std::string title = "Lobster Engine";
 		bool vsync = true;
 	};
@@ -30,6 +35,7 @@ namespace Lobster
     private:
 		static ApplicationMode mode;	// application mode (editor, simulation, game)
         static Application* m_instance;
+		Config config;
         Window* m_window;
         Renderer* m_renderer;
         Scene* m_scene;
@@ -56,7 +62,10 @@ namespace Lobster
 		void OpenScene(const char* scenePath);
 		void SetScenePath(const char* scenePath);
 		void SetSaved(bool saved);
+		inline bool IsSaved() { return m_saved; }
+		inline Config& GetConfig() { return config; }
         inline Window* GetWindow() { return m_window; }
+		inline Scene* GetCurrentScene() { return m_scene; }
         inline glm::ivec2 GetWindowSize() { return m_window->GetSize(); }
         inline float GetWindowAspectRatio() { return (float)m_window->GetSize().x / (float)m_window->GetSize().y; }
 		inline std::string GetScenePath() { return scenePath; }		

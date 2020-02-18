@@ -97,16 +97,16 @@ namespace Lobster
 		ImGui::Checkbox("", &test_bool);
 		ImGui::SameLine();
 		ImGui::Text(m_name.c_str());
-		ImGui::Separator();
-		ImGui::Text("ID: %X", GetId());
-		ImGui::SameLine();
-		//ImGui::Button("Clone"); // TODO implement this
-		//ImGui::SameLine();
 		static char rename[128];
 		static bool nothing = false;
+		ImGui::SameLine();
 		if (ImGui::Button("Rename")) {
 			ImGui::OpenPopup("Rename Game Object");
 		}
+		ImGui::Separator();
+		ImGui::Text("ID: %X", GetId());
+		//ImGui::Button("Clone"); // TODO implement this
+		//ImGui::SameLine();
 
 		ImGui::SetNextWindowSize(ImVec2(240, 120));
 		if (ImGui::BeginPopupModal("Rename Game Object")) {

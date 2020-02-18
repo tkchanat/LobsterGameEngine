@@ -3,6 +3,9 @@
 #include "graphics/Texture.h"
 #include "graphics/Renderer.h"
 #include "system/Input.h"
+#include "Scripts/Script.h"
+
+#define Z_LEVEL_MAX 256.f;
 
 namespace Lobster {
 
@@ -10,11 +13,10 @@ namespace Lobster {
 	// Sprite2D
 	// ============================================================
 
-	int Sprite2D::zLv = 16;
-	Config Sprite2D::config;
+	int Sprite2D::zLv = Z_LEVEL_MAX;
 
 	Sprite2D::Sprite2D(float mouseX, float mouseY) : x(mouseX), y(mouseY), alpha(1.f) {
-		z = zLv--; // z value count down
+		z = zLv--; // z value count down		
 	}
 
 	void Sprite2D::SetZIndex(uint z) {
@@ -22,19 +24,77 @@ namespace Lobster {
 	}
 
 	bool Sprite2D::Compare(Sprite2D* s1, Sprite2D* s2) {
-		return (s1->GetZIndex() > s2->GetZIndex());
+		return (s1->GetZIndex() < s2->GetZIndex());
 	}
 
-	// do nothing here
-	void Sprite2D::SubmitDrawCommand() {}
+	void Sprite2D::OnBegin() {
+		// load and begin script
+		if (!scriptNameOnHover.empty() && !funcOnHover.empty()) {
+			scriptOnHover = new Script(scriptNameOnHover.c_str());
+			scriptOnHover->OnBegin();
+		}
+		if (!scriptNameOnClick.empty() && !funcOnClick.empty()) {
+			scriptOnClick = new Script(scriptNameOnClick.c_str());
+			scriptOnClick->OnBegin();
+		}
+	}
+
+	// do button related work
+	void Sprite2D::OnUpdate() {
+		if (!isButton) return;
+		if (scriptOnHover && IsMouseOver()) 
+			scriptOnHover->Execute(funcOnHover.c_str());
+		if (scriptOnClick && IsMouseOver() && Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT))
+			scriptOnClick->Execute(funcOnClick.c_str());
+	}
 
 	void Sprite2D::BasicMenuItem(GameUI* ui, ImVec2 winSize) {
+		// Button Property ======
+		if (ImGui::Checkbox("Button", &isButton));
+		if (!isButton) {
+			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+		}
+		if (ImGui::TreeNode("Button Property")) {
+			// load all available scripts
+			std::vector<std::string> scripts;
+			std::string path = FileSystem::Path("scripts");
+			scripts.push_back("");
+			for (const auto& dirEntry : fs::recursive_directory_iterator(path)) {
+				std::string displayName = dirEntry.path().filename().string();
+				scripts.push_back(displayName);
+			}
+			if (ImGui::ColorEdit4("Color OnHover", colorOnHover));
+			if (ImGui::BeginCombo("Script OnHover", (scriptNameOnHover.empty() ? "None" : scriptNameOnHover.c_str()))) {
+				for (std::string& file : scripts)
+					if (ImGui::Selectable(file.c_str()))
+						scriptNameOnHover = file;
+				ImGui::EndCombo();
+			}
+			ImGui::InputText("Function OnHover", &funcOnHover[0], 32);
+			if (ImGui::ColorEdit4("Color OnClick", colorOnClick));
+			if (ImGui::BeginCombo("Script OnClick", (scriptNameOnClick.empty() ? "None" : scriptNameOnClick.c_str()))) {
+				for (std::string& file : scripts)
+					if (ImGui::Selectable(file.c_str()))
+						scriptNameOnClick = file;
+				ImGui::EndCombo();
+			}
+			ImGui::InputText("Function OnClick", &funcOnClick[0], 32);
+			ImGui::TreePop();
+		}
+		if (!isButton) {
+			ImGui::PopItemFlag();
+			ImGui::PopStyleVar();
+		}
+		// Z Index related ======
+		ImGui::Separator();
 		if (ImGui::MenuItem("Go to Front")) {
 			ui->GoFront(this);
 		}
 		if (ImGui::MenuItem("Go to Back")) {
 			ui->GoBack(this);
 		}
+		// Clone/Delete options ======
 		ImGui::Separator();
 		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
 		if (ImGui::MenuItem("Delete")) {
@@ -118,23 +178,43 @@ namespace Lobster {
 		ImGui::ImageButton(GetTexID(), ImVec2(w, h));
 	}
 
-	void ImageSprite2D::SubmitDrawCommand() {
-		RenderOverlayCommand ocommand;
+	void ImageSprite2D::OnUpdate() {
+		// run script
+		Sprite2D::OnUpdate();
+		// hover/click color
+		RenderOverlayCommand ocommand;		
+		if (Application::GetMode() == ApplicationMode::GAME && isButton) {
+			bool mouseOver = IsMouseOver();
+			if (mouseOver && Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT)) {
+				ocommand.blendR = colorOnClick[0];
+				ocommand.blendG = colorOnClick[1];
+				ocommand.blendB = colorOnClick[2];
+				ocommand.blendA = colorOnClick[3];
+			}
+			else if (mouseOver) {
+				ocommand.blendR = colorOnHover[0];
+				ocommand.blendG = colorOnHover[1];
+				ocommand.blendB = colorOnHover[2];
+				ocommand.blendA = colorOnHover[3];
+			}
+		}
+		// submit draw command
+		Config& config = Application::GetInstance()->GetConfig();
 		ocommand.UseTexture = tex;
 		ocommand.type = RenderOverlayCommand::Image;
-		ocommand.x = x * config.width;
-		ocommand.y = y * config.height;
+		ocommand.x = x * config.defaultWidth;
+		ocommand.y = y * config.defaultHeight;
 		ocommand.w = w;
 		ocommand.h = h;
 		ocommand.alpha = alpha;
-		ocommand.z = (float) z / 1000.f;
+		ocommand.z = (float)z / Z_LEVEL_MAX;
 		Renderer::Submit(ocommand);		
 	}
 
 	bool ImageSprite2D::IsMouseOver() {
 		double mx, my;
 		Input::GetMousePos(mx, my);
-		Config config;
+		Config& config = Application::GetInstance()->GetConfig();
 		float winX = mx / config.width;
 		float winY = my / config.height;
 		if (winX >= x && winX <= x + _w && winY >= y && winY <= y + _h) return true;
@@ -150,7 +230,6 @@ namespace Lobster {
 
 	TextSprite2D::TextSprite2D(const char* text, const char* typeface, float winW, float winH, float mouseX, float mouseY) : 
 		Sprite2D(mouseX, mouseY), text(text) {	
-		strcpy(_text, text);
 		// initialize static library, only called once
 		if (!s_library) {
 			FT_Error error = FT_Init_FreeType(&s_library);
@@ -245,19 +324,39 @@ namespace Lobster {
 		}
 	}
 
-	void TextSprite2D::SubmitDrawCommand() {
-		Texture2D* texture = getTexture();
+	void TextSprite2D::OnUpdate() {
+		// run script
+		Sprite2D::OnUpdate();
+		// hover/click color
 		RenderOverlayCommand ocommand;
+		if (Application::GetMode() == ApplicationMode::GAME && isButton) {
+			bool mouseOver = IsMouseOver();
+			if (mouseOver && Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT)) {
+				ocommand.blendR = colorOnClick[0];
+				ocommand.blendG = colorOnClick[1];
+				ocommand.blendB = colorOnClick[2];
+				ocommand.blendA = colorOnClick[3];
+			}
+			else if (mouseOver) {
+				ocommand.blendR = colorOnHover[0];
+				ocommand.blendG = colorOnHover[1];
+				ocommand.blendB = colorOnHover[2];
+				ocommand.blendA = colorOnHover[3];
+			}
+		}
+		// submit draw command
+		Config& config = Application::GetInstance()->GetConfig();
+		Texture2D* texture = getTexture();
 		ocommand.UseTexture = texture;
 		ocommand.type = RenderOverlayCommand::Text;
-		ocommand.x = x * config.width;
-		ocommand.y = y * config.height;
+		ocommand.x = x * config.defaultWidth;
+		ocommand.y = y * config.defaultHeight;
 		ocommand.w = fontSize * text.size();
 		ocommand.h = fontSize * 2;
 		ocommand.alpha = alpha;
-		ocommand.z = (float)z / 1000.f;
+		ocommand.z = (float)z / Z_LEVEL_MAX;
 		Renderer::Submit(ocommand);
-	}
+	}	
 
 	void TextSprite2D::OnImGuiRender() {
 		int length = fontSize * text.size();
@@ -275,14 +374,7 @@ namespace Lobster {
 		ImGui::SetWindowFontScale(1.f);
 	}
 
-	void TextSprite2D::ImGuiMenu(GameUI* ui, ImVec2 winSize) {
-		// preview mode
-		ImGui::Checkbox("Preview", &m_preview);
-		// text content		
-		if (ImGui::InputText("Text", _text, MAX_TEXT_LENGTH)) {
-			text = _text;
-			getTexture(true); // reload texture
-		}
+	void TextSprite2D::ImGuiMenuHelper() {
 		// alignment buttons
 		for (int type = HorizontalAlignType::Left; type < HorizontalAlignType::Count; type++) {
 			if (ImGui::ImageButton(m_iconTex[type]->Get(), ImVec2(16, 16))) {
@@ -293,6 +385,9 @@ namespace Lobster {
 		}
 		ImGui::Dummy(ImVec2(1, 1));
 		// font type
+		// ===================================
+		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 		fs::path subdir = FileSystem::Path(PATH_FONT);
 		if (ImGui::BeginCombo("Font Type", m_face->family_name)) {
 			for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {
@@ -306,6 +401,18 @@ namespace Lobster {
 			}
 			ImGui::EndCombo();
 		}
+		ImGui::PopItemFlag();
+		ImGui::PopStyleVar();
+		ImGui::SameLine();
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered()) {
+			ImGui::BeginTooltip();
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::TextUnformatted("This is disabled because of a bug which is not yet fixed.");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+		// ===================================
 		// font size
 		ImGui::InputFloat("Font Size", &fontSize, 1.f, 1.f, "%.1f");
 		// color picker
@@ -316,11 +423,23 @@ namespace Lobster {
 			getTexture(true);
 		}
 		ImGui::Separator();
+	}
+
+	void TextSprite2D::ImGuiMenu(GameUI* ui, ImVec2 winSize) {
+		// preview mode
+		ImGui::Checkbox("Preview", &m_preview);
+		// text content		
+		if (ImGui::InputText("Text", &text[0], MAX_TEXT_LENGTH)) {
+			getTexture(true); // reload texture
+		}
+		// text formatting
+		ImGuiMenuHelper();
 		// basic functions
 		BasicMenuItem(ui, winSize);
 	}
 
-	void TextSprite2D::Clip() {		
+	void TextSprite2D::Clip() {
+		Config& config = Application::GetInstance()->GetConfig();
 		float length = (float) fontSize * text.size() / config.width;
 		float height = (float) fontSize * 2 / config.height;
 		if (x < 0.f) x = 0.f;		
@@ -336,6 +455,100 @@ namespace Lobster {
 		float h = fontSize * 2;
 		if (mx >= x && mx <= x + w && my >= y && my <= y + h) return true;
 		return false;
+	}
+
+	// ============================================================
+	// DynamicTextSprite2D
+	// ============================================================
+	DynamicTextSprite2D::DynamicTextSprite2D(const char* sname, const char* vname, SupportedVarType vtype, const char* typeface,
+		float winW, float winH, float mouseX, float mouseY) :
+		TextSprite2D(vname, typeface, winW, winH, mouseX, mouseY), scriptName(sname), type(vtype), var(vname)
+	{
+		text = "<" + var + ">";
+	}
+
+	void DynamicTextSprite2D::OnBegin() {
+		// load script
+		if (!scriptName.empty() && !var.empty()) {
+			script = new Script(scriptName.c_str());
+		}
+		script->OnBegin();
+		TextSprite2D::OnBegin();
+	}
+
+	void DynamicTextSprite2D::OnUpdate() {
+		static std::string prevText = text;
+		if (script && Application::GetMode() == GAME) {
+			luabridge::LuaRef ref = script->GetVar(var.c_str());
+			static char prevErrmsg[512];
+			if (!ref.isNil()) {
+				try {
+					switch (type) {
+					case SupportedVarType::INT:
+					{
+						int vi = ref.cast<int>();
+						text = std::to_string(vi);
+					}
+					break;
+					case SupportedVarType::FLOAT:
+					{
+						float vf = ref.cast<float>();
+						text = std::to_string(vf);
+					}
+					break;
+					case SupportedVarType::STRING:
+						text = ref.cast<std::string>();
+						break;
+					}
+				}
+				catch (std::exception& e) {
+					char errmsg[512];
+					sprintf(errmsg, "%s in %s: %s", var.c_str(), scriptName.c_str(), e.what());
+					if (strcmp(prevErrmsg, errmsg) != 0) {
+						WARN(errmsg);
+						strcpy(prevErrmsg, errmsg);
+					}
+					text = "<" + var + ">";
+				}
+			}
+		}
+		else {
+			text = "<" + var + ">";
+		}
+		// reload texture if content changed
+		if (prevText != text) {
+			getTexture(true);
+			prevText = text;
+		}
+		// render the text
+		TextSprite2D::OnUpdate();
+	}
+
+	void DynamicTextSprite2D::ImGuiMenu(GameUI* ui, ImVec2 winSize) {
+		// script to track
+		if (ImGui::BeginCombo("Script", (scriptName.empty() ? "None" : scriptName.c_str()))) {
+			if (ImGui::Selectable("None")) {
+				scriptName.clear();
+			}
+			for (const auto& dirEntry : fs::recursive_directory_iterator(FileSystem::Path(PATH_SCRIPTS))) {
+				std::string displayName = dirEntry.path().filename().string();
+				if (ImGui::Selectable(displayName.c_str())) {
+					scriptName = displayName;
+				}
+			}
+			ImGui::EndCombo();
+		}
+		// variable name to track
+		if (ImGui::InputText("Variable", &var[0], MAX_TEXT_LENGTH)) {
+			text = "<" + var + ">";
+			getTexture(true); // reload texture
+		}
+		// variable type to track
+		const static char* vtypeStr[] = { "int", "float", "string" };
+		ImGui::Combo("Type", (int*)&type, vtypeStr, IM_ARRAYSIZE(vtypeStr));
+		// text formatting
+		ImGuiMenuHelper();
+		BasicMenuItem(ui, winSize);
 	}
 
 } 

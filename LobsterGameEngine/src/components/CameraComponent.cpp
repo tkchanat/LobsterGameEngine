@@ -43,20 +43,6 @@ namespace Lobster
 		m_orthoMatrix = glm::ortho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
 	}
     
-    void CameraComponent::OnUpdate(double deltaTime)
-    {
-#ifdef LOBSTER_BUILD_DEBUG
-		// submit gizmos command
-		GizmosCommand command;
-		command.texture = "textures/ui/camera.png";
-		command.position = transform->WorldPosition;
-		command.source = gameObject;
-		ImGuiScene::SubmitGizmos(command);
-
-		DrawUI();
-#endif
-    }
-
 	void CameraComponent::OnAttach()
 	{
 		if (s_activeCamera) {
@@ -101,14 +87,31 @@ namespace Lobster
 	void CameraComponent::DrawUI() {
 		if (!gameUI) return;
 		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
-			sprite->SubmitDrawCommand();
+			sprite->OnUpdate();			
 		}
 	}
 
 	void CameraComponent::OnBegin() {
-
+		if (!gameUI) return;
+		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
+			sprite->OnBegin();
+		}
 	}
 		
+	void CameraComponent::OnUpdate(double deltaTime)
+	{
+#ifdef LOBSTER_BUILD_DEBUG
+		// submit gizmos command
+		GizmosCommand command;
+		command.texture = "textures/ui/camera.png";
+		command.position = transform->WorldPosition;
+		command.source = gameObject;
+		ImGuiScene::SubmitGizmos(command);
+
+		DrawUI();
+#endif
+	}
+
 	void CameraComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
 	{
 		//LOG("Serializing CameraComponent");

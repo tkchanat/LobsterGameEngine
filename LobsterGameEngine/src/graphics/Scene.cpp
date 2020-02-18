@@ -21,7 +21,7 @@ namespace Lobster
 		);
 
 		// If scenePath is set, load and deserialize scene data
-		if (scenePath[0] != '\0') {
+		if (scenePath && scenePath[0] != '\0') {
 			std::stringstream ss = FileSystem::ReadStringStream(FileSystem::Path(scenePath).c_str());
 			Deserialize(ss);
 		}
@@ -122,7 +122,7 @@ namespace Lobster
 			iarchive(*this);
 		}
 		catch (std::exception e) {
-			LOG("Deserializing Scene {} failed");
+			LOG("Deserializing Scene failed. Reason: {}", e.what());
 		}
 	}
     

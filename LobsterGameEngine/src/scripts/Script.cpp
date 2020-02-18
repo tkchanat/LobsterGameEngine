@@ -13,6 +13,12 @@ namespace Lobster {
 		luaL_openlibs(L);		
 	}
 
+	Script::Script(const char* file) : Component(SCRIPT_COMPONENT) {
+		L = luaL_newstate();
+		luaL_openlibs(L);
+		loadScript(file);
+	}
+
 	Script::~Script() {
 		lua_close(L);
 		L = nullptr;
@@ -66,6 +72,40 @@ namespace Lobster {
 			}
 			ImGui::EndChild();
 		}
+	}
+
+	void Script::Execute(std::string funcName) {
+		if (Application::GetMode() != GAME) return;
+		if (filename.size() == 0 || errmsg.size() > 0) return;
+		LuaRef lua_Func = getGlobal(L, funcName.c_str());
+		try {
+			lua_Func();
+		}
+		catch (LuaException const& e) {
+			// not editing errmsg here (nowhere to display), use log instead
+			static char lastWarn[256] = "";
+			if (strcmp(lastWarn, e.what())) {
+				strcpy(lastWarn, e.what());
+				LOG(lastWarn);
+			}
+		}
+	}
+
+	LuaRef Script::GetVar(std::string varName) {
+		if (Application::GetMode() != GAME) return LuaRef(L);
+		if (varName.empty() || filename.empty() || errmsg.size() > 0) return LuaRef(L);
+		LuaRef lua_Var = getGlobal(L, varName.c_str());
+		if (lua_Var.isNil()) {
+			// not editing errmsg here (nowhere to display), use log instead
+			char buffer[256];			
+			static char prevBuffer[256];
+			sprintf(buffer, "%s: %s does not exist", filename.c_str(), varName.c_str());
+			if (strcmp(buffer, prevBuffer) != 0) {				
+				LOG(buffer);
+				strcpy(prevBuffer, buffer);
+			}
+		}
+		return lua_Var;
 	}
 
 	void Script::OnBegin() {		

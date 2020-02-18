@@ -42,6 +42,7 @@ namespace Lobster
 
 	class TextureCube : public Texture
 	{
+		friend class ImGuiSkyboxEditor;
 	protected:
 		// cube map
 		uint m_id;

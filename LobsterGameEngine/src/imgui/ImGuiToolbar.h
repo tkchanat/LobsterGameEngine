@@ -160,7 +160,6 @@ namespace Lobster
 					// initialize all gameobjects and components
 					for (GameObject* gameObject : scene->GetGameObjects()) {
 						gameObject->OnBegin(); // this should be in actual game, not here
-						gameObject->OnBegin();
 					}
 				}
 			}			

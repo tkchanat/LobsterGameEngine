@@ -22,9 +22,9 @@ namespace Lobster
 		enum OverlayType { Image, Text };
 		Texture2D* UseTexture;
 		OverlayType type;
-		float x, y;
-		float w, h;
+		float x, y, w, h;
 		float alpha;
+		float blendR, blendG, blendB, blendA = 0.f;
 		int z;
 		RenderOverlayCommand() { memset(this, 0, sizeof(RenderOverlayCommand)); }
 	};

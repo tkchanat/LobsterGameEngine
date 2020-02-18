@@ -70,7 +70,6 @@ extern "C" {
 #include "events/EventCollection.h"
 #include "events/EventDispatcher.h"
 #include "imgui/ImGuiConsole.h"
-#include "imgui/ImGuiFileBrowser.h"
 #include "system/FileSystem.h"
 #include "system/Timer.h"
 #include "system/ThreadPool.h"
@@ -95,6 +94,8 @@ extern "C" {
 #define PATH_SPRITES "sprites"
 #define PATH_FONT "textures/font"
 #define PATH_SCRIPTS "scripts"
+#define PATH_ANIMATIONS "animations"
+#define PATH_SCENES "scenes"
 
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)
