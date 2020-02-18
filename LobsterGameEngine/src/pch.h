@@ -84,6 +84,8 @@ extern "C" {
 #define MAX_BONE_INFLUENCE 4
 #define MAX_DIRECTIONAL_LIGHTS 4
 #define MAX_POINT_LIGHTS 64
+#define MAX_DIRECTIONAL_SHADOW 2
+#define MAX_POINT_SHADOW 3
 #define MAX_PARTICLES 1024
 
 #define PATH_AUDIO "audio"

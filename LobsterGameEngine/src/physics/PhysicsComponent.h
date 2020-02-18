@@ -2,6 +2,7 @@
 #include <vector>
 #include "components/Component.h"
 #include "physics/ColliderCollection.h"
+#include "physics/PhysicsSystem.h"
 
 namespace Lobster {
 	class PhysicsComponent : public Component {
@@ -9,17 +10,16 @@ namespace Lobster {
 		static const char* PhysicsBodyTypes[];
 		static const char* PhysicsType[];
 
-		PhysicsComponent() : Component(PHYSICS_COMPONENT) {}
-		virtual ~PhysicsComponent() override {
-			if(m_boundingBox) delete m_boundingBox;
-			m_boundingBox = nullptr;
-			for (Collider* collider : m_colliders) {
-				if(collider) delete collider;
-				collider = nullptr;
-			}
-		}
+		PhysicsComponent();
+		virtual ~PhysicsComponent() override;
 
-		void AddCollider(Collider* collider) {
+		virtual void VirtualCreate() override;
+		virtual void VirtualDelete() override;
+
+		//	Callback function to register the event of setting enabled / disabled (through ImGui) to undo system.
+		void SetEnabledCallback();
+
+		inline void AddCollider(Collider* collider) {
 			m_colliders.push_back(collider);
 		}
 		inline Collider* GetBoundingBox() const { return m_boundingBox; }
@@ -29,12 +29,23 @@ namespace Lobster {
 		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
 		virtual void OnPhysicsUpdate(double deltaTime) = 0;
-		virtual void OnPhysicsLateUpdate(double deltaTime) = 0;
 
 		//	Block / Overlap / Ignore
 		inline int GetPhysicsType() const { return m_physicsType; }
 		void RemoveCollider(Collider* collider);
-		virtual void ApplyForce(glm::vec3 position, glm::vec3 force) {}
+
+		//	ApplyForce: Force in Newton (N).
+		inline void AddVelocity(glm::vec3 velocity) { m_velocity += glm::inverse(transform->WorldRotation) * velocity; }
+		inline void ApplyForce(glm::vec3 force) { m_acceleration += glm::inverse(transform->WorldRotation) * force / m_mass; }
+
+		inline void AddAngularVelocity(glm::vec3 velocity) { m_angularVelocity += velocity; }
+		inline void ApplyAngularForce(glm::vec3 force) { m_angularVelocity += force / m_mass; }
+
+		inline glm::vec3 GetVelocity() { return transform->WorldRotation * m_velocity; }
+		inline glm::vec3 GetAcceleration() { return transform->WorldRotation * m_acceleration; }
+		
+		inline glm::vec3 GetAngularVelocity() { return m_angularVelocity; }
+		inline glm::vec3 GetAngularAcceleration() { return m_angularAcceleration; }
 
 	protected:
 		//	Mass of component.
@@ -42,6 +53,14 @@ namespace Lobster {
 
 		//	Center of mass offset.
 		glm::vec3 m_centerOfMass = glm::vec3(0, 0, 0);
+
+		//	Velocity and acceleration for physics calculation.
+		glm::vec3 m_velocity;
+		glm::vec3 m_acceleration;
+
+		//	Angular velocity and acceleration for physics calculation.
+		glm::vec3 m_angularVelocity;
+		glm::vec3 m_angularAcceleration;
 
 		bool m_simulate = false;
 
@@ -53,6 +72,10 @@ namespace Lobster {
 
 		//	Initialized to be of bound type.
 		int m_physicsType = 0;
+
+		//	Keeping track of colliding objects in the previous frame.
+		std::vector<PhysicsComponent*> m_prevCollidingList;
+
 	private:
 		friend class cereal::access;
 		template <class Archive>

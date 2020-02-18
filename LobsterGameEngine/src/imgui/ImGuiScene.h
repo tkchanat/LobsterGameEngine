@@ -173,7 +173,7 @@ namespace Lobster
 			// draw scene
 			CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
 			camera->ResizeProjection(window_size.x, window_size.y);
-			void* image = camera->GetFrameBuffer()->Get();
+			void* image = camera->GetFrameBuffer()->Get(0);
 			ImGui::GetWindowDrawList()->AddImage(image, ImVec2(window_pos.x, window_pos.y), ImVec2(window_pos.x + window_size.x, window_pos.y + window_size.y), ImVec2(0, 1), ImVec2(1, 0));						
 						
 			// ImGuizmo

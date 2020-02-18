@@ -67,6 +67,26 @@ vec4 CalcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir)
     return vec4(color, diffuse.a);
 }
 
+vec4 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir) 
+{
+    vec3 lightDir = normalize(light.position - frag_position);
+    // attenuation
+    float distance = length(light.position - frag_position);
+	float quadratic_attenuation = (light.attenuation + 0.05) * distance * distance;
+	float attenuation = 1.0 / quadratic_attenuation;
+    vec3 radiance = vec3(light.color) * attenuation;
+    // diffuse shading
+    float intensity = max(dot(normal, lightDir), AmbientStrength);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float multiplier = pow(max(dot(viewDir, reflectDir), 0.0), 16.0 * (Shininess + EPSILON));
+    // combine results
+    vec4 diffuse = TextureExists(DiffuseMap) ? texture(DiffuseMap, frag_texcoord) * DiffuseColor : DiffuseColor;
+    vec4 specular = Shininess * multiplier * SpecularColor;
+    vec3 color = (diffuse * intensity + specular).rgb * radiance;
+    return vec4(color, diffuse.a);
+}
+
 void main()
 {
     // calculate normal in tangent space
@@ -75,7 +95,22 @@ void main()
 
     vec4 result = vec4(0.0);
     for(int i = 0; i < Lights.directionalLightCount; ++i) {
-        result += CalcDirectionalLight(Lights.directionalLights[i], normal, viewDir);
+        // Shadow
+        vec4 lightSpacePosition = Lights.lightSpaceMatrix[i] * vec4(frag_position, 1.0);
+        lightSpacePosition /= lightSpacePosition.w;
+        lightSpacePosition = lightSpacePosition * 0.5 + 0.5;
+        float closestDepth = texture(sys_shadowMap[i], lightSpacePosition.xy).r; 
+        float currentDepth = lightSpacePosition.z;
+        float bias = max(0.05 * (1.0 - dot(normal, Lights.directionalLights[i].direction)), 0.005);
+        float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+        shadow = lightSpacePosition.z > 1.0 ? 0.0 : shadow;
+        if(i > MAX_DIRECTIONAL_SHADOW) shadow = 0.0;
+
+        // merge lightings
+        result += (1.0 - shadow) * Lights.directionalLights[i].intensity * CalcDirectionalLight(Lights.directionalLights[i], normal, viewDir);
+    }
+    for(int i = 0; i < Lights.pointLightCount; ++i) {
+        result += CalcPointLight(Lights.pointLights[i], normal, viewDir);
     }
     FragColor = vec4(result);
 }

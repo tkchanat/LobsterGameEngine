@@ -63,7 +63,7 @@ namespace Lobster
 		{
 			// draw camera preview
 			ImVec2 window_size = ImGui::GetItemRectSize();			
-			void* image = m_frameBuffer->Get();
+			void* image = m_frameBuffer->Get(0);
 			float padding = 10.f;
 			ImGui::Text("Camera Preview");
 			ImVec2 imageSize = { (window_size.x - padding), (window_size.x - padding) / m_frameBuffer->GetAspectRatio() };

@@ -10,7 +10,6 @@ namespace Lobster {
 	private:
 		float m_vertexData[24]; // raw vertices position
 		float m_vertexInitialData[24]; // raw initial vertices position
-		//float m_debugTranslatedData[24]; // raw translated (for once) vertices position
 
 	public:
 		BoxCollider(PhysicsComponent* physics, Transform transform = Transform());

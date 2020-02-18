@@ -18,6 +18,7 @@ namespace Lobster
     private:
 		TextureCube* m_skybox;
         std::vector<GameObject*> m_gameObjects;
+		PhysicsSystem* m_physicsSystem;
 		std::string m_name;
     public:
         Scene(const char* scenePath = nullptr);

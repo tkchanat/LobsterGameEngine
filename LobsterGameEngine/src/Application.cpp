@@ -139,7 +139,7 @@ namespace Lobster
 
 		GameObject* light = new GameObject("Directional Light");
 		light->AddComponent(new LightComponent(LightType::DIRECTIONAL_LIGHT));
-		//light->transform.Translate(0, 2, 3);
+		light->transform.Translate(0, 2, 3);
 		m_scene->AddGameObject(light);
 
         //GameObject* sibenik = (new GameObject("sibenik"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/sibenik.obj").c_str(), "materials/sibenik.mat");

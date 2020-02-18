@@ -9,39 +9,16 @@ namespace Lobster {
 		static const glm::vec3 GRAVITY;
 		static const float RESISTANCE;
 
-		Rigidbody() :
-			m_velocity(glm::vec3(0, 0, 0)),
-			m_acceleration(glm::vec3(0, 0, 0)),
-			m_angularVelocity(glm::vec3(0, 0, 0)),
-			m_angularAcceleration(glm::vec3(0, 0, 0)),
-			m_prevLinearPos(glm::vec3(0, 0, 0)),
-			m_prevAngularPos(glm::vec3(0, 0, 0)),
-			m_newLinearVelocity(glm::vec3(0, 0, 0))
-		{
-		}
-		virtual ~Rigidbody() override {
-			m_lastCollided.clear();
-		}
+		Rigidbody() : m_prevRotation(glm::vec3(0, 0, 0)) {}
 
 		void OnAttach() override;
 		void OnUpdate(double deltaTime) override;
 		void OnImGuiRender() override;
 		void OnPhysicsUpdate(double deltaTime) override;
-		void OnPhysicsLateUpdate(double deltaTime) override;
-
-		//	Apply force and angular motion.
-		//	position: Offset from COM position, in world coordinates (ie invariant with object scale and rotation)
-		//	force: Force in Newton (N) to apply to the object.
-		void ApplyForce(glm::vec3 position, glm::vec3 force);
 
 	private:
-		//	Velocity and acceleration for physics calculation.
-		glm::vec3 m_velocity;
-		glm::vec3 m_acceleration;
-
-		//	Angular velocity and acceleration for physics calculation.
-		glm::vec3 m_angularVelocity;
-		glm::vec3 m_angularAcceleration;
+		int m_isChanging = -1;		//	Used for undo system. 0 = mass, 1 = linear damping, 2 = angular damping, 3 = elasticity.
+		float m_prevProp[4];		//	Used for undo system.
 
 		//	Variables used for position estimation.
 		glm::vec3 m_prevLinearPos;
@@ -51,7 +28,11 @@ namespace Lobster {
 		//	Used to store when is the last collsion.
 		int lastCollision = 0;
 
+		//	Used to store prev rotation details. (NEW)
+		glm::vec3 m_prevRotation;
+
 		//	Damping factors. 0 means no damping.
+		//	The factor is a value from 0 to 100. We will reduce acceleration by (damping factor)% each second.
 		float m_linearDamping = 1.0f;
 		float m_angularDamping = 1.0f;
 
@@ -61,8 +42,10 @@ namespace Lobster {
 		//	Find the normal between this and other. Normal is pointing out from this, towards other direction.
 		glm::vec3 GetNormal(Rigidbody* other) const;
 
-		void Travel(float time, glm::vec3 linearAccel);
-		void UndoTravel(float time, glm::vec3 linearAccel);
-		std::vector<GameObject*> m_lastCollided;
+		//	Let the object travel in given time (in milliseconds).
+		void Travel(float time, bool gravity = true, bool damping = true);
+
+		//	Undo the object's motion.
+		void UndoTravel(float time);
 	};
 }

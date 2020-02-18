@@ -38,7 +38,12 @@ namespace Lobster
     
     Renderer::~Renderer()
     {
-        
+		if (m_postProcessMesh) delete m_postProcessMesh;
+		if (m_skyboxMesh) delete m_skyboxMesh;
+		if (m_spriteMesh) delete m_spriteMesh;
+		m_postProcessMesh = nullptr;
+		m_skyboxMesh = nullptr;
+		m_spriteMesh = nullptr;
     }
 
 	void Renderer::SetDepthTest(bool enabled, DepthFunc func)
@@ -100,6 +105,10 @@ namespace Lobster
 			useShader->SetTextureCube(8, m_activeSceneEnvironment.Skybox->GetIrradiance());
 			useShader->SetTextureCube(9, m_activeSceneEnvironment.Skybox->GetPrefilter());
 			useShader->SetTexture2D(10, m_activeSceneEnvironment.Skybox->GetBRDF());
+			for (int i = 0; i < MAX_DIRECTIONAL_SHADOW; ++i) {
+				useShader->SetTexture2D(11 + i, LightLibrary::GetDirectionalShadowMap(i));
+				useShader->SetUniform(("sys_shadowMap["+std::to_string(i)+"]").c_str(), 11 + i);
+			}
 			useShader->SetUniform("sys_irradianceMap", 8);
 			useShader->SetUniform("sys_prefilterMap", 9);
 			useShader->SetUniform("sys_brdfLUTMap", 10);
@@ -121,15 +130,14 @@ namespace Lobster
 		// =====================================================
 		// [First Pass] Render the scene to frame buffer
 		// Render order: Background -> Opaque -> Transparent(sorted) -> Overlay
+		
+		// Update lightings
+		LightLibrary::Update(m_opaqueQueue);
 
 		// Set renderer configurations
 		FrameBuffer* renderTarget = camera->GetFrameBuffer();
-		renderTarget->Bind();
-		Renderer::Clear(0.2f, 0.3f, 0.3f);
+		renderTarget->BindAndClear(ClearFlag::COLOR | ClearFlag::DEPTH);
 		Renderer::SetFaceCulling(true);
-		
-		// Update lightings
-		LightLibrary::SetUniforms();
 
 		// Background
 		if (m_activeSceneEnvironment.Skybox)
@@ -164,7 +172,7 @@ namespace Lobster
 			glm::mat4 world = glm::mat4(1.0);
 			world = glm::translate(world, glm::vec3(command.x, command.y, command.z));
 			world = glm::scale(world, glm::vec3(command.w, command.h, 1.0f));
-			m_spriteShader->SetTexture2D(0, renderTarget->Get());
+			m_spriteShader->SetTexture2D(0, renderTarget->Get(0));
 			m_spriteShader->SetTexture2D(1, command.UseTexture->Get());			
 			m_spriteShader->SetUniform("sys_world", world);
 			m_spriteShader->SetUniform("sys_projection", camera->GetOrthoMatrix());
@@ -177,24 +185,17 @@ namespace Lobster
 
 		// Unset renderer configurations
 		Renderer::SetFaceCulling(false);
-
 		renderTarget->Unbind();
 
 		// =====================================================
 		// [Second Pass] Render the stored frame buffer in rect
-		Renderer::Clear(0.1f, 0.2f, 0.3f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		Renderer::SetDepthTest(false);
 		m_postProcessShader->Bind();
-		m_postProcessShader->SetTexture2D(0, renderTarget->Get());
+		m_postProcessShader->SetTexture2D(0, renderTarget->Get(0));
 		m_postProcessMesh->Draw();
 		Renderer::SetDepthTest(true);
     }
-
-	void Renderer::Clear(float r, float g, float b)
-	{
-		glClearColor(r, g, b, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	}
 
 	void Renderer::BeginScene(TextureCube * skybox)
 	{
