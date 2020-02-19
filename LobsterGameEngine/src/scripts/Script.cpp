@@ -158,7 +158,6 @@ namespace Lobster {
 			// Transform
 			.beginClass<Transform>("Transform")
 			.addProperty("WorldPosition", &Transform::WorldPosition)
-			.addProperty("LocalPosition", &Transform::LocalPosition)
 			.addFunction("Up", &Transform::Up)
 			.addFunction("Right", &Transform::Right)
 			.addFunction("Forward", &Transform::Forward)

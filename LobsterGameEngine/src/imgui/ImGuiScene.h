@@ -220,8 +220,8 @@ namespace Lobster
 						gameObject->transform.RotateEuler(deltaRotation.y, glm::vec3(0, 1, 0));
 						gameObject->transform.RotateEuler(deltaRotation.z, glm::vec3(0, 0, 1)); break;
 					case ImGuizmo::SCALE:
-						if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) m_originalScale = gameObject->transform.LocalScale;
-						else gameObject->transform.LocalScale = m_originalScale + deltaScale - glm::vec3(1); break;
+						if (!ImGuizmo::IsUsing()) m_originalScale = gameObject->transform.LocalScale;
+						else gameObject->transform.LocalScale = m_originalScale * deltaScale; break;
 					}
 
 					// check with IsUsing if we are trying to edit an item.

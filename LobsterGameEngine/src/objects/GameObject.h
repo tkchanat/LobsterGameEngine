@@ -28,8 +28,6 @@ namespace Lobster
         std::vector<Component*> m_components;
 		//	Shortcut to access the vector of colliders.
 		std::vector<Collider*> m_colliders;
-		//	Boolean to indicate whether we are changing object in previous frame.
-		bool b_isChanging = false;
 		//	Transform object to store previous state of game object prior to change.
 		Transform m_transPrev;
 

@@ -98,6 +98,8 @@ extern "C" {
 #define PATH_FONT "textures/font"
 #define PATH_SCRIPTS "scripts"
 
+#define BIT(x) 1 << x
+
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)
 

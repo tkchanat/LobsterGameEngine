@@ -102,7 +102,7 @@ namespace Lobster {
 			epsilonVec.z += ( i / 12 ? epsilon : -epsilon );
 			
 			//	Epsilon apply transform.
-			epsilonVec = transform->WorldRotation * m_transform.WorldRotation * glm::vec4(epsilonVec, 1.0);
+			epsilonVec = transform->LocalRotation * m_transform.LocalRotation * glm::vec4(epsilonVec, 1.0);
 
 			//	Push the position back.
 			vertices.push_back(position + epsilonVec);

@@ -78,8 +78,8 @@ namespace Lobster
 		m_demoWindow->Show(&show_demo); // Demo window
 		m_hierarchy->Show(&show_hierarchy); // Hierarchy
 		m_menuBar->Show(&show_menuBar); // Menu bar
-		m_properties->Show(&show_properties); // Properties
 		m_scene->Show(&show_scene); // Scene
+		m_properties->Show(&show_properties); // Properties
 		m_toolbar->Show(&show_toolbar); // Toolbar	
 		ImGui::End();
 	}
