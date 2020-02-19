@@ -74,6 +74,7 @@ namespace Lobster
 			ar(textureNames);
 
 			m_shader = ShaderLibrary::Use(shaderName.c_str());
+			m_chosenShader = shaderName == shaderPath[0] ? 0 : 1;
 			m_textures.resize(textureNames.size());
 			for (int i = 0; i < m_textures.size(); ++i)
 				m_textures[i] = textureNames[i].empty() ? nullptr : TextureLibrary::Use(textureNames[i].c_str());

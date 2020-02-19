@@ -1,8 +1,8 @@
 #pragma once
-
 #include "Component.h"
 #include "objects/Transform.h"
 #include "graphics/2D/GameUI.h"
+#include "utils/Frustum.h"
 
 namespace Lobster
 {
@@ -18,6 +18,7 @@ namespace Lobster
     {
     private:
         float m_fieldOfView;
+		float m_width, m_height;
         float m_nearPlane;
         float m_farPlane;
         glm::mat4 m_viewMatrix;
@@ -28,7 +29,7 @@ namespace Lobster
 		GameUI* gameUI = nullptr;
 		
 		static CameraComponent* s_activeCamera;
-
+		Frustum m_frustum;
     public:
         CameraComponent();
         virtual ~CameraComponent();
@@ -40,7 +41,9 @@ namespace Lobster
 		virtual void OnBegin() override;
 		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
-		glm::mat4 GetViewMatrix() const;
+		glm::mat4 GetViewMatrix();
+		inline void SetFar(float f) { m_farPlane = f; ResizeProjection(m_width, m_height); }
+		inline void SetNear(float n) { m_nearPlane = n; ResizeProjection(m_width, m_height); }
 		inline GameUI* GetUI() const { return gameUI; }
         inline glm::mat4 GetProjectionMatrix() const { return m_projectionMatrix; }
 		inline glm::mat4 GetOrthoMatrix() const { return m_orthoMatrix; }

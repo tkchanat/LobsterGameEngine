@@ -59,8 +59,10 @@ namespace Lobster
 			m_gridVertexArray(nullptr),
 			b_showProfiler(true)
 		{
+			CameraComponent* camera = new CameraComponent();
+			camera->SetFar(10000.f);
 			m_editorCamera = new GameObject("EditorCamera");
-			m_editorCamera->AddComponent(new CameraComponent());
+			m_editorCamera->AddComponent(camera);
 			m_editorCamera->transform.Translate(10, 8, 10);
 			m_editorCamera->transform.LookAt(glm::vec3(0, 0, 0));
 
@@ -106,7 +108,7 @@ namespace Lobster
 				command.UseMaterial = m_gridMaterial;
 				command.UseVertexArray = m_gridVertexArray;
 				command.UseWorldTransform = glm::mat4(1.0f);
-				Renderer::Submit(command);
+				Renderer::SubmitDebug(command);
 			}
 		}
 

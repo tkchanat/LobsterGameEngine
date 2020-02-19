@@ -123,7 +123,7 @@ namespace Lobster
 		}
 	}
 
-	void Renderer::Render(CameraComponent* camera)
+	void Renderer::Render(CameraComponent* camera, bool debug)
 	{
 		if (!camera) return;
 
@@ -181,6 +181,12 @@ namespace Lobster
 			m_spriteShader->SetUniform("sys_spriteTexture", 1);			
 			m_spriteMesh->Draw();
 		}
+		// Debug
+#ifdef LOBSTER_BUILD_DEBUG
+		if (debug) {
+			Renderer::DrawQueue(camera, m_debugQueue);
+		}
+#endif
 
 		// Unset renderer configurations
 		Renderer::SetFaceCulling(false);
@@ -222,6 +228,11 @@ namespace Lobster
 		s_instance->m_overlayQueue.push_back(ocommand);
 	}
 
+	void Renderer::SubmitDebug(RenderCommand dcommand)
+	{
+		s_instance->m_debugQueue.push_back(dcommand);
+	}
+
 	void Renderer::EndScene()
 	{
 		// do all batching and sorting job here
@@ -237,6 +248,7 @@ namespace Lobster
 		s_instance->m_opaqueQueue.clear();
 		s_instance->m_transparentQueue.clear();
 		s_instance->m_overlayQueue.clear();
+		s_instance->m_debugQueue.clear();
 	}
 
 }

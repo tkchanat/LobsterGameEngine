@@ -97,16 +97,12 @@ namespace Lobster
 		uint m_brdfId;
 		uint m_captureFrameBuffer;
 		uint m_captureRenderBuffer;
-		// static cube mesh for rendering
-		static VertexArray* s_cube;
-		static VertexArray* s_quad;
 	public:
 		virtual ~TextureCube() override;
 		inline virtual void* Get() const override { return(void*)(intptr_t)m_id; }
 		inline void* GetIrradiance() const { return (void*)(intptr_t)m_irradianceId; }
 		inline void* GetPrefilter() const { return (void*)(intptr_t)m_prefilterId; }
 		inline void* GetBRDF() const { return (void*)(intptr_t)m_brdfId; }
-		inline static VertexArray* GetCube() { return s_cube; }
 		explicit TextureCube(const char* right, const char* left, const char* up, const char* down, const char* back, const char* front);
 	protected:
 		bool Load();

@@ -254,6 +254,12 @@ namespace Lobster
 					std::string headerLabel = fmt::format("Material: {}", material->GetName());
 					if (ImGui::TreeNode(headerLabel.c_str()))
 					{
+						if (ImGui::Button("Load Material (.mat)")) {
+							std::string path = FileSystem::OpenFileDialog();
+							if (!path.empty()) {
+								m_meshInfo.Materials[i] = MaterialLibrary::Use(path.c_str());
+							}
+						}
 						material->OnImGuiRender();
 						ImGui::TreePop();
 					}

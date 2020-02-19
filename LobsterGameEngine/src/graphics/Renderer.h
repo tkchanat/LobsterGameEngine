@@ -95,6 +95,7 @@ namespace Lobster
 		SceneEnvironment m_activeSceneEnvironment;
 		std::list<RenderCommand> m_opaqueQueue;
 		std::list<RenderCommand> m_transparentQueue;
+		std::list<RenderCommand> m_debugQueue;
 		std::list<RenderOverlayCommand> m_overlayQueue;
     public:
         Renderer();
@@ -107,12 +108,13 @@ namespace Lobster
 		static void BeginScene(TextureCube* skybox);
 		static void Submit(RenderCommand command);
 		static void Submit(RenderOverlayCommand ocommand);
+		static void SubmitDebug(RenderCommand dcommand);
 		static void EndScene();
 		static void ClearOverlayQueue();
 		static void ClearAllQueues();
 	private:
 		void DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue);
-        void Render(CameraComponent* camera);
+        void Render(CameraComponent* camera, bool debug = false);
     };
     
 }

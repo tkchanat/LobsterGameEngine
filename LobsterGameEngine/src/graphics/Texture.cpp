@@ -73,8 +73,6 @@ namespace Lobster
 	// TextureCubeMap
 	// =======================================================
 
-	VertexArray* TextureCube::s_cube = nullptr;
-	VertexArray* TextureCube::s_quad = nullptr;
 	const glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
 	const glm::mat4 captureViews[] =
 	{
@@ -88,13 +86,6 @@ namespace Lobster
 
 	TextureCube::TextureCube(const char* right, const char* left, const char* up, const char* down, const char* back, const char* front)
 	{
-		// Initialize cube and quad mesh if either one is not set
-		if (!s_cube || !s_quad)
-		{
-			s_cube = MeshFactory::Cube();
-			s_quad = MeshFactory::Plane();
-		}
-
 		// Generate and bind texture
 		glGenTextures(1, &m_id);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
@@ -117,19 +108,24 @@ namespace Lobster
 			WARN("Couldn't load cube map");
 		}
 
+		glGenFramebuffers(1, &m_captureFrameBuffer);
+		glGenRenderbuffers(1, &m_captureRenderBuffer);
+		GLint originalViewport[4];
+		glGetIntegerv(GL_VIEWPORT, originalViewport);
 		GenerateIrradianceMap();
 		GeneratePrefilterMap();
 		GenerateBRDFMap();
+		glViewport(originalViewport[0], originalViewport[1], originalViewport[2], originalViewport[3]);
 	}
 
 	TextureCube::~TextureCube()
 	{
+		glDeleteFramebuffers(1, &m_captureFrameBuffer);
+		glDeleteRenderbuffers(1, &m_captureRenderBuffer);
 		glDeleteTextures(1, &m_id);
 		glDeleteTextures(1, &m_irradianceId);
 		glDeleteTextures(1, &m_prefilterId);
 		glDeleteTextures(1, &m_brdfId);
-		glDeleteFramebuffers(1, &m_captureFrameBuffer);
-		glDeleteRenderbuffers(1, &m_captureRenderBuffer);
 	}
 
 	bool TextureCube::Load()
@@ -167,8 +163,6 @@ namespace Lobster
 	void TextureCube::GenerateIrradianceMap()
 	{
 		// Create irradiance map resources
-		glGenFramebuffers(1, &m_captureFrameBuffer);
-		glGenRenderbuffers(1, &m_captureRenderBuffer);
 		glGenTextures(1, &m_irradianceId);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_irradianceId);
 		for (unsigned int i = 0; i < 6; ++i)
@@ -193,19 +187,19 @@ namespace Lobster
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
 
-		GLint originalViewport[4];
-		glGetIntegerv(GL_VIEWPORT, originalViewport);
 		glViewport(0, 0, 32, 32);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_captureFrameBuffer);
+		VertexArray* cube = MeshFactory::Cube();
 		for (unsigned int i = 0; i < 6; ++i)
 		{
 			irradianceShader->SetUniform("captureView", captureViews[i]);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_irradianceId, 0);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			s_cube->Draw();
+			cube->Draw();
 		}
+		if(cube) delete cube;
+		cube = nullptr;
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(originalViewport[0], originalViewport[1], originalViewport[2], originalViewport[3]);
 	}
 
 	void TextureCube::GeneratePrefilterMap()
@@ -226,15 +220,14 @@ namespace Lobster
 
 		Shader* prefilterShader = ShaderLibrary::Use("shaders/PrefilterConvolution.glsl");
 		prefilterShader->Bind();
-		prefilterShader->SetUniform("environmentMap", 0);
-		prefilterShader->SetUniform("captureProjection", captureProjection);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
+		prefilterShader->SetUniform("environmentMap", 0);
+		prefilterShader->SetUniform("captureProjection", captureProjection);
 
-		GLint originalViewport[4];
-		glGetIntegerv(GL_VIEWPORT, originalViewport);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_captureFrameBuffer);
 		unsigned int maxMipLevels = 5;
+		VertexArray* cube = MeshFactory::Cube();
 		for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
 		{
 			// resize framebuffer according to mip-level size.
@@ -250,13 +243,13 @@ namespace Lobster
 			{
 				prefilterShader->SetUniform("captureView", captureViews[i]);
 				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_prefilterId, mip);
-
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				s_cube->Draw();
+				cube->Draw();
 			}
 		}
+		if (cube) delete cube;
+		cube = nullptr;
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(originalViewport[0], originalViewport[1], originalViewport[2], originalViewport[3]);
 	}
 
 	void TextureCube::GenerateBRDFMap()
@@ -272,21 +265,19 @@ namespace Lobster
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		// then re-configure capture framebuffer object and render screen-space quad with BRDF shader.
+		glViewport(0, 0, 512, 512);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_captureFrameBuffer);
 		glBindRenderbuffer(GL_RENDERBUFFER, m_captureRenderBuffer);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_brdfId, 0);
-
-		GLint originalViewport[4];
-		glGetIntegerv(GL_VIEWPORT, originalViewport);
-		glViewport(0, 0, 512, 512);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		VertexArray* quad = MeshFactory::Plane();
 		Shader* brdfShader = ShaderLibrary::Use("shaders/BRDFConvolution.glsl");
 		brdfShader->Bind();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		s_quad->Draw();
-
+		quad->Draw();
+		if (quad) delete quad;
+		quad = nullptr;
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(originalViewport[0], originalViewport[1], originalViewport[2], originalViewport[3]);
 	}
 
 	// =======================================================

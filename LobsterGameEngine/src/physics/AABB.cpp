@@ -93,7 +93,7 @@ namespace Lobster
         command.UseMaterial = m_vertexMaterial;
         command.UseVertexArray = m_mesh;
         command.UseWorldTransform = glm::translate(Center);
-        Renderer::Submit(command);
+        Renderer::SubmitDebug(command);
 #endif
     }
 
