@@ -295,8 +295,8 @@ namespace Lobster
 	void Material::ChangeShaderType() {
 		m_shader = ShaderLibrary::Use(shaderPath[m_chosenShader]);
 		ResizeUniformBuffer(m_shader->GetUniformBufferSize());
-		AssignTextureSlot();
 		InitializeUniformsFromShader();
+		AssignTextureSlot();
 		b_dirty = true;
 	}
 

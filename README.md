@@ -1,5 +1,6 @@
-# Lobster Engine
-Lobster Engine is a cross-platform game engine for our final year project. Nothing to see here right now! :smiley:
+# Lobster Engine <img src="LobsterGameEngine/lobster.png" width=32>
+Lobster Engine is yet another OpenGL game engine written in C++. :video_game: :computer:
+
 ## Current Progress
 ![](doc/Screenshot.png)
 Join and follow our roadmap at [<img src="https://d2k1ftgv7pobq7.cloudfront.net/meta/u/res/images/brand-assets/Logos/0099ec3754bf473d2bbf317204ab6fea/trello-logo-blue.png" width="80" alt="Trello">](https://trello.com/invite/b/CnX7N13z/665a3ecc44dd00868f37f27c2e5ee895/ssf)
@@ -20,11 +21,13 @@ For details, please refer to our [Wiki Page](https://github.com/tkchanat/StealSt
 
 ## Third-party Dependencies
 * [cereal](https://github.com/USCiLab/cereal) - A C++11 library for serialization
+* [freetype](https://www.freetype.org/) - FreeType is a freely available software library to render fonts.
 * [glfw](https://github.com/glfw/glfw) - A multi-platform library for OpenGL, OpenGL ES, Vulkan, window and input
 * [glm](https://github.com/g-truc/glm.git) - OpenGL Mathematics
 * [glad](https://github.com/Dav1dde/glad) - Multi-Language Vulkan/GL/GLES/EGL/GLX/WGL Loader-Generator based on the official specs.
 * [imgui](https://github.com/ocornut/imgui) - Dear ImGui: Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies
 * [imguizmo](https://github.com/CedricGuillemet/ImGuizmo) - Immediate mode 3D gizmo for scene editing and other controls based on Dear Imgui
-* [json](https://github.com/nlohmann/json) - JSON for Modern C++
 * [spdlog](https://github.com/gabime/spdlog) - Fast C++ logging library.
-* [assimp](https://github.com/assimp/assimp) - [Binary distribute] Official Open Asset Import Library Repository. Loads 40+ 3D file formats into one unified and clean data structure.
+* [assimp](https://github.com/assimp/assimp) - **[Binary distribution]** Official Open Asset Import Library Repository. Loads 40+ 3D file formats into one unified and clean data structure.
+* [lua5.3](https://www.lua.org/download.html) - **[Binary distribution]** Lua is a powerful and fast programming language that is easy to learn and use and to embed into your application.
+* [openal](https://www.openal.org/) - [**Binary distribution]** OpenAL is a cross-platform 3D audio API appropriate for use with gaming applications and many other types of audio applications.
