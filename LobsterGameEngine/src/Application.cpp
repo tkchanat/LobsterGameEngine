@@ -311,8 +311,9 @@ namespace Lobster
 			m_scene = new Scene(this->scenePath.c_str());
 		}
 		else {
-			m_scene = new Scene();
+			m_scene = new Scene();			
 		}		
+		Application::GetInstance()->SetScenePath(scenePath);
 		SetSaved(true);
 	}
 

@@ -127,7 +127,7 @@ namespace Lobster
 			ResizeProjection(size.x, size.y);
 		}
 		catch (std::exception e) {
-			LOG("Deserializing CameraComponent failed");
+			LOG("Deserializing CameraComponent failed, reason: {}", e.what());
 		}
 	}
 

@@ -24,7 +24,7 @@ namespace Lobster
         glm::mat4 m_projectionMatrix;
 		glm::mat4 m_orthoMatrix;
 		FrameBuffer* m_frameBuffer;
-		bool b_uiEditor = false;
+		bool b_uiEditor = false;		
 		GameUI* gameUI = nullptr;
 		
 		static CameraComponent* s_activeCamera;
@@ -49,19 +49,25 @@ namespace Lobster
 		static inline CameraComponent* GetActiveCamera() { return s_activeCamera; }
 	private:
 		friend class cereal::access;
-		template <class Archive>
-		void save(Archive & ar) const
+		template <class Archive> void save(Archive & ar) const
 		{
 			ar(m_fieldOfView);
 			ar(m_nearPlane, m_farPlane);
-			//gameUI->Serialize();
+			bool hasUi = (bool) gameUI;
+			ar(hasUi);
+			if (hasUi)
+				gameUI->Serialize(ar);
 		}
-		template <class Archive>
-		void load(Archive & ar)
+		template <class Archive> void load(Archive & ar)
 		{
 			ar(m_fieldOfView);
 			ar(m_nearPlane, m_farPlane);
-			//gameUI->Deserialize();
+			bool hasUi;
+			ar(hasUi);
+			if (hasUi) {
+				gameUI = new GameUI();
+				gameUI->Deserialize(ar);
+			}
 		}
     };
     

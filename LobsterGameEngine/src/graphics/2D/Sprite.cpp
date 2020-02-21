@@ -5,6 +5,9 @@
 #include "system/Input.h"
 #include "Scripts/Script.h"
 
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/polymorphic.hpp>
+
 #define Z_LEVEL_MAX 256.f;
 
 namespace Lobster {
@@ -108,8 +111,9 @@ namespace Lobster {
 	// ============================================================
 
 	ImageSprite2D::ImageSprite2D(const char* path, float winW, float winH, float mouseX, float mouseY) :
-		Sprite2D(mouseX, mouseY)
+		Sprite2D(mouseX, mouseY), path(path)
 	{
+		spriteType = SpriteType::ImageSprite;
 		std::string resPath = FileSystem::Join(PATH_SPRITES, path);
 		tex = TextureLibrary::Use(FileSystem::Path(resPath).c_str());
 		m_width = tex->GetWidth();
@@ -228,8 +232,9 @@ namespace Lobster {
 	FT_Library TextSprite2D::s_library = nullptr;
 	Texture2D* TextSprite2D::m_iconTex[3] = {};
 
-	TextSprite2D::TextSprite2D(const char* text, const char* typeface, float winW, float winH, float mouseX, float mouseY) : 
-		Sprite2D(mouseX, mouseY), text(text) {	
+	TextSprite2D::TextSprite2D(const char* text, const char* typeface, float fontSize, float winW, float winH, float mouseX, float mouseY) : 
+		Sprite2D(mouseX, mouseY), text(text), fontName(typeface) {	
+		spriteType = SpriteType::TextSprite;
 		// initialize static library, only called once
 		if (!s_library) {
 			FT_Error error = FT_Init_FreeType(&s_library);
@@ -243,7 +248,7 @@ namespace Lobster {
 		std::string resPath = FileSystem::Path(FileSystem::Join(PATH_FONT, typeface));
 		loadFace(resPath);
 		// set font size
-		SetFontSize(24);
+		SetFontSize(fontSize);
 		// load the texture into it first
 		getTexture();
 	}
@@ -460,10 +465,11 @@ namespace Lobster {
 	// ============================================================
 	// DynamicTextSprite2D
 	// ============================================================
-	DynamicTextSprite2D::DynamicTextSprite2D(const char* sname, const char* vname, SupportedVarType vtype, const char* typeface,
+	DynamicTextSprite2D::DynamicTextSprite2D(const char* sname, const char* vname, SupportedVarType vtype, const char* typeface, float fontSize,
 		float winW, float winH, float mouseX, float mouseY) :
-		TextSprite2D(vname, typeface, winW, winH, mouseX, mouseY), scriptName(sname), type(vtype), var(vname)
+		TextSprite2D(vname, typeface, fontSize, winW, winH, mouseX, mouseY), scriptName(sname), type(vtype), var(vname)
 	{
+		spriteType = SpriteType::DynamicTextSprite;
 		text = "<" + var + ">";
 	}
 

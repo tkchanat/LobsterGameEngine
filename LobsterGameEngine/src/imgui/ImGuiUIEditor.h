@@ -80,7 +80,7 @@ namespace Lobster {
 						ImGui::EndCombo();
 					}
 					if (ImGui::Button("Confirm")) {
-						ui->AddSprite(new TextSprite2D(textContent.c_str(), fontType.c_str(), windowSize.x, windowSize.y, x, y));
+						ui->AddSprite(new TextSprite2D(textContent.c_str(), fontType.c_str(), 24.0f, windowSize.x, windowSize.y, x, y));
 						ImGui::CloseCurrentPopup();
 					}
 					ImGui::SameLine();
@@ -123,7 +123,7 @@ namespace Lobster {
 						ImGui::EndCombo();
 					}
 					if (ImGui::Button("Confirm")) {
-						ui->AddSprite(new DynamicTextSprite2D(scriptName.c_str(), varname.c_str(), vtype, fontType.c_str(),
+						ui->AddSprite(new DynamicTextSprite2D(scriptName.c_str(), varname.c_str(), vtype, fontType.c_str(), 24.0f,
 							windowSize.x, windowSize.y, x, y));
 						ImGui::CloseCurrentPopup();
 					}

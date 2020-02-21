@@ -32,7 +32,7 @@ namespace Lobster
     {
 		for (GameObject* gameObject : m_gameObjects)
 		{
-			if(gameObject)	delete gameObject;
+			if (gameObject)	delete gameObject;
 			gameObject = nullptr;
 		}
 		if (m_skybox) delete m_skybox;

@@ -239,6 +239,8 @@ namespace Lobster {
 			.addFunction("SetFontSize", &TextSprite2D::SetFontSize)
 			.addFunction("SetColor", &TextSprite2D::SetColor)
 			.endClass()
+			.deriveClass<DynamicTextSprite2D, TextSprite2D>("DynamicTextSprite2D")
+			.endClass()
 			// Audio Component
 			.beginClass<AudioSource>("AudioSource")
 			.addFunction("Play", &AudioSource::Play)

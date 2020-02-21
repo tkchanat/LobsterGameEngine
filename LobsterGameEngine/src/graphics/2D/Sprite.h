@@ -1,8 +1,6 @@
 #pragma once
 #include "pch.h"
 #include "graphics/texture.h"
-#include "graphics/2D/GameUI.h"
-
 
 namespace Lobster {
 	class GameUI;
@@ -10,7 +8,8 @@ namespace Lobster {
 
 	// Sprite2D is only applicable in GameUI
 	// For 3D sprite and particles, use Sprite3D
-	class Sprite2D {			
+	class Sprite2D {
+		friend class GameUI;
 	protected:
 		int z;	// z-index (smaller goes to the front, allow negative)
 		static int zLv;
@@ -28,6 +27,7 @@ namespace Lobster {
 		float x;	// the x position of the sprite, in percentage [0, 1]
 		float y;	// the y position of the sprite, in percentage [0, 1]
 		float alpha;// alpha value of the sprite, in range [0, 1]
+		enum class SpriteType { ImageSprite, TextSprite, DynamicTextSprite } spriteType;
 
 		// constructor for derived classes
 		Sprite2D(float mouseX, float mouseY);
@@ -44,13 +44,14 @@ namespace Lobster {
 		static bool Compare(Sprite2D* s1, Sprite2D* s2);
 	};
 
-	class ImageSprite2D : public Sprite2D {
+	class ImageSprite2D : public Sprite2D {	
+		friend class GameUI;
 	private:
 		Texture2D* tex;
 		float m_width, m_height; // actual image width and height (in pixel)
 		float _w, _h;	// temporarily store the width and height (in %)		
 		bool relativeSize = false; // indicate the size in px or %
-
+		std::string path; // track the path for scene saving/loading
 	public:
 		float w;	// the width of the sprite, always in px (for that in %, see _w)
 		float h;	// the height of the sprite, always in px (for that in %, see _h)
@@ -58,6 +59,7 @@ namespace Lobster {
 		ImageSprite2D(const char* path, float winW, float winH, float mouseX = 0.5f, float mouseY = 0.5f);
 		~ImageSprite2D();
 		inline ImTextureID GetTexID() const { return tex->Get(); }
+		inline std::string GetPath() const { return path; }
 
 		virtual void Clip() override;	// adjust x, y into reasonable range
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) override;
@@ -67,6 +69,8 @@ namespace Lobster {
 	};
 
 	class TextSprite2D : public Sprite2D {
+		friend class GameUI;
+	public:
 		enum HorizontalAlignType { Left, Center, Right, Count };
 	protected:
 		static const int MAX_TEXT_LENGTH = 128;
@@ -76,6 +80,7 @@ namespace Lobster {
 		float fontSize = 12.f;
 		float color[4] = { 1.f, 1.f, 1.f, 1.f }; // font color, in range [0, 1]
 		std::string text;
+		std::string fontName;
 
 		bool m_preview = false; // show preview in imgui
 		const char* m_iconPath[3] = {
@@ -90,7 +95,7 @@ namespace Lobster {
 		// helper function to load typeface
 		void loadFace(std::string fullpath);
 	public:
-		TextSprite2D(const char* text, const char* typeface, float winW, float winH, float mouseX, float mouseY);
+		TextSprite2D(const char* text, const char* typeface, float fontSize, float winW, float winH, float mouseX, float mouseY);
 
 		// setter
 		inline void SetText(const char* text) { this->text = text; }
@@ -98,6 +103,7 @@ namespace Lobster {
 		void SetColor(float r, float g, float b, float a);
 		// getter
 		inline std::string GetText() { return text; }
+		inline std::string GetFontName() { return fontName; }
 		inline float GetFontSize() { return fontSize; }
 		inline glm::vec4 GetColor() { return glm::vec4(color[0], color[1], color[2], color[3]); }
 		
@@ -110,6 +116,7 @@ namespace Lobster {
 	};
 
 	class DynamicTextSprite2D final : public TextSprite2D {
+		friend class GameUI;
 	public:
 		enum SupportedVarType { INT, FLOAT, STRING };
 	private:
@@ -118,10 +125,16 @@ namespace Lobster {
 		std::string var;
 		SupportedVarType type;
 	public:
-		DynamicTextSprite2D(const char* sname, const char* vname, SupportedVarType vtype, const char* typeface,
+		DynamicTextSprite2D(const char* sname, const char* vname, SupportedVarType vtype, const char* typeface, float fontSize,
 			float winW, float winH, float mouseX, float mouseY);
+
+		inline std::string GetScriptName() { return scriptName; }
+		inline std::string GetVarName() { return var; }
+		inline SupportedVarType GetVarType() { return type; }
+
 		virtual void OnBegin() override;
 		virtual void OnUpdate() override;
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) override;
 	};
+
 }

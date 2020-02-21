@@ -321,7 +321,7 @@ namespace Lobster {
 	}
 
 	void FileSystem::WriteStringStream(const char * path, const std::stringstream & ss, bool binary)
-	{
+	{		
 		int flags = std::ios::out;
 		if (binary) flags |= std::ios::binary;
 		std::ofstream outFile(path, flags);
@@ -329,5 +329,8 @@ namespace Lobster {
 			outFile << ss.rdbuf();
 			outFile.close();
 		}
+		else {
+			WARN("Unable to save file at {}.", path);
+		}				
 	}
 }
