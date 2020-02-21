@@ -307,7 +307,7 @@ namespace Lobster
 		if (scenePath && scenePath[0] != '\0') {
 			std::string path(scenePath);
 			StringOps::ReplaceAll(path, "\\", "/");
-			this->scenePath = FileSystem::Path(scenePath);
+			this->scenePath = scenePath;
 			m_scene = new Scene(this->scenePath.c_str());
 		}
 		else {

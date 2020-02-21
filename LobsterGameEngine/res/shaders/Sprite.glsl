@@ -25,5 +25,5 @@ void main()
     color.a *= alpha;
 
 	if (color.a < 0.05) discard;
-	out_color = vec4(vec3(color) * color.a + vec3(base) * (1.0 - color.a), alpha);    	
+	out_color = vec4(vec3(color) * color.a + vec3(base) * (1.0 - color.a), 1);    	
 }

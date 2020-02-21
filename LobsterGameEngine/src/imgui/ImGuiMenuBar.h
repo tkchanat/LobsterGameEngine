@@ -130,7 +130,7 @@ namespace Lobster
 						else {
 							// save by overwrite
 							std::stringstream ss = GetScene()->Serialize();
-							FileSystem::WriteStringStream(FileSystem::Path(scenePath).c_str(), ss);
+							FileSystem::WriteStringStream(scenePath.c_str(), ss);
 							Application::GetInstance()->SetSaved(true);
 						}								
 					}
