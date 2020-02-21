@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "Application.h"
 #include "Input.h"
 #include "events/EventCallback.h"
 #include "events/EventDispatcher.h"
@@ -48,6 +47,12 @@ namespace Lobster
 	void Input::UnlockCursor() {
 		m_locked = false;
 	}
+	
+	bool Input::InsideWindow(const glm::vec2& mouse, const glm::vec2& pos, const glm::vec2& size) {
+		if (mouse.x >= pos.x && mouse.x <= pos.x + size.x && mouse.y >= pos.y && mouse.y <= pos.y + size.y)
+			return true;
+		return false;
+	}
 
 	bool Input::IsKeyUp(int key)
 	{
@@ -95,6 +100,35 @@ namespace Lobster
 	{
 		GLFWwindow* window = Application::GetInstance()->GetWindow()->GetPtr();
 		glfwGetCursorPos(window, &x, &y);
+		// non-game mode: calculate the position to that of the game window
+		#if LOBSTER_BUILD_DEBUG
+		{
+			int winPosX, winPosY, winSizeX, winSizeY;
+			GetWindowPos(&winPosX, &winPosY);
+			GetWindowSize(&winSizeX, &winSizeY);
+			Config& config = Application::GetInstance()->GetConfig();
+			glm::vec2 tabPos = config.gameTabPos;
+			glm::vec2 tabSize = config.gameTabSize;
+			// calculate the difference in y caused by the change in aspect ratio
+			float actualTabSizeY = tabSize.x * winSizeY / winSizeX;
+			float aspectRatioDiffY = (tabSize.y - actualTabSizeY) * 0.5;
+
+			float scaleX = tabSize.x / winSizeX, scaleY = actualTabSizeY / winSizeY;
+			float transX = tabPos.x - winPosX, transY = tabPos.y - winPosY;
+			x = (x - transX) / scaleX;
+			y = (y - transY - aspectRatioDiffY) / scaleY;
+		}
+		#endif
+	}
+
+	void Input::GetWindowPos(int* x, int* y) {
+		GLFWwindow* window = Application::GetInstance()->GetWindow()->GetPtr();
+		glfwGetWindowPos(window, x, y);
+	}
+
+	void Input::GetWindowSize(int* x, int* y) {
+		GLFWwindow* window = Application::GetInstance()->GetWindow()->GetPtr();
+		glfwGetWindowSize(window, x, y);
 	}
 
 	double Input::GetMousePosX() {

@@ -47,6 +47,13 @@ namespace Lobster
 		m_orthoMatrix = glm::ortho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
 		m_frustum.SetFromMatrix(m_projectionMatrix);
 	}
+
+	void CameraComponent::OnBegin() {
+		if (!gameUI) return;
+		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
+			sprite->OnBegin();
+		}
+	}
     
     void CameraComponent::OnUpdate(double deltaTime)
     {
@@ -117,14 +124,10 @@ namespace Lobster
 	void CameraComponent::DrawUI() {
 		if (!gameUI) return;
 		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
-			sprite->SubmitDrawCommand();
+			sprite->OnUpdate();			
 		}
 	}
 
-	void CameraComponent::OnBegin() {
-
-	}
-		
 	void CameraComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
 	{
 		//LOG("Serializing CameraComponent");
@@ -140,7 +143,7 @@ namespace Lobster
 			ResizeProjection(size.x, size.y);
 		}
 		catch (std::exception e) {
-			LOG("Deserializing CameraComponent failed");
+			LOG("Deserializing CameraComponent failed, reason: {}", e.what());
 		}
 	}
 

@@ -20,14 +20,25 @@ namespace Lobster {
 		m_executableDir = fs::current_path().string();
 	}
 
+	// Note: Path can take both meshes/files or absolute path, but not other format
 	std::string FileSystem::Path(std::string path) {
-		// if path is absolute, add it into res/ and use the relative one		
-		// TODO delete this if not required
+		// if path is absolute, add it into res/ and use the relative one
 		fs::path p(path);
-		if (p.is_absolute()) {
-			std::string relative = m_instance->addResourceIfNecessary(path);
-			if (!relative.empty())
-				return relative;
+		if (p.is_absolute()) {			
+			// we are going to make use of current_path to move relatively
+			fs::path tempCurrentPath = fs::current_path();
+			fs::current_path(m_workingDir);			
+			fs::path pathRelativeToWorkingDir = fs::relative(p);			
+			fs::current_path(tempCurrentPath); // restore current path
+			// if path is already inside res/, just change the path into relative without adding
+			if (pathRelativeToWorkingDir.empty() || pathRelativeToWorkingDir.string()[0] == '.') {
+				std::string relative = m_instance->addResourceIfNecessary(path);
+				if (!relative.empty())
+					return relative;
+			}
+			else {
+				return pathRelativeToWorkingDir.string();
+			}
 		}
 		// sometimes it yields a/b\c/d, nevermind it is just fine
 		// remove the two slashes suffix
@@ -83,7 +94,7 @@ namespace Lobster {
 	std::string FileSystem::addResource(std::string path, std::string type) {	
 		fs::path source = path;
 		fs::path target = m_workingDir;
-		target = Join(target.string(), (type.size() == 0 ? source.filename().string() : Join(type, source.filename().string())));
+		target = Join(target.string(), (type.empty() ? source.filename().string() : Join(type, source.filename().string())));
 		LOG(target.string() + " loaded");
 		if (!fs::exists(target))
 			fs::copy_file(source, target);
@@ -93,23 +104,32 @@ namespace Lobster {
 	}
 
 	// Same as addResource(std::string path, std::string type),
-// except letting the system determine the type itself
-// If no file is added, empty string will be returned
+	// except letting the system determine the type itself
+	// If no file is added, empty string will be returned
 	std::string FileSystem::addResourceIfNecessary(std::string path) {
 		// TODO check any object with the same name
 		fs::path p(path);
 		std::string subfolder;
 		if (p.extension() == ".obj" || p.extension() == ".mtl") {
-			subfolder = "meshes";
+			subfolder = PATH_MESHES;
 		}
 		else if (p.extension() == ".mat") {
-			subfolder = "materials";
+			subfolder = PATH_MATERIALS;
 		}
 		else if (p.extension() == ".glsl") {
-			subfolder = "shaders";
+			subfolder = PATH_SHADERS;
 		}
 		else if (p.extension() == ".png") {
-			subfolder = "textures";
+			subfolder = PATH_TEXTURES;
+		}
+		else if (p.extension() == ".wav") {
+			subfolder = PATH_AUDIO;
+		}
+		else if (p.extension() == ".anim") {
+			subfolder = PATH_ANIMATIONS;
+		}
+		else if (p.extension() == ".lobster") {
+			subfolder = PATH_SCENES;
 		}
 		else return "";
 		addResource(p.string(), subfolder);
@@ -211,9 +231,9 @@ namespace Lobster {
 		}
 		
 #endif        
-        path = fs::relative(fs::path(buffer), executablePath).string();
-        StringOps::ReplaceAll(path, "\\", "/");
-        fs::current_path(executablePath);
+		path = buffer;
+		StringOps::ReplaceAll(path, "\\", "/");
+		fs::current_path(executablePath);
 		return path;
 	}
 
@@ -354,7 +374,7 @@ namespace Lobster {
 	}
 
 	void FileSystem::WriteStringStream(const char * path, const std::stringstream & ss, bool binary)
-	{
+	{		
 		int flags = std::ios::out;
 		if (binary) flags |= std::ios::binary;
 		std::ofstream outFile(path, flags);
@@ -362,5 +382,8 @@ namespace Lobster {
 			outFile << ss.rdbuf();
 			outFile.close();
 		}
+		else {
+			WARN("Unable to save file at {}.", path);
+		}				
 	}
 }

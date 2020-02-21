@@ -1,5 +1,5 @@
 #pragma once
-
+#include "pch.h"
 #include "components/Component.h"
 #include "objects/GameObject.h"
 #include "objects/Transform.h"
@@ -33,9 +33,14 @@ namespace Lobster
 		void loadScript(const char* file);
     public:
 		Script();
+		Script(const char* file);
 		~Script();	
 		// pass class/object information to Lua via LuaBridge
 		void Bind(); 
+		// these functions should ONLY be called as non-component (e.g. UI button call)
+		void Execute(std::string funcName);
+		luabridge::LuaRef GetVar(std::string varName);
+		// =====================
 		virtual void OnBegin() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;

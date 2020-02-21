@@ -20,6 +20,7 @@ namespace Lobster
 		static void Update();
 		static void LockCursor();
 		static void UnlockCursor();
+		static bool InsideWindow(const glm::vec2& mouse, const glm::vec2& pos, const glm::vec2& size);
 		static bool IsKeyUp(int key);
 		static bool IsKeyDown(int key);
 		static bool IsKeyHold(int key);
@@ -27,6 +28,8 @@ namespace Lobster
 		static bool IsMouseDown(int button);
 		static bool IsMouseHold(int button);
 		static void GetMousePos(double& x, double& y);
+		static void GetWindowPos(int* x, int* y);
+		static void GetWindowSize(int* x , int* y);
 		static double GetMousePosX();
 		static double GetMousePosY();
 		static double GetMouseDeltaX();

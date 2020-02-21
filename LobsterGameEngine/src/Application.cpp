@@ -77,7 +77,6 @@ namespace Lobster
 		Input::Initialize();
 
 		// OpenGL dependent system initialization (Window class create OpenGL context)
-		Config config;
 		m_window = new Window(config.width, config.height, config.title, config.vsync);
 		TextureLibrary::Initialize();
 		ShaderLibrary::Initialize();
@@ -159,6 +158,11 @@ namespace Lobster
 	// * Physics update
 	void Application::FixedUpdate(double deltaTime)
 	{ 
+		// application info (config) update
+		int w, h;
+		Input::GetWindowSize(&w, &h);
+		Application::GetInstance()->GetConfig().width = w;
+		Application::GetInstance()->GetConfig().height = h;
 		//=========================================================
 		// Networking update
 
@@ -301,8 +305,16 @@ namespace Lobster
 			delete m_scene;
             EditorLayer::s_selectedGameObject = nullptr;
 		}
-		m_scene = new Scene(scenePath);
-		this->scenePath = fs::path(scenePath).string();
+		if (scenePath && scenePath[0] != '\0') {
+			std::string path(scenePath);
+			StringOps::ReplaceAll(path, "\\", "/");
+			this->scenePath = scenePath;
+			m_scene = new Scene(this->scenePath.c_str());
+		}
+		else {
+			m_scene = new Scene();			
+		}		
+		Application::GetInstance()->SetScenePath(scenePath);
 		SetSaved(true);
 	}
 

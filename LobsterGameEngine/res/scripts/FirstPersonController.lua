@@ -1,16 +1,20 @@
 function OnBegin()
+	rigidbody = Lobster.GetPhysicsComponent(this)
 	-- lock cursor
+	--[[
 	Lobster.LockCursor()
 	Lobster.DisableCursor()
-	rigidbody = Lobster.GetPhysicsComponent(this)
+	
 	cursorLocked = true
 	eventTriggered = false
 	jumped = false
+	]]--
 end
 
 function OnUpdate(dt)
 	ds = dt / 50
 	-- toggle cursor lock (for debug only)
+	--[[
 	if (Lobster.IsKeyUp(string.byte("L"))) then eventTriggered = false; end
 	if (not eventTriggered and Lobster.IsKeyDown(string.byte("L"))) then
 		if (cursorLocked) then
@@ -31,7 +35,7 @@ function OnUpdate(dt)
 		transform:RotateEuler(-dy, transform:Right())
 		transform:RotateEuler(-dx, Lobster.Vec3(0, 1, 0))		
 	end
-	
+	--]]
 	-- up
 	if (Lobster.IsKeyDown(265) or Lobster.IsKeyDown(string.byte("W"))) then
 		dir = transform:Forward(); dir.y = 0

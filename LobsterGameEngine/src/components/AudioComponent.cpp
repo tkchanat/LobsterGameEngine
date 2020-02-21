@@ -30,14 +30,17 @@ namespace Lobster {
 	}
 
 	void AudioSource::OnUpdate(double deltaTime) {
-		// update data for attached clip
-		m_clip->SetGain(m_gain);
-		m_clip->SetPitch(m_pitch);		
-		// update source position
-		if (transform && m_clip && m_enable3d) {
-			glm::vec3 position = transform->WorldPosition;
-			alSource3f(m_clip->GetSource(), AL_POSITION, position[0], position[1], position[2]);
-		}
+		if (Application::GetMode() != GAME) return;
+		if (m_clip) {
+			// update data for attached clip
+			m_clip->SetGain(m_gain);
+			m_clip->SetPitch(m_pitch);
+			// update source position
+			if (transform && m_enable3d) {
+				glm::vec3 position = transform->WorldPosition;
+				alSource3f(m_clip->GetSource(), AL_POSITION, position[0], position[1], position[2]);
+			}
+		}		
 	}
 
 	void AudioSource::OnImGuiRender() {

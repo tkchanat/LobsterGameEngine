@@ -87,7 +87,7 @@ namespace Lobster
 	TextureCube::TextureCube(const char* right, const char* left, const char* up, const char* down, const char* back, const char* front)
 	{
 		// Generate and bind texture
-		glGenTextures(1, &m_id);
+		glGenTextures(1, &m_id);		
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
 		// Set sampler parameters
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -140,13 +140,13 @@ namespace Lobster
 			m_frontPath
 		};
 
-		//  Load individual 2D texture
+		//  Load individual 2D texture	
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
 		for (unsigned int i = 0; i < faces.size(); i++)
 		{
 			unsigned char *data = stbi_load(faces[i].c_str(), &m_width, &m_height, &m_channelCount, 4);
 			if (data)
-			{
+			{				
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 				stbi_image_free(data);
 			}

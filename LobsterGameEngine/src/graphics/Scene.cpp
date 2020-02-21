@@ -22,8 +22,8 @@ namespace Lobster
 		);
 
 		// If scenePath is set, load and deserialize scene data
-		if (scenePath[0] != '\0') {
-			std::stringstream ss = FileSystem::ReadStringStream(FileSystem::Path(scenePath).c_str());
+		if (scenePath && scenePath[0] != '\0') {
+			std::stringstream ss = FileSystem::ReadStringStream(scenePath);
 			Deserialize(ss);
 		}
     }
@@ -32,7 +32,7 @@ namespace Lobster
     {
 		for (GameObject* gameObject : m_gameObjects)
 		{
-			if(gameObject)	delete gameObject;
+			if (gameObject)	delete gameObject;
 			gameObject = nullptr;
 		}
 		if (m_skybox) delete m_skybox;
@@ -84,7 +84,7 @@ namespace Lobster
 			iarchive(*this);
 		}
 		catch (std::exception e) {
-			LOG("Deserializing Scene {} failed");
+			WARN("Deserializing Scene failed. Reason: {}", e.what());
 		}
 	}
     
