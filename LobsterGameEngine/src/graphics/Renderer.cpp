@@ -182,7 +182,7 @@ namespace Lobster
 			m_spriteMesh->Draw();
 		}
 		// Debug
-#ifdef LOBSTER_BUILD_DEBUG
+#ifdef LOBSTER_BUILD_EDITOR
 		if (debug) {
 			Renderer::DrawQueue(camera, m_debugQueue);
 		}

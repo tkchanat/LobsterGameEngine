@@ -53,7 +53,7 @@ namespace Lobster
 		m_frustum.Update();
 		//m_frustum.Draw(glm::inverse(m_viewMatrix));
 
-#ifdef LOBSTER_BUILD_DEBUG
+#ifdef LOBSTER_BUILD_EDITOR
 		// submit gizmos command
 		GizmosCommand command;
 		command.texture = "textures/ui/camera.png";

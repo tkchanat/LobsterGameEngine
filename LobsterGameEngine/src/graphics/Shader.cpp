@@ -58,7 +58,7 @@ namespace Lobster
 		std::string source = FileSystem::ReadText(m_path.c_str());
 		if (source.empty())
 		{
-			WARN("Shader file {} is either invalid or empty, aborting compilation...", m_path);
+			WARN("Shader file {} is either corrupted or empty, aborting compilation...", m_path);
 			return false;
 		}
 		size_t readLocation = 0;
@@ -175,10 +175,11 @@ uniform sampler2D sys_shadowMap[MAX_DIRECTIONAL_SHADOW];)");
         }
 
 		if (!successVS || (b_hasGS && !successGS) || !successFS || !successLink) {
+			WARN("Unable to compile {}", m_name);
 			return false;
 		}
 
-		INFO("{} successfully compiled!", m_name);
+		//INFO("{} successfully compiled!", m_name);
 		//int total = -1;
 		//glGetProgramiv(m_id, GL_ACTIVE_UNIFORMS, &total);
 		//for (int i = 0; i < total; ++i) {
@@ -409,7 +410,7 @@ uniform sampler2D sys_shadowMap[MAX_DIRECTIONAL_SHADOW];)");
 		}
 		Shader* newShader = new Shader(path);
 		s_instance->m_shaders.push_back(newShader);
-		s_instance->m_shadersLastModified.push_back(FileSystem::LastModified(path));
+		s_instance->m_shadersLastModified.push_back(FileSystem::LastModified(newShader->GetPath().c_str()));
 		return newShader;
 	}
 

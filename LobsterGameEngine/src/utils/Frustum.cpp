@@ -46,7 +46,7 @@ namespace Lobster
 
 	void Frustum::Draw(glm::mat4 offset)
 	{
-#ifdef LOBSTER_BUILD_DEBUG
+#ifdef LOBSTER_BUILD_EDITOR
 		RenderCommand command;
 		command.UseMaterial = m_material;
 		command.UseVertexArray = m_vertexArray;

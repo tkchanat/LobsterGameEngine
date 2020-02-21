@@ -14,6 +14,7 @@ namespace Lobster
         static FileSystem* m_instance;
 		// The root path storing everything, should be dependent in DEBUG/RELEASE
 		static std::string m_workingDir;
+		static std::string m_executableDir;
 		// A dicationary that map Resource type into a vector of resources files
 		static std::map<std::string, std::vector<std::string>> m_directory;
 
@@ -23,12 +24,17 @@ namespace Lobster
 		FileSystem();
 		inline static FileSystem* GetInstance() { return m_instance; }
 		inline static std::string GetCurrentWorkingDirectory() { return m_instance->m_workingDir; }
+		inline static std::string GetCurrentExecutableDirectory() { return m_instance->m_executableDir; }
 		inline static std::map<std::string, std::vector<std::string>> GetDirectoryStructure() { return m_instance->m_directory; }				
 		inline static bool Exist(const std::string& path) { return std::filesystem::exists(path); }
+		inline static bool ExistDirectory(const std::string& path) { return std::filesystem::is_directory(path) && Exist(path); }
+		static std::string Absolute(const std::string& path) { return std::filesystem::absolute(fs::path(path)).string(); }
 		static std::string Join(const std::string& path, const std::string& path2);
 		static std::string Path(std::string path);
+		static std::string RelativeToAbsolute(std::string path);
 		static std::string ReadText(const char* path);
 		static std::string OpenFileDialog();
+		static std::string OpenDirectoryDialog();
 		static std::string SaveFileDialog(const char* defaultPath = "");
 		static std::filesystem::file_time_type LastModified(const char* path);
 		static std::stringstream ReadStringStream(const char* path, bool binary = false);

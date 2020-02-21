@@ -4,8 +4,6 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#define USE_SPDLOG_CONSOLE
-
 #ifdef USE_SPDLOG_CONSOLE
 #define LOG(...) ::spdlog::get("console")->trace(__VA_ARGS__)
 #define INFO(...) ::spdlog::get("console")->info(__VA_ARGS__)
@@ -46,7 +44,7 @@ namespace Lobster
 			spdlog::set_pattern("%^[%n %T]: %v%$");
 			g_console = spdlog::stdout_color_mt("console");
 			g_console->set_level(spdlog::level::trace);
-			g_console->info("SPDLOG is running...");
+			//g_console->info("SPDLOG is running...");
 		}
 
 		void Clear()

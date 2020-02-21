@@ -3,18 +3,21 @@
 
 #ifdef LOBSTER_PLATFORM_WIN
 #include <Commdlg.h>
+#include <shlobj_core.h>
 #endif
 
 namespace Lobster {
 
 	FileSystem* FileSystem::m_instance = nullptr;
 	std::string FileSystem::m_workingDir;
+	std::string FileSystem::m_executableDir;
 	std::map<std::string, std::vector<std::string>> FileSystem::m_directory;
 
 	FileSystem::FileSystem() {
 		if (m_instance)
 			throw std::runtime_error("File system already created. Do you really need two file systems?");
 		m_instance = this;
+		m_executableDir = fs::current_path().string();
 	}
 
 	std::string FileSystem::Path(std::string path) {
@@ -30,6 +33,11 @@ namespace Lobster {
 		// remove the two slashes suffix
 		path = (path.substr(0, 1).compare("/") == 0 ? path.substr(1, path.size() - 1) : path);
 		return Join(m_workingDir, path);
+	}
+
+	std::string FileSystem::RelativeToAbsolute(std::string path)
+	{
+		return fs::canonical(fs::path(path)).string();
 	}
 
 	// To join the two string with a slash regardless of OS
@@ -161,7 +169,7 @@ namespace Lobster {
 
 		// Use native windows file dialog box
 		OPENFILENAME ofn;       // common dialog box structure
-		wchar_t lpBuffer[FILE_DIALOG_MAX_BUFFER];
+		wchar_t lpBuffer[MAX_FILE_BUFFER_SIZE];
 
 		// Initialize OPENFILENAME
 		ZeroMemory(&ofn, sizeof(ofn));
@@ -206,6 +214,51 @@ namespace Lobster {
         path = fs::relative(fs::path(buffer), executablePath).string();
         StringOps::ReplaceAll(path, "\\", "/");
         fs::current_path(executablePath);
+		return path;
+	}
+
+	std::string FileSystem::OpenDirectoryDialog()
+	{
+		char buffer[MAX_FILE_BUFFER_SIZE];
+		std::string path;
+
+#ifdef LOBSTER_PLATFORM_MAC
+		throw std::runtime_error("We don't support mac for now!");
+#elif defined LOBSTER_PLATFORM_WIN
+
+		BROWSEINFO browseinfo;
+		wchar_t pszDisplayName[MAX_FILE_BUFFER_SIZE];
+		memset(&browseinfo, 0, sizeof(BROWSEINFO));
+		browseinfo.hwndOwner = NULL;
+		browseinfo.pidlRoot = NULL;
+		browseinfo.pszDisplayName = pszDisplayName;
+		browseinfo.lpszTitle = L"Select Folder";
+		browseinfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
+		browseinfo.lpfn = NULL;
+		browseinfo.lParam = NULL;
+		browseinfo.iImage = 0;
+
+		LPITEMIDLIST pidl = NULL;
+		if ((pidl = SHBrowseForFolder(&browseinfo)) != NULL) {
+			wchar_t buf[MAX_FILE_BUFFER_SIZE];
+			if (SHGetPathFromIDList(pidl, buf)) {
+				int pos = 0;
+				while (buf[pos] != '\0') {
+					buffer[pos] = (char)buf[pos];
+					pos++;
+				}
+				buffer[pos] = '\0';
+			}
+		}
+		else {
+			buffer[0] = '\0';
+		}
+#else
+		throw std::runtime_error("We don't support linux for now!");
+#endif
+
+		if (buffer[0] == '\0') return "";
+		path = buffer;
 		return path;
 	}
 
@@ -284,7 +337,7 @@ namespace Lobster {
 
 	std::filesystem::file_time_type FileSystem::LastModified(const char * path)
 	{
-		return fs::last_write_time(fs::path(Path(path)));
+		return fs::last_write_time(fs::path(path));
 	}
 
 	std::stringstream FileSystem::ReadStringStream(const char * path, bool binary)

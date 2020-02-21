@@ -30,7 +30,7 @@ namespace Lobster
 		ImGuiToolbar() {
 			for (int i = 0; i < numIco; i++) {
 				// load image (texture)
-				m_tex[i] = TextureLibrary::Use(FileSystem::Path(image_path[i]).c_str());
+				m_tex[i] = TextureLibrary::Use(image_path[i].c_str());
 			}
 		}
 

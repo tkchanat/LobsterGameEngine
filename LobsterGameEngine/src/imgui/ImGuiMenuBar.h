@@ -4,6 +4,7 @@
 #include "events/EventQueue.h"
 #include "events/EventCollection.h"
 #include "imgui/ImGuiAbout.h"
+#include "imgui/ImGuiExport.h"
 #include "graphics/meshes/MeshFactory.h"
 #include "system/UndoSystem.h"
 
@@ -13,30 +14,36 @@ namespace Lobster
 	{
 	private:
 		ImGuiAbout* m_about;
+		ImGuiExport* m_export;
 		int m_prevHighlightIndex = -1;	//	Used for undo / redo or other multile highlight menu items.
 
 	public:
-		ImGuiMenuBar() : m_about(new ImGuiAbout()) {}
+		ImGuiMenuBar() : m_about(new ImGuiAbout()), m_export(new ImGuiExport()) {}
+		~ImGuiMenuBar() { 
+			if (m_about) delete m_about; 
+			if (m_export) delete m_export; 
+			m_about = nullptr; 
+			m_export = nullptr; 
+		}
 		virtual void Show(bool* p_open) override
 		{
 			if (ImGui::BeginMenuBar())
 			{
 				// ==========================================
 				// File
+				static bool show_export = false;
 				if (ImGui::BeginMenu("File"))
 				{
-					if (ImGui::MenuItem("New", "Ctrl+N", false))
-					{
+					if (ImGui::MenuItem("New", "Ctrl+N", false)) {
+						// TODO
 					}
-					if (ImGui::MenuItem("Open", "Ctrl+O", false))
-					{
+					if (ImGui::MenuItem("Open", "Ctrl+O", false)) {
 						std::string path = FileSystem::OpenFileDialog();
 						if (!path.empty()) {
 							Application::GetInstance()->OpenScene(path.c_str());
 						}
 					}
-					if (ImGui::MenuItem("Save", "Ctrl+S", false))
-					{
+					if (ImGui::MenuItem("Save", "Ctrl+S", false)) {
 						std::string scenePath = Application::GetInstance()->GetScenePath();
 						if (scenePath.empty()) {
 							goto LABEL_SAVEAS; // save as
@@ -48,8 +55,7 @@ namespace Lobster
 							Application::GetInstance()->SetSaved(true);
 						}								
 					}
-					if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false))
-					{
+					if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false)) {
 					LABEL_SAVEAS:
 						std::string fullpath = FileSystem::SaveFileDialog(".");
 						if (!fullpath.empty()) {
@@ -59,16 +65,16 @@ namespace Lobster
 							Application::GetInstance()->SetSaved(true);
 						}						
 					}
-					if (ImGui::MenuItem("Export...", "", false)) {
-
+					if (ImGui::MenuItem("Export...", "Ctrl+Shift+E", false)) {
+						show_export = true;
 					}
 					ImGui::Separator();
-					if (ImGui::MenuItem("Quit", "Alt+F4", false))
-					{
+					if (ImGui::MenuItem("Quit", "Alt+F4", false)) {
 						EventQueue::GetInstance()->AddEvent<WindowClosedEvent>();
 					}
 					ImGui::EndMenu();
 				}
+				if (show_export) m_export->Show(&show_export);
 				// ==========================================
 				// Edit
 				if (ImGui::BeginMenu("Edit"))

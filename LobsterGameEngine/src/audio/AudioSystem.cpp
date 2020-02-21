@@ -19,7 +19,7 @@ namespace Lobster
 			// Check for Enumeration Support
 			ALboolean enumeration = alcIsExtensionPresent(m_device, "ALC_ENUMERATION_EXT");
 			if (enumeration == AL_TRUE) {
-				ListAllDevices(alcGetString(NULL, ALC_DEVICE_SPECIFIER));
+				//ListAllDevices(alcGetString(NULL, ALC_DEVICE_SPECIFIER));
 			}
 			else {
 				CRITICAL("OpenAL enumeration is not supported.");
