@@ -14,14 +14,18 @@ namespace Lobster
     CameraComponent::CameraComponent() :
 		Component(CAMERA_COMPONENT),
         m_fieldOfView(45.0f),
+		m_width(1),
+		m_height(1),
         m_nearPlane(0.1f),
-        m_farPlane(10000.0f),
+        m_farPlane(10.0f),
         m_viewMatrix(glm::mat4(1.0f)),
         m_projectionMatrix(glm::mat4(1.0f))
     {
 		glm::ivec2 size = Application::GetInstance()->GetWindowSize();
-        ResizeProjection(size.x, size.y);
-		m_frameBuffer = new FrameBuffer(size.x, size.y);
+		m_width = size.x;
+		m_height = size.y;
+        ResizeProjection(m_width, m_height);
+		m_frameBuffer = new FrameBuffer(m_width, m_height);
     }
     
     CameraComponent::~CameraComponent()
@@ -41,8 +45,33 @@ namespace Lobster
 		float aspectRatio = width / height;
 		m_projectionMatrix = glm::perspectiveRH(glm::radians(m_fieldOfView), aspectRatio, m_nearPlane, m_farPlane);
 		m_orthoMatrix = glm::ortho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
+		m_frustum.SetFromMatrix(m_projectionMatrix);
+	}
+
+	void CameraComponent::OnBegin() {
+		if (!gameUI) return;
+		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
+			sprite->OnBegin();
+		}
 	}
     
+    void CameraComponent::OnUpdate(double deltaTime)
+    {
+		m_frustum.Update();
+		//m_frustum.Draw(glm::inverse(m_viewMatrix));
+
+#ifdef LOBSTER_BUILD_DEBUG
+		// submit gizmos command
+		GizmosCommand command;
+		command.texture = "textures/ui/camera.png";
+		command.position = transform->WorldPosition;
+		command.source = gameObject;
+		ImGuiScene::SubmitGizmos(command);
+
+		DrawUI();
+#endif
+    }
+
 	void CameraComponent::OnAttach()
 	{
 		if (s_activeCamera) {
@@ -75,6 +104,14 @@ namespace Lobster
 				}
 				b_uiEditor = true;
 			}
+			// properties control
+			ImGui::PushItemWidth(80);
+			ImGui::DragFloat("Near", &m_nearPlane, 0.1f, 0.01f, m_farPlane);
+			ImGui::SameLine();
+			ImGui::DragFloat("Far", &m_farPlane, 0.1f, m_nearPlane, 1000.f);
+			ImGui::PopItemWidth();
+			ResizeProjection(m_width, m_height);
+
 			// show the UI editor
 			if (b_uiEditor) {
 				ImGuiUIEditor* editor = EditorLayer::GetUIEditor();
@@ -89,27 +126,6 @@ namespace Lobster
 		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
 			sprite->OnUpdate();			
 		}
-	}
-
-	void CameraComponent::OnBegin() {
-		if (!gameUI) return;
-		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
-			sprite->OnBegin();
-		}
-	}
-		
-	void CameraComponent::OnUpdate(double deltaTime)
-	{
-#ifdef LOBSTER_BUILD_DEBUG
-		// submit gizmos command
-		GizmosCommand command;
-		command.texture = "textures/ui/camera.png";
-		command.position = transform->WorldPosition;
-		command.source = gameObject;
-		ImGuiScene::SubmitGizmos(command);
-
-		DrawUI();
-#endif
 	}
 
 	void CameraComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
@@ -131,9 +147,10 @@ namespace Lobster
 		}
 	}
 
-	glm::mat4 CameraComponent::GetViewMatrix() const
+	glm::mat4 CameraComponent::GetViewMatrix()
 	{
-		return glm::mat4_cast(glm::conjugate(transform->LocalRotation)) * glm::translate(-transform->WorldPosition);
+		m_viewMatrix = glm::mat4_cast(glm::conjugate(transform->LocalRotation)) * glm::translate(-transform->WorldPosition);
+		return m_viewMatrix;
 	}
     
 }

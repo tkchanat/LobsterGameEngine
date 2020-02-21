@@ -2,6 +2,8 @@
 
 namespace Lobster
 {
+
+	class GameObject;
     
 	//    This class is for defining a spatial description of an object.
 	//    Any objects composite with this class can do all kinds of affine transform, and has a homogeneous coordinate.
@@ -9,10 +11,7 @@ namespace Lobster
 	{
 	public:
 		glm::vec3 WorldPosition;
-		glm::quat WorldRotation;
-		glm::vec3 WorldEulerAngles;
         glm::vec3 LocalEulerAngles;
-		glm::vec3 LocalPosition;
         glm::quat LocalRotation;		
 		glm::vec3 LocalScale;
 		float OverallScale;
@@ -21,6 +20,7 @@ namespace Lobster
 	public:
 		Transform();
 		~Transform() = default;
+		void OnImGuiRender(GameObject* owner);
 		void UpdateMatrix();
 		void Translate(float dx, float dy, float dz);
 		void RotateEuler(float degree, glm::vec3 axis);
@@ -37,10 +37,7 @@ namespace Lobster
 		void serialize(Archive & ar)
 		{
 			ar(WorldPosition);
-			ar(WorldRotation);
-			ar(WorldEulerAngles);
 			ar(LocalEulerAngles);
-			ar(LocalPosition);
 			ar(LocalRotation);
 			ar(LocalScale);
 			ar(OverallScale);

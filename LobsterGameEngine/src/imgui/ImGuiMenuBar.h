@@ -130,8 +130,8 @@ namespace Lobster
 						else {
 							// save by overwrite
 							std::stringstream ss = GetScene()->Serialize();
-							FileSystem::WriteStringStream(scenePath.c_str(), ss);
-							app->SetSaved(true);
+							FileSystem::WriteStringStream(FileSystem::Path(scenePath).c_str(), ss);
+							Application::GetInstance()->SetSaved(true);
 						}								
 					}
 					if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false))

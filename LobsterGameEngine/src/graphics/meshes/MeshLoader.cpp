@@ -209,7 +209,7 @@ namespace Lobster
 			vbData[i].bitangent[1] = (mesh->mTextureCoords[0]) ? mesh->mBitangents[i].y : 0.0f;
 			vbData[i].bitangent[2] = (mesh->mTextureCoords[0]) ? mesh->mBitangents[i].z : 0.0f;
 
-			//INFO("{:.4f}, {:.4f}, {:.4f},    {:.4f}, {:.4f}, {:.4f},    {:.4f}, {:.4f},", vbData[i].position[0], vbData[i].position[1], vbData[i].position[2], vbData[i].normal[0], vbData[i].normal[1], vbData[i].normal[2], vbData[i].texcoord[0], vbData[i].texcoord[1]);
+			//INFO("{:.4f}, {:.4f}, {:.4f},\t{:.4f}, {:.4f}, {:.4f},\t{:.4f}, {:.4f},,\t{:.4f}, {:.4f}, {:.4f},\t{:.4f}, {:.4f}, {:.4f}", vbData[i].position[0], vbData[i].position[1], vbData[i].position[2], vbData[i].normal[0], vbData[i].normal[1], vbData[i].normal[2], vbData[i].texcoord[0], vbData[i].texcoord[1], vbData[i].tangent[0], vbData[i].tangent[1], vbData[i].tangent[2], vbData[i].bitangent[0], vbData[i].bitangent[1], vbData[i].bitangent[2]);
 			glm::vec3& min = meshInfo.Bound.first;
 			glm::vec3& max = meshInfo.Bound.second;
 			min.x = mesh->mVertices[i].x < min.x ? mesh->mVertices[i].x : min.x;

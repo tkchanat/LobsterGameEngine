@@ -35,14 +35,14 @@ namespace Lobster {
 		void RemoveCollider(Collider* collider);
 
 		//	ApplyForce: Force in Newton (N).
-		inline void AddVelocity(glm::vec3 velocity) { m_velocity += glm::inverse(transform->WorldRotation) * velocity; }
-		inline void ApplyForce(glm::vec3 force) { m_acceleration += glm::inverse(transform->WorldRotation) * force / m_mass; }
+		inline void AddVelocity(glm::vec3 velocity) { m_velocity += glm::inverse(transform->LocalRotation) * velocity; }
+		inline void ApplyForce(glm::vec3 force) { m_acceleration += glm::inverse(transform->LocalRotation) * force / m_mass; }
 
 		inline void AddAngularVelocity(glm::vec3 velocity) { m_angularVelocity += velocity; }
 		inline void ApplyAngularForce(glm::vec3 force) { m_angularVelocity += force / m_mass; }
 
-		inline glm::vec3 GetVelocity() { return transform->WorldRotation * m_velocity; }
-		inline glm::vec3 GetAcceleration() { return transform->WorldRotation * m_acceleration; }
+		inline glm::vec3 GetVelocity() { return transform->LocalRotation * m_velocity; }
+		inline glm::vec3 GetAcceleration() { return transform->LocalRotation * m_acceleration; }
 		
 		inline glm::vec3 GetAngularVelocity() { return m_angularVelocity; }
 		inline glm::vec3 GetAngularAcceleration() { return m_angularAcceleration; }

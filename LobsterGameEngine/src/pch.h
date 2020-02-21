@@ -99,6 +99,8 @@ extern "C" {
 #define PATH_ANIMATIONS "animations"
 #define PATH_SCENES "scenes"
 
+#define BIT(x) 1 << x
+
 // Warning suppression (not recommended)
 #pragma warning(disable:4996)
 

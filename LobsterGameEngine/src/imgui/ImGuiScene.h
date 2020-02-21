@@ -59,8 +59,10 @@ namespace Lobster
 			m_gridVertexArray(nullptr),
 			b_showProfiler(true)
 		{
+			CameraComponent* camera = new CameraComponent();
+			camera->SetFar(10000.f);
 			m_editorCamera = new GameObject("EditorCamera");
-			m_editorCamera->AddComponent(new CameraComponent());
+			m_editorCamera->AddComponent(camera);
 			m_editorCamera->transform.Translate(10, 8, 10);
 			m_editorCamera->transform.LookAt(glm::vec3(0, 0, 0));
 
@@ -99,7 +101,7 @@ namespace Lobster
 				command.UseMaterial = m_gridMaterial;
 				command.UseVertexArray = m_gridVertexArray;
 				command.UseWorldTransform = glm::mat4(1.0f);
-				Renderer::Submit(command);
+				Renderer::SubmitDebug(command);
 			}
 		}
 
@@ -211,8 +213,8 @@ namespace Lobster
 						gameObject->transform.RotateEuler(deltaRotation.y, glm::vec3(0, 1, 0));
 						gameObject->transform.RotateEuler(deltaRotation.z, glm::vec3(0, 0, 1)); break;
 					case ImGuizmo::SCALE:
-						if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) m_originalScale = gameObject->transform.LocalScale;
-						else gameObject->transform.LocalScale = m_originalScale + deltaScale - glm::vec3(1); break;
+						if (!ImGuizmo::IsUsing()) m_originalScale = gameObject->transform.LocalScale;
+						else gameObject->transform.LocalScale = m_originalScale * deltaScale; break;
 					}
 
 					// check with IsUsing if we are trying to edit an item.

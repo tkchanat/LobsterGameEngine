@@ -226,7 +226,7 @@ namespace Lobster
 		Timer imguiRenderTimer;
 		ImGui::GetIO().DeltaTime = deltaTime;
 		m_editorLayer->OnUpdate(deltaTime);
-		m_renderer->Render(m_editorLayer->GetSceneCamera());
+		m_renderer->Render(m_editorLayer->GetSceneCamera(), true);
 		m_GUILayer->Begin();
 		m_editorLayer->OnImGuiRender();
 		m_GUILayer->End();

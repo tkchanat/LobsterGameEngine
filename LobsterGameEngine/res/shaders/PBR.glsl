@@ -191,7 +191,7 @@ void main()
         shadow = lightSpacePosition.z > 1.0 ? 0.0 : shadow;
         if(i > MAX_DIRECTIONAL_SHADOW) shadow = 0.0;
 		// merge lightings
-		LightContribution += (1.0 - shadow) * DirectionalLighting(Lights.directionalLights[i], f0, view, albedo, normal, roughness, metallic);
+		LightContribution += (1.0 - shadow) * Lights.directionalLights[i].intensity * DirectionalLighting(Lights.directionalLights[i], f0, view, albedo, normal, roughness, metallic);
 	}
 	for(int i = 0; i < Lights.pointLightCount; ++i) {
 		LightContribution += PointLighting(Lights.pointLights[i], f0, view, albedo, normal, roughness, metallic);

@@ -165,37 +165,8 @@ namespace Lobster
 			}
 		}
 
-		//	Check if transform is active, ie: we are trying to change the value of transform.
-		bool isChanging = false;
-		if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
-		{
-			ImGui::DragFloat3("Position", glm::value_ptr(transform.WorldPosition), 0.05f, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-			isChanging = isChanging || ImGui::IsItemActive();
-			ImGui::DragFloat3("Rotation", glm::value_ptr(transform.LocalEulerAngles), 1.0f, -360.0f, 360.0f);
-			isChanging = isChanging || ImGui::IsItemActive();
-			ImGui::DragFloat3("Scale", glm::value_ptr(transform.LocalScale), 0.05f, -std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-			isChanging = isChanging || ImGui::IsItemActive();
-			ImGui::DragFloat("Overall Scale", &transform.OverallScale, 0.0001f, 0.0001f, 1000.f, "%.03f");
-			isChanging = isChanging || ImGui::IsItemActive();
-		}
-		ImGui::Separator();
-
-		//	Keep track of transform before we start transforming.
-		if (!b_isChanging) {
-			m_transPrev = transform;
-		}
-
-		//	Now, keep track of whether we are changing, and send undo event after change.
-		if (!b_isChanging && isChanging) {
-			b_isChanging = true;
-		} else if (b_isChanging && !isChanging) {
-			b_isChanging = false;
-
-			//	Only send undo event if transform changed.
-			if (m_transPrev.GetMatrix() != transform.GetMatrix()) {
-				UndoSystem::GetInstance()->Push(new TransformCommand(this, m_transPrev, transform));
-			}
-		}
+		// Transform
+		transform.OnImGuiRender(this);
 
 		//  Show information of all components, and all physics components should wait
 		for (Component* component : m_components)
