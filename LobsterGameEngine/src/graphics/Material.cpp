@@ -22,7 +22,6 @@ namespace Lobster
 		b_dirty(false)
     {
 		Deserialize(FileSystem::ReadStringStream(FileSystem::Path(m_name).c_str()));
-		if(m_uniformData == nullptr) InitializeUniformsFromShader();
 		AssignTextureSlot();
     }
 
@@ -321,6 +320,7 @@ namespace Lobster
 			m_shader = ShaderLibrary::Use("shaders/Phong.glsl");
 			m_uniformDataSize = m_shader->GetUniformBufferSize();
 			if (m_uniformData == nullptr) m_uniformData = new byte[m_uniformDataSize];
+			InitializeUniformsFromShader();
 			WARN("Couldn't load material {}, setting to default. Exception: {}", m_name, e.what());
 		};
 	}

@@ -176,12 +176,12 @@ namespace Lobster {
 		}
 	}
 
-	void AudioSource::Serialize(cereal::BinaryOutputArchive & oarchive)
+	void AudioSource::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
 		oarchive(*this);
 	}
 
-	void AudioSource::Deserialize(cereal::BinaryInputArchive & iarchive)
+	void AudioSource::Deserialize(cereal::JSONInputArchive & iarchive)
 	{
 		try {
 			iarchive(*this);
@@ -265,12 +265,12 @@ namespace Lobster {
 		}
 	}
 
-	void AudioListener::Serialize(cereal::BinaryOutputArchive & oarchive)
+	void AudioListener::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
 		oarchive(*this);
 	}
 
-	void AudioListener::Deserialize(cereal::BinaryInputArchive & iarchive)
+	void AudioListener::Deserialize(cereal::JSONInputArchive & iarchive)
 	{
 		try {
 			iarchive(*this);

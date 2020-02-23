@@ -50,8 +50,8 @@ namespace Lobster
 		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 
 		void Pause() { b_animated = true; }
 		void Simulate() { b_animated = false; }

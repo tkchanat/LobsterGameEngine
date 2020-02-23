@@ -101,8 +101,8 @@ void main()
         lightSpacePosition = lightSpacePosition * 0.5 + 0.5;
         float closestDepth = texture(sys_shadowMap[i], lightSpacePosition.xy).r; 
         float currentDepth = lightSpacePosition.z;
-        float bias = max(0.05 * (1.0 - dot(normal, Lights.directionalLights[i].direction)), 0.005);
-        float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+        float bias = max(0.05 * (1.0 - dot(normal, Lights.directionalLights[i].direction)), 0.001);
+        float shadow = currentDepth - bias > closestDepth ? 0.6 : 0.0;
         shadow = lightSpacePosition.z > 1.0 ? 0.0 : shadow;
         if(i > MAX_DIRECTIONAL_SHADOW) shadow = 0.0;
 

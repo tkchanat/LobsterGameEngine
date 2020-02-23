@@ -132,11 +132,11 @@ namespace Lobster {
 		}
 	}
 
-	void Script::Serialize(cereal::BinaryOutputArchive& oarchive) {
+	void Script::Serialize(cereal::JSONOutputArchive& oarchive) {
 		oarchive(*this);
 	}
 
-	void Script::Deserialize(cereal::BinaryInputArchive& iarchive) {
+	void Script::Deserialize(cereal::JSONInputArchive& iarchive) {
 		iarchive(*this);
 	}
 	

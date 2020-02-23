@@ -39,8 +39,8 @@ namespace Lobster
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnBegin() override;
-		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 		glm::mat4 GetViewMatrix();
 		inline void SetFar(float f) { m_farPlane = f; ResizeProjection(m_width, m_height); }
 		inline void SetNear(float n) { m_nearPlane = n; ResizeProjection(m_width, m_height); }

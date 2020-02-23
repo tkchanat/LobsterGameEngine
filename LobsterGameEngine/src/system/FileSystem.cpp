@@ -48,7 +48,9 @@ namespace Lobster {
 				}
 			}
 			else {
-				return pathRelativeToWorkingDir.string();
+				std::string return_path = pathRelativeToWorkingDir.string();
+				StringOps::ReplaceAll(return_path, "\\", "/");
+				return return_path;
 			}
 		}
 		else {
@@ -57,7 +59,9 @@ namespace Lobster {
 				return path;
 			// remove the two slashes suffix
 			if (path.substr(0, 1) == "/") path.substr(1, path.size() - 1);
-			return Join(m_workingDir, path);
+			std::string return_path = Join(m_workingDir, path);
+			StringOps::ReplaceAll(return_path, "\\", "/");
+			return return_path;
 		}
 	}
 

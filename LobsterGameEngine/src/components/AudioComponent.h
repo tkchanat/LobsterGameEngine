@@ -41,8 +41,8 @@ namespace Lobster {
 		virtual void OnImGuiRender();
 		virtual void OnBegin();
 		virtual void OnEnd();
-		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 		// functions provided for Lua call
 		void Play(); // only works when clip is loaded
 		void Stop(); // only works when clip is loaded
@@ -83,8 +83,8 @@ namespace Lobster {
 		virtual void OnBegin() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 	private:
 		friend class cereal::access;
 		template <class Archive>
