@@ -262,7 +262,7 @@ namespace Lobster {
 			.beginClass<Scene>("Scene")
 			.addFunction("AddGameObject", &Scene::AddGameObject)
 			//.addFunction("RemoveGameObject", ) <- overloaded function
-			.addFunction("GetGameObjects", &Scene::GetGameObjects)
+			//.addFunction("GetGameObjects", &Scene::GetGameObjects)
 			.endClass()
 			.endNamespace();
 		getGlobalNamespace(L).beginNamespace("Lobster").endNamespace();

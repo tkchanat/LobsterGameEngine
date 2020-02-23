@@ -65,13 +65,12 @@ namespace Lobster
 		friend class TextureLibrary;
 	private:
 		uint m_id;
-		std::string m_path;
 		std::string m_name;
 	public:
 		virtual ~Texture2D() override;
 		void SetRaw(byte* data, uint size);
 		inline virtual void* Get() const override { return (void*)(intptr_t)m_id; }
-		inline std::string GetPath() const { return m_path; }
+		inline std::string GetPath() const { return FileSystem::Path(m_name); }
 		inline std::string GetName() const { return m_name; }
 	private:
 		explicit Texture2D(const char* path);
@@ -82,16 +81,9 @@ namespace Lobster
 
 	class TextureCube : public Texture
 	{
-		friend class ImGuiSkyboxEditor;
 	protected:
 		// cube map
 		uint m_id;
-		std::string m_rightPath;
-		std::string m_leftPath;
-		std::string m_upPath;
-		std::string m_downPath;
-		std::string m_backPath;
-		std::string m_frontPath;
 		// irradiance & prefilter map
 		uint m_irradianceId;
 		uint m_prefilterId;
@@ -99,14 +91,15 @@ namespace Lobster
 		uint m_captureFrameBuffer;
 		uint m_captureRenderBuffer;
 	public:
+		TextureCube();
 		virtual ~TextureCube() override;
+		void Set(const char* right, const char* left, const char* up, const char* down, const char* back, const char* front);
 		inline virtual void* Get() const override { return(void*)(intptr_t)m_id; }
 		inline void* GetIrradiance() const { return (void*)(intptr_t)m_irradianceId; }
 		inline void* GetPrefilter() const { return (void*)(intptr_t)m_prefilterId; }
 		inline void* GetBRDF() const { return (void*)(intptr_t)m_brdfId; }
-		explicit TextureCube(const char* right, const char* left, const char* up, const char* down, const char* back, const char* front);
 	protected:
-		bool Load();
+		bool Load(const std::vector<std::string>& faces);
 		void GenerateIrradianceMap();
 		void GeneratePrefilterMap();
 		void GenerateBRDFMap();
@@ -116,15 +109,15 @@ namespace Lobster
 	{
 		friend class Renderer;
 	private:
-		Texture2D* m_placeholder;
-		std::vector<Texture2D*> m_textures;
+		std::unordered_map<std::string, Texture2D*> m_textures;
 		static TextureLibrary* s_instance;
 	public:
 		static void Initialize();
+		static void Clear();
 		static Texture2D* Use(const char* path);
 		// search, edit or add texture to the corresponding id
 		static Texture2D* Use(const char* id, byte* buffer, int w, int h);
-		inline static Texture2D* Placeholder() { return s_instance->m_placeholder; } // only use this in debug mode
+		inline static Texture2D* Placeholder() { return TextureLibrary::Use("textures/image_not_found.png"); } // only use this in debug mode
 	};
 
 }

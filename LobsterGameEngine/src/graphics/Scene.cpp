@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "graphics/meshes/MeshFactory.h"
 #include "graphics/Renderer.h"
+#include "graphics/Skybox.h"
 #include "objects/GameObject.h"
 
 namespace Lobster
@@ -12,14 +13,15 @@ namespace Lobster
 		m_physicsSystem(new PhysicsSystem())
     {
 		// hard-coded skybox
-		m_skybox = new TextureCube(
+		std::string faces[6] = { 
 			"textures/skybox/px.png",
 			"textures/skybox/nx.png",
 			"textures/skybox/py.png",
 			"textures/skybox/ny.png",
 			"textures/skybox/pz.png",
-			"textures/skybox/nz.png"
-		);
+			"textures/skybox/nz.png" 
+		};
+		m_skybox = new Skybox(faces[0].c_str(), faces[1].c_str(), faces[2].c_str(), faces[3].c_str(), faces[4].c_str(), faces[5].c_str());
 
 		// If scenePath is set, load and deserialize scene data
 		if (scenePath && scenePath[0] != '\0') {
@@ -50,7 +52,7 @@ namespace Lobster
     
     void Scene::OnUpdate(double deltaTime)
     {
-		Renderer::BeginScene(m_skybox);
+		Renderer::BeginScene(m_skybox->Get());
         for(GameObject* gameObject : m_gameObjects)
         {
             gameObject->OnUpdate(deltaTime);
@@ -112,22 +114,6 @@ namespace Lobster
 			}
 		}
 		return this;
-	}
-
-	// Deprecated
-	const std::vector<GameObject*>& Scene::GetGameObjects() {
-		return m_gameObjects;
-	}
-
-	GameObject * Scene::GetGameObject(GameObject * gameObject)
-	{
-		std::stack<GameObject*> parents;
-		GameObject* parent = gameObject->GetParent();
-		while (parent != nullptr) {
-			parents.push(parent);
-			parent = parent->GetParent();
-		}
-		return nullptr;
 	}
     
 	bool Scene::IsObjectNameDuplicated(std::string name, std::string except) {
