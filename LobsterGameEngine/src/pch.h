@@ -87,6 +87,7 @@ extern "C" {
 #define MAX_DIRECTIONAL_SHADOW 2
 #define MAX_POINT_SHADOW 3
 #define MAX_PARTICLES 1024
+#define MAX_FILE_BUFFER_SIZE 256
 
 #define PATH_AUDIO "audio"
 #define PATH_MESHES "meshes"

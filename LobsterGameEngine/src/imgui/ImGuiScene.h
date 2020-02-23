@@ -126,7 +126,7 @@ namespace Lobster
 		}
 
 		void SelectObject(glm::vec3 pos, glm::vec3 dir) {
-			const std::vector<GameObject*>& gameObjects = GetScene()->GetGameObjects();
+			const std::vector<GameObject*>& gameObjects = GetScene()->m_gameObjects;
 			GameObject* nearestGameObject = nullptr; 
 			float tmin = FLT_MAX;
 			for (GameObject* gameObject : gameObjects) {

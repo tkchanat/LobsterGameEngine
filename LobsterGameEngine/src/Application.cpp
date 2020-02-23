@@ -23,9 +23,9 @@ namespace Lobster
     
     Application* Application::m_instance = nullptr;	
 
-#ifdef LOBSTER_BUILD_DEBUG
+#ifdef LOBSTER_BUILD_EDITOR
 	ApplicationMode Application::mode = EDITOR;
-#elif LOBSTER_BUILD_RELEASE
+#elif LOBSTER_BUILD_TEMPLATE
 	ApplicationMode Application::mode = GAME;
 #endif	
 
@@ -61,7 +61,7 @@ namespace Lobster
 		bool err = false;
 #ifdef LOBSTER_BUILD_DEBUG
 		err = m_fileSystem->assignWorkingDirectory("../../LobsterGameEngine/res");
-#elif LOBSTER_BUILD_RELEASE
+#else
 		err = m_fileSystem->createWorkingDirectory("./resources");
 #endif
 		m_fileSystem->update();
@@ -91,12 +91,7 @@ namespace Lobster
 
         //  Initialize GameObjects
 		Timer loadTimer;
-#if LOBSTER_BUILD_DEBUG
-		OpenScene("");
-#elif LOBSTER_BUILD_RELEASE
-		OpenScene("c:/Users/cwyan/Desktop/ha.lobster");
-#endif
-		
+		OpenScene("");	
 
 //		ThreadPool::Enqueue([]() {
 //			// This job should be running in a separate thread without blocking the main thread
@@ -151,7 +146,7 @@ namespace Lobster
 		LOG("Model loading spent {} ms", loadTimer.GetElapsedTime());
 
 		// Push layers to layer stack
-#ifdef LOBSTER_BUILD_DEBUG
+#ifdef LOBSTER_BUILD_EDITOR
 		m_GUILayer = new GUILayer();
 		m_editorLayer = new EditorLayer();
 #endif
@@ -227,7 +222,7 @@ namespace Lobster
 		m_renderer->ClearOverlayQueue();
 		//=========================================================
 		// GUI Renderer update
-		#ifdef LOBSTER_BUILD_DEBUG
+		#ifdef LOBSTER_BUILD_EDITOR
 		Timer imguiRenderTimer;
 		ImGui::GetIO().DeltaTime = deltaTime;
 		m_editorLayer->OnUpdate(deltaTime);
@@ -263,7 +258,8 @@ namespace Lobster
 			//	Get the time difference of executing one game loop
 			double deltaTime = timer.GetDeltaTime();
 
-			//	===Display FPS in the window title===
+#ifdef LOBSTER_BUILD_EDITOR
+			// Display FPS in the window title
 			logTime += deltaTime;
 			if (logTime > 1000.0f)
 			{
@@ -273,7 +269,7 @@ namespace Lobster
 				logTime -= 1000.0f;
 				frames = 0;
 			}
-			//  ===========TO BE REMOVED=============
+#endif
 
 			accumulateTime += deltaTime;
 			for (int i = 0; i < m_maxFixedUpdates && accumulateTime > intervalTime; ++i)

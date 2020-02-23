@@ -4,104 +4,42 @@
 #include "events/EventQueue.h"
 #include "events/EventCollection.h"
 #include "imgui/ImGuiAbout.h"
+#include "imgui/ImGuiExport.h"
 #include "graphics/meshes/MeshFactory.h"
+#include "graphics/Skybox.h"
 #include "system/UndoSystem.h"
 
 namespace Lobster
 {
-	class ImGuiSkyboxEditor : public ImGuiComponent {
-	private:
-		// the string pointer to Scene::m_skybox (yes, private member)
-		std::vector<std::string*> paths;
-		std::string dirPos[6] = {
-			"Right", "Left", "Top", "Bottom", "Back", "Front"
-		};
-		Texture2D* tex[6]; // +x, +y, +z, -x, -y, -z
-		const ImVec2 btnSize = ImVec2(66, 66);
-		const ImVec2 padding = ImVec2(20, 20);
-		const ImVec2 btnPos[6] = {
-			ImVec2(padding.x + btnSize.x, padding.y * 2), 
-			ImVec2(padding.x, padding.y * 2 + btnSize.y),
-			ImVec2(padding.x + btnSize.x, padding.y * 2 + btnSize.y),
-			ImVec2(padding.x + btnSize.x * 2, padding.y * 2 + btnSize.y),
-			ImVec2(padding.x + btnSize.x * 3, padding.y * 2 + btnSize.y),
-			ImVec2(padding.x + btnSize.x, padding.y * 2 + btnSize.y * 2),
-		};
-		const ImVec2 winSize = ImVec2(padding.x * 2 + btnSize.x * 4, padding.y * 3 + btnSize.y * 3);
-	public:
-		ImGuiSkyboxEditor() {			
-			for (unsigned int i = 0; i < 6; i++)
-				tex[i] = nullptr;
-			// load skybox textures
-			TextureCube* skybox = this->GetScene()->m_skybox;
-			paths.push_back(&skybox->m_rightPath);
-			paths.push_back(&skybox->m_leftPath);
-			paths.push_back(&skybox->m_upPath);
-			paths.push_back(&skybox->m_downPath);
-			paths.push_back(&skybox->m_backPath);
-			paths.push_back(&skybox->m_frontPath);
-			reload();			
-		}
-
-		// Reload the image button shown in ImGui
-		void reload() {			
-			for (unsigned int i = 0; i < paths.size(); i++) {
-				if (tex[i]) {
-					// TODO TextureLibrary::RemoveTexture
-				}
-				tex[i] = TextureLibrary::Use(FileSystem::Path(*paths[i]).c_str());
-			}
-		}
-
-		virtual void Show(bool* p_open) override {
-			ImGui::SetNextWindowSize(winSize);
-			ImGui::Begin("Skybox Editor", p_open, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse);
-			TextureCube* skybox = this->GetScene()->m_skybox;			
-			for (unsigned int i = 0; i < 6; i++) {
-				ImGui::SetCursorPos(btnPos[i]);
-				if (ImGui::ImageButton(tex[i]->Get(), ImVec2(64, 64), ImVec2(0, 0), ImVec2(1, 1), 1)) {
-					std::string fullpath = FileSystem::OpenFileDialog();
-					if (!fullpath.empty()) {
-						*paths[i] = fullpath;
-						reload();
-						bool b_loadSuccess = skybox->Load();
-						if (!b_loadSuccess)
-						{
-							WARN("Couldn't load cube map");
-						}
-						skybox->GenerateIrradianceMap();
-						skybox->GeneratePrefilterMap();
-						skybox->GenerateBRDFMap();
-					}
-				}
-				if (ImGui::IsItemHovered()) {
-					ImGui::SetTooltip(dirPos[i].c_str());
-				}
-			}
-			ImGui::End();
-		}
-	};
 
 	class ImGuiMenuBar : public ImGuiComponent
 	{
 	private:
 		ImGuiAbout* m_about;
-		ImGuiSkyboxEditor* m_skyboxEditor;
-		int m_prevHighlightIndex = -1;	//	Used for undo / redo or other multile highlight menu items.
-
+		ImGuiExport* m_export;
+		int m_prevHighlightIndex = -1;	//	Used for undo / redo or other multiple highlight menu items.
 	public:
-		ImGuiMenuBar() : m_about(new ImGuiAbout()), m_skyboxEditor(new ImGuiSkyboxEditor()) {}
+		ImGuiMenuBar() : m_about(new ImGuiAbout()), m_export(new ImGuiExport()) {}
+		~ImGuiMenuBar() { 
+			if (m_about) delete m_about; 
+			if (m_export) delete m_export; 
+			m_about = nullptr; 
+			m_export = nullptr; 
+		}
 		virtual void Show(bool* p_open) override
 		{
 			if (ImGui::BeginMenuBar())
 			{
 				// ==========================================
 				// File
+				static bool show_export = false;
 				if (ImGui::BeginMenu("File"))
 				{
 					Application* app = Application::GetInstance();
 					if (ImGui::MenuItem("New", "Ctrl+N", false))
-					{												
+					{
+						// Clear current resource cache
+						TextureLibrary::Clear();
 						// TODO new a scene in a more proper way
 						app->OpenScene("");
 						GameObject* camera = new GameObject("Main Camera");
@@ -116,6 +54,9 @@ namespace Lobster
 					// confirm dialog for newing project
 					if (ImGui::MenuItem("Open", "Ctrl+O", false))
 					{
+						// Clear current resource cache
+						TextureLibrary::Clear();
+						// Open scene
 						std::string fullpath = FileSystem::OpenFileDialog();
 						if (!fullpath.empty()) {
 							app->OpenScene(fullpath.c_str());
@@ -134,8 +75,7 @@ namespace Lobster
 							Application::GetInstance()->SetSaved(true);
 						}								
 					}
-					if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false))
-					{
+					if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false)) {
 					LABEL_SAVEAS:
 						std::string fullpath = FileSystem::SaveFileDialog(".");
 						if (!fullpath.empty()) {
@@ -145,16 +85,16 @@ namespace Lobster
 							app->SetSaved(true);
 						}						
 					}
-					if (ImGui::MenuItem("Export...", "", false)) {
-
+					if (ImGui::MenuItem("Export...", "Ctrl+Shift+E", false)) {
+						show_export = true;
 					}
 					ImGui::Separator();
-					if (ImGui::MenuItem("Quit", "Alt+F4", false))
-					{
+					if (ImGui::MenuItem("Quit", "Alt+F4", false)) {
 						EventQueue::GetInstance()->AddEvent<WindowClosedEvent>();
 					}
 					ImGui::EndMenu();
 				}
+				if (show_export) m_export->Show(&show_export);
 				// ==========================================
 				// Edit
 				if (ImGui::BeginMenu("Edit"))
@@ -271,8 +211,9 @@ namespace Lobster
 					}
 					ImGui::EndMenu();
 				}
-				if (show_skyboxEditor)
-					m_skyboxEditor->Show(&show_skyboxEditor);
+				if (show_skyboxEditor) {
+					GetScene()->GetSkybox()->OnImGuiRender(&show_skyboxEditor);
+				}
 				// ==========================================
 				// Window				
 				if (ImGui::BeginMenu("Window"))

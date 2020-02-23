@@ -55,7 +55,7 @@ namespace Lobster
 
 	void LightComponent::OnUpdate(double deltaTime)
 	{
-#ifdef LOBSTER_BUILD_DEBUG
+#ifdef LOBSTER_BUILD_EDITOR
 		GizmosCommand command;
 		command.texture = "textures/ui/light.png";
 		command.position = transform->WorldPosition;

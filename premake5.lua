@@ -3,67 +3,7 @@ workspace "LobsterGameEngine"
 	architecture "x64"
 	startproject "LobsterGameEngine"
 
-	configuration "Debug"
-		defines { "LOBSTER_BUILD_DEBUG" }
-	configuration "Release"
-		defines { "LOBSTER_BUILD_RELEASE" }
-
 -- Third-party Dependencies
--- project "Assimp"
--- 	location "LobsterGameEngine/vendor"
--- 	kind "SharedLib"
--- 	language "C++"
--- 	cppdialect "C++17"
-
--- 	targetdir ("LobsterGameEngine/lib")
--- 	objdir("LobsterGameEngine/vendor/bin-int/%{prj.name}")
-
--- 	defines {
--- 		"ASSIMP_BUILD_NO_OWN_ZLIB",
--- 		"ASSIMP_BUILD_NO_3D_IMPORTER",
--- 		"ASSIMP_BUILD_NO_EXPORT",
--- 		"ASSIMP_BUILD_NO_C4D_IMPORTER", -- Cinema4D is MSVC only and needs some weird headers to work
--- 		"OPENDDL_STATIC_LIBARY",
--- 	}
--- 	files {
--- 		"LobsterGameEngine/vendor/assimp/include/**",
--- 		"LobsterGameEngine/vendor/assimp/code/**.cpp",
--- 		"LobsterGameEngine/vendor/assimp/code/**.h",
--- 		"LobsterGameEngine/vendor/assimp/contrib/irrXML/*.cpp",
--- 		"LobsterGameEngine/vendor/assimp/contrib/irrXML/*.h",
--- 		"LobsterGameEngine/vendor/assimp/contrib/unzip/*.c",
--- 		"LobsterGameEngine/vendor/assimp/contrib/unzip/*.h",
--- 		"LobsterGameEngine/vendor/assimp/contrib/openddlparser/code/*.cpp",
--- 		"LobsterGameEngine/vendor/assimp/contrib/poly2tri/poly2tri/**.cc",
--- 		"LobsterGameEngine/vendor/assimp/contrib/clipper/*.cpp",
--- 	}
--- 	includedirs {
--- 		"LobsterGameEngine/vendor/assimp",
--- 		"LobsterGameEngine/vendor/assimp/code",
--- 		"LobsterGameEngine/vendor/assimp/contrib/irrXML",
--- 		"LobsterGameEngine/vendor/assimp/contrib/rapidjson/include",
--- 		"LobsterGameEngine/vendor/assimp/contrib/openddlparser/include",
--- 		"LobsterGameEngine/vendor/assimp/contrib/unzip",
--- 		"LobsterGameEngine/vendor/assimp/include"
--- 	}
--- 	removefiles {
--- 		"LobsterGameEngine/vendor/assimp/code/Importer/IFC/IFCReaderGen_4.*",
--- 		"LobsterGameEngine/vendor/assimp/code/Common/Version.cpp"
--- 	}
-
--- 	-- prebuildcommands {
--- 		-- ("{COPY} ./assimp/include/assimp/config.h.in ./assimp/include/assimp/config.h"),
--- 		-- ("{COPY} ./assimp/revision.h.in ./assimp/revision.h")
--- 	-- }
-
--- 	filter "system:windows"
--- 		buildoptions "/bigobj"
--- 		defines "_CRT_SECURE_NO_WARNINGS"
--- 		disablewarnings "4065"
-
--- 	filter "system:macosx"
--- 		xcodebuildsettings { ["ALWAYS_SEARCH_USER_PATHS"] = "YES" }
-
 project "GLFW"
 	location "LobsterGameEngine/vendor"
 	kind "StaticLib"
@@ -158,15 +98,18 @@ project "ImGuizmo"
         "LobsterGameEngine/vendor/imguizmo/Im*.cpp"
     }
 
--- LobsterGameEngine Core Engine
-project "LobsterGameEngine"
+-- Template
+project "LobsterTemplate"
 	location "LobsterGameEngine"
 	language "C++"
 	cppdialect "C++17"
 	dependson { "GLFW", "GLAD", "ImGui", "ImGuizmo" }
-
-	targetdir ("bin/%{cfg.buildcfg}")
-	objdir ("bin/int/%{cfg.buildcfg}")
+	
+	defines "LOBSTER_BUILD_TEMPLATE"
+	targetdir "bin/%{cfg.buildcfg}/templates"
+	targetname "%{cfg.system}_template"
+	objdir "bin/int/%{cfg.buildcfg}"
+	
 	libdirs	{
 		"%{prj.location}/vendor/assimp/lib",
 		"%{prj.location}/vendor/openal/libs/Win64",
@@ -176,7 +119,9 @@ project "LobsterGameEngine"
 
 	files {
 		"%{prj.location}/src/**.h",
-		"%{prj.location}/src/**.cpp"
+		"%{prj.location}/src/**.cpp",
+		"%{prj.location}/LobsterGameEngine.rc",
+		"%{prj.location}/lobster.ico"
 	}
 
 	includedirs {
@@ -199,8 +144,9 @@ project "LobsterGameEngine"
 	filter "system:windows"
 		entrypoint "mainCRTStartup"
 		systemversion "latest"
-		kind "ConsoleApp"
 		debugdir "bin/%{cfg.buildcfg}"
+		defines { "LOBSTER_PLATFORM_WIN" }
+		icon "lobster.ico"
 
 		pchheader "pch.h"
 		pchsource "%{prj.location}/src/pch.cpp"
@@ -216,15 +162,136 @@ project "LobsterGameEngine"
 			"freetype"
 		}
 
+		local root_path = "../bin/%{cfg.buildcfg}/templates/"
+		local res_path = "../bin/%{cfg.buildcfg}/resources/"
+		optimize "Full"
+		kind "WindowedApp"
 		prebuildcommands {
-			"{COPY} vendor/assimp/lib/ ../bin/%{cfg.buildcfg}",
-			"{COPY} vendor/lua535/lua/dll/ ../bin/%{cfg.buildcfg}",
-			"{COPY} vendor/freetype/win64/ ../bin/%{cfg.buildcfg}"
+			"{COPY} vendor/assimp/lib/ " .. root_path,
+			"{COPY} vendor/lua535/lua/dll/ " .. root_path,
+			"{COPY} vendor/freetype/win64/ " .. root_path
+		}
+		postbuildcommands {
+			"{DELETE} " .. root_path .. "*.lib",
+			"{DELETE} " .. root_path .. "*.dll",
+			"{DELETE} " .. root_path .. "*.pdb",
+			"{DELETE} " .. root_path .. "*.ilk",
+			"{DELETE} " .. root_path .. "*.dylib"
+		}
+		
+	filter "system:macosx"
+		kind "ConsoleApp"
+		pchheader "src/pch.h"
+		pchsource "%{prj.location}/src/pch.cpp"
+		xcodebuildsettings { ["ALWAYS_SEARCH_USER_PATHS"] = "YES" }
+
+		links {
+			"GLFW",
+			"assimp4.1.0",
+			"ImGui",
+			"ImGuizmo",
+			"GLAD",
+			"freetype",
+			"Cocoa.framework",
+			"OpenAL.framework",
+			"OpenGL.framework",
+			"IOKit.framework",
+			"CoreVideo.framework"
 		}
 
 		defines {
-			"LOBSTER_PLATFORM_WIN"
+			"LOBSTER_PLATFORM_MAC"
 		}
+
+-- LobsterGameEngine Core Engine
+project "LobsterGameEngine"
+	location "LobsterGameEngine"
+	language "C++"
+	cppdialect "C++17"
+	dependson { "GLFW", "GLAD", "ImGui", "ImGuizmo", "LobsterTemplate" }
+
+	targetdir ("bin/%{cfg.buildcfg}")
+	objdir ("bin/int/%{cfg.buildcfg}")
+	libdirs	{
+		"%{prj.location}/vendor/assimp/lib",
+		"%{prj.location}/vendor/openal/libs/Win64",
+		"%{prj.location}/vendor/freetype/win64",
+		"%{prj.location}/vendor/lua535/lua"
+	}
+
+	files {
+		"%{prj.location}/src/**.h",
+		"%{prj.location}/src/**.cpp",
+		"%{prj.location}/LobsterGameEngine.rc",
+		"%{prj.location}/lobster.ico"
+	}
+
+	includedirs {
+		"%{prj.location}/src",
+		"%{prj.location}/vendor/assimp/include",
+		"%{prj.location}/vendor/stb",
+		"%{prj.location}/vendor/cereal/include",
+		"%{prj.location}/vendor/glm",
+		"%{prj.location}/vendor/glfw/include",
+		"%{prj.location}/vendor/glad/include",
+		"%{prj.location}/vendor/imgui",
+		"%{prj.location}/vendor/imguizmo",
+		"%{prj.location}/vendor/json/include",
+		"%{prj.location}/vendor/spdlog/include",
+		"%{prj.location}/vendor/openal/include",
+		"%{prj.location}/vendor/freetype/include",
+		"%{prj.location}/vendor/lua535"
+	}
+
+	filter "system:windows"
+		entrypoint "mainCRTStartup"
+		systemversion "latest"
+		debugdir "bin/%{cfg.buildcfg}"
+		defines { "LOBSTER_PLATFORM_WIN" }
+		icon "lobster.ico"
+
+		pchheader "pch.h"
+		pchsource "%{prj.location}/src/pch.cpp"
+
+		links {
+			"GLFW",
+			"assimp-vc140-mt",
+			"ImGui",
+			"ImGuizmo",
+			"GLAD",
+			"opengl32",
+			"OpenAL32",
+			"freetype"
+		}
+
+		local root_path = "../bin/%{cfg.buildcfg}/"
+		local res_path = "../bin/%{cfg.buildcfg}/resources/"
+		filter "Debug"
+			optimize "Debug"
+			kind "ConsoleApp"
+			defines { "LOBSTER_BUILD_DEBUG", "LOBSTER_BUILD_EDITOR", "USE_SPDLOG_CONSOLE" }
+			prebuildcommands {
+				"{COPY} vendor/assimp/lib/ " .. root_path,
+				"{COPY} vendor/lua535/lua/dll/ " .. root_path,
+				"{COPY} vendor/freetype/win64/ " .. root_path
+			}
+		filter "Release"
+			optimize "On"
+			kind "WindowedApp"
+			defines { "LOBSTER_BUILD_RELEASE", "LOBSTER_BUILD_EDITOR" }
+			prebuildcommands {
+				"{MKDIR} " .. res_path,
+				"{COPY} res/ " .. res_path,
+				"{COPY} vendor/assimp/lib/ " .. root_path,
+				"{COPY} vendor/lua535/lua/dll/ " .. root_path,
+				"{COPY} vendor/freetype/win64/ " .. root_path
+			}
+			postbuildcommands {
+				-- "{DELETE} " .. root_path .. "*.lib",
+				-- "{DELETE} " .. root_path .. "*.pdb",
+				-- "{DELETE} " .. root_path .. "*.ilk",
+				-- "{DELETE} " .. root_path .. "*.dylib"
+			}
 		
 	filter "system:macosx"
 		kind "ConsoleApp"
