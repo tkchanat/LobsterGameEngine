@@ -14,7 +14,7 @@ namespace Lobster {
 		std::string m_name;		
 		float m_pitch;
 		float m_gain;
-		bool m_mute;
+		bool m_mute = false;
 		bool m_looping;
 	public:
 		AudioClip(const char* name, float pitch=1.f, float gain=1.f, glm::vec3 pos=glm::vec3(0, 0, 0),

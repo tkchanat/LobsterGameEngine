@@ -66,7 +66,7 @@ namespace Lobster
 		ALvoid *data;
 		LoadWAVFile(file, &format, &data, &size, &freq);
 		// TODO check if loaded successfully
-		AudioClip* ac = new AudioClip(fs::path(file).filename().string().c_str());
+		AudioClip* ac = new AudioClip(fs::path(file).filename().string().c_str());		
 		ac->BindBuffer(format, data, size, freq);
 		s_instance->m_audioClips.push_back(ac);
 		return ac;
