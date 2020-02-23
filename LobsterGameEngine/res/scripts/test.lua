@@ -9,6 +9,8 @@ function OnBegin()
 	spriteList = ui:GetSpriteList()
 	]]--
 	print("onBegin called")
+	audio = Lobster.GetAudioSource(this)
+	audio:Play()
 	-- finalTest = "final"
 end
 
