@@ -14,12 +14,12 @@ namespace Lobster
     {
 		// hard-coded skybox
 		std::string faces[6] = { 
-			"textures/skybox/px.png",
-			"textures/skybox/nx.png",
-			"textures/skybox/py.png",
-			"textures/skybox/ny.png",
-			"textures/skybox/pz.png",
-			"textures/skybox/nz.png" 
+			FileSystem::Path("textures/skybox/px.png"),
+			FileSystem::Path("textures/skybox/nx.png"),
+			FileSystem::Path("textures/skybox/py.png"),
+			FileSystem::Path("textures/skybox/ny.png"),
+			FileSystem::Path("textures/skybox/pz.png"),
+			FileSystem::Path("textures/skybox/nz.png") 
 		};
 		m_skybox = new Skybox(faces[0].c_str(), faces[1].c_str(), faces[2].c_str(), faces[3].c_str(), faces[4].c_str(), faces[5].c_str());
 

@@ -18,8 +18,28 @@ namespace Lobster
 		ImGuiAbout* m_about;
 		ImGuiExport* m_export;
 		int m_prevHighlightIndex = -1;	//	Used for undo / redo or other multiple highlight menu items.
+		bool b_show_export = false;
 	public:
-		ImGuiMenuBar() : m_about(new ImGuiAbout()), m_export(new ImGuiExport()) {}
+		ImGuiMenuBar() : 
+			m_about(new ImGuiAbout()), 
+			m_export(new ImGuiExport()) 
+		{
+			EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {
+				if (e->Mod & GLFW_MOD_CONTROL) {
+					if (e->Mod & GLFW_MOD_SHIFT) {
+						if (e->Key == GLFW_KEY_S) SaveAs();
+						if (e->Key == GLFW_KEY_E) b_show_export = true;
+						if (e->Key == GLFW_KEY_Z) UndoSystem::GetInstance()->Redo();
+					}
+					else {
+						if (e->Key == GLFW_KEY_N) New();
+						if (e->Key == GLFW_KEY_O) Open();
+						if (e->Key == GLFW_KEY_S) Save();
+						if (e->Key == GLFW_KEY_Z) UndoSystem::GetInstance()->Undo();
+					}
+				}
+			}));
+		}
 		~ImGuiMenuBar() { 
 			if (m_about) delete m_about; 
 			if (m_export) delete m_export; 
@@ -32,61 +52,22 @@ namespace Lobster
 			{
 				// ==========================================
 				// File
-				static bool show_export = false;
 				if (ImGui::BeginMenu("File"))
 				{
-					Application* app = Application::GetInstance();
-					if (ImGui::MenuItem("New", "Ctrl+N", false))
-					{
-						// Clear current resource cache
-						TextureLibrary::Clear();
-						// TODO new a scene in a more proper way
-						app->OpenScene("");
-						GameObject* camera = new GameObject("Main Camera");
-						camera->AddComponent(new CameraComponent());
-						camera->AddComponent(new AudioListener());
-						camera->transform.Translate(0, 2, 10);
-						app->GetCurrentScene()->AddGameObject(camera);
-						GameObject* light = new GameObject("Directional Light");
-						light->AddComponent(new LightComponent(LightType::DIRECTIONAL_LIGHT));
-						app->GetCurrentScene()->AddGameObject(light);
+					if (ImGui::MenuItem("New", "Ctrl+N", false)) {
+						New();
 					}
-					// confirm dialog for newing project
-					if (ImGui::MenuItem("Open", "Ctrl+O", false))
-					{
-						// Clear current resource cache
-						TextureLibrary::Clear();
-						// Open scene
-						std::string fullpath = FileSystem::OpenFileDialog();
-						if (!fullpath.empty()) {
-							app->OpenScene(fullpath.c_str());
-						}
+					if (ImGui::MenuItem("Open", "Ctrl+O", false)) {
+						Open();
 					}
-					if (ImGui::MenuItem("Save", "Ctrl+S", false))
-					{
-						std::string scenePath = app->GetScenePath();
-						if (scenePath.empty()) {
-							goto LABEL_SAVEAS; // save as
-						}
-						else {
-							// save by overwrite
-							std::stringstream ss = GetScene()->Serialize();
-							FileSystem::WriteStringStream(scenePath.c_str(), ss);
-							Application::GetInstance()->SetSaved(true);
-						}								
+					if (ImGui::MenuItem("Save", "Ctrl+S", false)) {
+						Save();
 					}
 					if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false)) {
-					LABEL_SAVEAS:
-						std::string fullpath = FileSystem::SaveFileDialog(".");
-						if (!fullpath.empty()) {
-							std::stringstream ss = GetScene()->Serialize();
-							FileSystem::WriteStringStream(fullpath.c_str(), ss);
-							app->SetScenePath(fullpath.c_str());
-							app->SetSaved(true);
-						}						
+						SaveAs();
 					}
 					if (ImGui::MenuItem("Export...", "Ctrl+Shift+E", false)) {
-						show_export = true;
+						b_show_export = true;
 					}
 					ImGui::Separator();
 					if (ImGui::MenuItem("Quit", "Alt+F4", false)) {
@@ -94,7 +75,7 @@ namespace Lobster
 					}
 					ImGui::EndMenu();
 				}
-				if (show_export) m_export->Show(&show_export);
+				if (b_show_export) m_export->Show(&b_show_export);
 				// ==========================================
 				// Edit
 				if (ImGui::BeginMenu("Edit"))
@@ -237,6 +218,59 @@ namespace Lobster
 				}
 				if(show_about) m_about->Show(&show_about);
 				ImGui::EndMenuBar();
+			}
+		}
+
+		void New() {
+			// Clear current resource cache
+			TextureLibrary::Clear();
+			// TODO new a scene in a more proper way
+			Application* app = Application::GetInstance();
+			app->OpenScene("");
+			GameObject* camera = new GameObject("Main Camera");
+			camera->AddComponent(new CameraComponent());
+			camera->AddComponent(new AudioListener());
+			camera->transform.Translate(0, 2, 10);
+			app->GetCurrentScene()->AddGameObject(camera);
+			GameObject* light = new GameObject("Directional Light");
+			light->AddComponent(new LightComponent(LightType::DIRECTIONAL_LIGHT));
+			light->transform.Translate(0, 2, 3);
+			app->GetCurrentScene()->AddGameObject(light);
+		}
+
+		void Open() {
+			// Clear current resource cache
+			TextureLibrary::Clear();
+			// Open scene
+			Application* app = Application::GetInstance();
+			std::string fullpath = FileSystem::OpenFileDialog();
+			if (!fullpath.empty()) {
+				app->OpenScene(fullpath.c_str());
+			}
+		}
+
+		void Save() {
+			Application* app = Application::GetInstance();
+			std::string scenePath = app->GetScenePath();
+			if (scenePath.empty()) {
+				SaveAs(); // save as
+			}
+			else {
+				// save by overwrite
+				std::stringstream ss = GetScene()->Serialize();
+				FileSystem::WriteStringStream(scenePath.c_str(), ss);
+				Application::GetInstance()->SetSaved(true);
+			}
+		}
+
+		void SaveAs() {
+			Application* app = Application::GetInstance();
+			std::string fullpath = FileSystem::SaveFileDialog(".");
+			if (!fullpath.empty()) {
+				std::stringstream ss = GetScene()->Serialize();
+				FileSystem::WriteStringStream(fullpath.c_str(), ss);
+				app->SetScenePath(fullpath.c_str());
+				app->SetSaved(true);
 			}
 		}
 	};

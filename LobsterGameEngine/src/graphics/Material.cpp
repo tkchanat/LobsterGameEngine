@@ -171,6 +171,7 @@ namespace Lobster
 					if (ImGui::ImageButton(m_textures[*(uint*)data] ? m_textures[*(uint*)data]->Get() : notFound->Get(), previewSize)) {
 						std::string path = FileSystem::OpenFileDialog();
 						if (!path.empty()) {
+							path = FileSystem::Path(path);
 							m_textures[*(uint*)data] = TextureLibrary::Use(path.c_str());
 							b_dirty = true;
 						}

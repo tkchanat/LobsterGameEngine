@@ -134,7 +134,7 @@ namespace Lobster {
 		else if (p.extension() == ".glsl") {
 			subfolder = PATH_SHADERS;
 		}
-		else if (p.extension() == ".png") {
+		else if (p.extension() == ".png" || p.extension() == ".jpg") {
 			subfolder = PATH_TEXTURES;
 		}
 		else if (p.extension() == ".wav") {
@@ -149,7 +149,10 @@ namespace Lobster {
 		else if (p.extension() == ".lobster") {
 			subfolder = PATH_SCENES;
 		}
-		else return "";
+		else {
+			throw std::runtime_error("Please add new extension");
+			return "";
+		}
 		addResource(p.string(), subfolder);
 		return Path(Join(subfolder, p.filename().string()));
 	}
