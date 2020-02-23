@@ -17,30 +17,45 @@ namespace Lobster {
 		m_instance = this;
 	}
 
-	// Note: Path can take both meshes/files or absolute path, but not other format
-	std::string FileSystem::Path(std::string path) {
+	// Convert the provided path into relative path, with the following format:
+	// #Absolute path:		Copy into project resources and return the relative path inside resources folder
+	// #<folder>/<file>:	Append working directory before the file 
+	// #Relative path:		NOT SUPPORTED! Never provide this path to the function though this function tries its best to ignore.
+	// Note: Path can take both <res-folder>/<file> or absolute path, but not other format
+	std::string FileSystem::Path(std::string path, int flags) {
 		// if path is absolute, add it into res/ and use the relative one
 		fs::path p(path);
-		if (p.is_absolute()) {			
-			// we are going to make use of current_path to move relatively
+		if (p.is_absolute()) {
+			// not allow to copy but absolute => just do nothing and return original path
+			if (flags & Flag_SuppressCopying) return path;
+			// make use of current_path to move relatively
 			fs::path tempCurrentPath = fs::current_path();
-			fs::current_path(m_workingDir);			
-			fs::path pathRelativeToWorkingDir = fs::relative(p);			
+			fs::current_path(m_workingDir);
+			fs::path pathRelativeToWorkingDir = fs::relative(p);
 			fs::current_path(tempCurrentPath); // restore current path
 			// if path is already inside res/, just change the path into relative without adding
 			if (pathRelativeToWorkingDir.empty() || pathRelativeToWorkingDir.string()[0] == '.') {
 				std::string relative = m_instance->addResourceIfNecessary(path);
 				if (!relative.empty())
 					return relative;
+				else {
+					char msg[512];
+					sprintf(msg, "FileSystem::Path() does not support conversion of path %s", path.c_str());
+					throw std::exception(msg);
+				}
 			}
 			else {
 				return pathRelativeToWorkingDir.string();
 			}
 		}
-		// sometimes it yields a/b\c/d, nevermind it is just fine
-		// remove the two slashes suffix
-		path = (path.substr(0, 1).compare("/") == 0 ? path.substr(1, path.size() - 1) : path);
-		return Join(m_workingDir, path);
+		else {
+			// if path is relative starting with ../, ignore and return the original path
+			if (path[0] == '.') 
+				return path;
+			// remove the two slashes suffix
+			if (path.substr(0, 1) == "/") path.substr(1, path.size() - 1);
+			return Join(m_workingDir, path);
+		}
 	}
 
 	// To join the two string with a slash regardless of OS
@@ -119,6 +134,9 @@ namespace Lobster {
 		}
 		else if (p.extension() == ".anim") {
 			subfolder = PATH_ANIMATIONS;
+		}
+		else if (p.extension() == ".lua") {
+			subfolder = PATH_SCRIPTS;
 		}
 		else if (p.extension() == ".lobster") {
 			subfolder = PATH_SCENES;

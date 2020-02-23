@@ -9,7 +9,7 @@ function OnBegin()
 	spriteList = ui:GetSpriteList()
 	]]--
 	print("onBegin called")
-	finalTest = "final"
+	-- finalTest = "final"
 end
 
 function OnUpdate(dt)

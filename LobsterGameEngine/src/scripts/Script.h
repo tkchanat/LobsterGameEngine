@@ -1,6 +1,5 @@
 #pragma once
 #include "pch.h"
-#include "components/Component.h"
 #include "objects/GameObject.h"
 #include "objects/Transform.h"
 
@@ -45,8 +44,16 @@ namespace Lobster
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 
-		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override {}
-		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override {}
+		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+	private:
+		friend class cereal::access;
+		template <class Archive> void save(Archive & ar) const {
+			ar(filename);
+		}
+		template <class Archive> void load(Archive & ar) {
+			ar(filename);
+		}
     };
     
 }

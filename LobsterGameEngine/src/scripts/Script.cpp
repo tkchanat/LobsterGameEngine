@@ -131,6 +131,14 @@ namespace Lobster {
 			errmsg += "OnUpdate(): " + std::string(e.what()) + "\n";
 		}
 	}
+
+	void Script::Serialize(cereal::BinaryOutputArchive& oarchive) {
+		oarchive(*this);
+	}
+
+	void Script::Deserialize(cereal::BinaryInputArchive& iarchive) {
+		iarchive(*this);
+	}
 	
 	void FunctionBinder::DisableCursor() {
 		glfwSetInputMode(glfwGetCurrentContext(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);

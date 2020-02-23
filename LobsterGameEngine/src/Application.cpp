@@ -91,7 +91,12 @@ namespace Lobster
 
         //  Initialize GameObjects
 		Timer loadTimer;
+#if LOBSTER_BUILD_DEBUG
 		OpenScene("");
+#elif LOBSTER_BUILD_RELEASE
+		OpenScene("c:/Users/cwyan/Desktop/ha.lobster");
+#endif
+		
 
 //		ThreadPool::Enqueue([]() {
 //			// This job should be running in a separate thread without blocking the main thread

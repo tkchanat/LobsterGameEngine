@@ -544,8 +544,10 @@ namespace Lobster {
 			}
 			ImGui::EndCombo();
 		}
+		
 		// variable name to track
 		if (ImGui::InputText("Variable", &var[0], MAX_TEXT_LENGTH)) {
+			var = var.c_str(); // i know, this is stupid, but it works to fix a bug
 			text = "<" + var + ">";
 			getTexture(true); // reload texture
 		}
