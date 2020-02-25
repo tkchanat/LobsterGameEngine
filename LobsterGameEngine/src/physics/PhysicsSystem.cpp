@@ -4,12 +4,12 @@
 namespace Lobster {
 	PhysicsSystem* PhysicsSystem::m_instance = nullptr;
 
-	PhysicsSystem::PhysicsSystem() {
-		if (m_instance)
-		{
-			LOG("Physics System instance already created. Ignoring this ...");
+	void PhysicsSystem::Initialize()
+	{
+		if (m_instance) {
+			WARN("Physics System instance already created. Ignoring this ...");
 			return;
 		}
-		m_instance = this;
+		m_instance = new PhysicsSystem();
 	}
 }

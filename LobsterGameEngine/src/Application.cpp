@@ -71,6 +71,7 @@ namespace Lobster
 		// Independent system initialization
 		ThreadPool::Initialize(16);
 		AudioSystem::Initialize();
+		PhysicsSystem::Initialize();
 		Profiler::Initialize();
 		EventDispatcher::Initialize();
 		EventQueue::Initialize();

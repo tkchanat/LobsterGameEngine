@@ -9,8 +9,7 @@ namespace Lobster
 {
     
     Scene::Scene(const char * scenePath) :
-		m_skybox(nullptr),
-		m_physicsSystem(new PhysicsSystem())
+		m_skybox(nullptr)
     {
 		// hard-coded skybox
 		std::string faces[6] = { 
@@ -32,16 +31,12 @@ namespace Lobster
 
 	Scene::~Scene()
     {
-		for (GameObject* gameObject : m_gameObjects)
-		{
+		for (GameObject* gameObject : m_gameObjects) {
 			if (gameObject)	delete gameObject;
 			gameObject = nullptr;
 		}
 		if (m_skybox) delete m_skybox;
 		m_skybox = nullptr;
-
-		if (m_physicsSystem) delete m_physicsSystem;
-		m_physicsSystem = nullptr;
     }
 
 	void Scene::OnBegin() {

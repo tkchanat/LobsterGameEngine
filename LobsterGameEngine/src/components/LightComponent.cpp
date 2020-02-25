@@ -32,6 +32,8 @@ namespace Lobster
 	LightComponent::~LightComponent()
 	{
 		if (b_isVirtuallyDeleted == false) LightLibrary::RemoveLight(this, m_type);
+		if (m_depthBuffer) delete m_depthBuffer;
+		m_depthBuffer = nullptr;
 	}
 
 	void LightComponent::VirtualCreate() {

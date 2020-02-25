@@ -10,6 +10,7 @@ namespace Lobster {
 		static const float RESISTANCE;
 
 		Rigidbody() : m_prevRotation(glm::vec3(0, 0, 0)) {}
+		virtual ~Rigidbody();
 
 		void OnAttach() override;
 		void OnUpdate(double deltaTime) override;

@@ -40,6 +40,12 @@ namespace Lobster
 		AssignTextureSlot();
 	}
 
+	Material::~Material()
+	{
+		if (m_uniformData) delete m_uniformData;
+		m_uniformData = nullptr;
+	}
+
 	void Material::InitializeUniformsFromShader()
 	{
 		// assume all uniform default values are zero
@@ -118,10 +124,6 @@ namespace Lobster
 		if (m_uniformData) delete[] m_uniformData;
 		m_uniformData = newBuffer;
 	}
-    
-    Material::~Material()
-    {
-    }
 
 	void Material::OnImGuiRender()
 	{
