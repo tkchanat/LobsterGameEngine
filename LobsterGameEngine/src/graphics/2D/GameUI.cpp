@@ -52,11 +52,11 @@ namespace Lobster {
 		return spriteList;
 	}
 
-	void GameUI::Serialize(cereal::BinaryOutputArchive& oarchive) {
+	void GameUI::Serialize(cereal::JSONOutputArchive& oarchive) {
 		oarchive(*this);
 	}
 
-	void GameUI::Deserialize(cereal::BinaryInputArchive& iarchive) {
+	void GameUI::Deserialize(cereal::JSONInputArchive& iarchive) {
 		try {
 			iarchive(*this);
 		}

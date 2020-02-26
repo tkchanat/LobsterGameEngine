@@ -10,9 +10,9 @@ namespace Lobster
 		struct Platform {
 		public:
 			std::string Name;
-			Texture2D* Icon;
+			std::string IconPath;
 		public:
-			Platform(const char* name, Texture2D* icon) : Name(name), Icon(icon) {}
+			Platform(const char* name, const char* path) : Name(name), IconPath(path) {}
 		};
 		enum ExportStatusFlag : int {
 			NONE = 0,
@@ -27,8 +27,8 @@ namespace Lobster
 		int m_exportStatusFlag = 0;
 	public:
 		ImGuiExport() {
-			m_platforms.emplace_back("Windows", TextureLibrary::Use("textures/ui/windows.png"));
-			m_platforms.emplace_back("MacOSX", TextureLibrary::Use("textures/ui/macos.png"));
+			m_platforms.emplace_back("Windows", "textures/ui/windows.png");
+			m_platforms.emplace_back("MacOSX", "textures/ui/macos.png");
 		}
 		virtual void Show(bool* p_open) override
 		{
@@ -52,7 +52,8 @@ namespace Lobster
 				for (int i = 0; i < m_platforms.size(); ++i) {
 					ImGui::RadioButton(m_platforms[i].Name.c_str(), &e, i);
 					ImGui::SameLine();
-					ImGui::Image(m_platforms[i].Icon->Get(), icon_size);
+					Texture2D* image = TextureLibrary::Use(m_platforms[i].IconPath.c_str());
+					ImGui::Image(image ? image->Get() : nullptr, icon_size);
 				}
 				ImGui::NextColumn();
 				ImGui::Dummy(ImVec2(100, 64));

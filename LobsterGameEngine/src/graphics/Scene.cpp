@@ -9,17 +9,16 @@ namespace Lobster
 {
     
     Scene::Scene(const char * scenePath) :
-		m_skybox(nullptr),
-		m_physicsSystem(new PhysicsSystem())
+		m_skybox(nullptr)
     {
 		// hard-coded skybox
 		std::string faces[6] = { 
-			"textures/skybox/px.png",
-			"textures/skybox/nx.png",
-			"textures/skybox/py.png",
-			"textures/skybox/ny.png",
-			"textures/skybox/pz.png",
-			"textures/skybox/nz.png" 
+			FileSystem::Path("textures/skybox/px.png"),
+			FileSystem::Path("textures/skybox/nx.png"),
+			FileSystem::Path("textures/skybox/py.png"),
+			FileSystem::Path("textures/skybox/ny.png"),
+			FileSystem::Path("textures/skybox/pz.png"),
+			FileSystem::Path("textures/skybox/nz.png") 
 		};
 		m_skybox = new Skybox(faces[0].c_str(), faces[1].c_str(), faces[2].c_str(), faces[3].c_str(), faces[4].c_str(), faces[5].c_str());
 
@@ -32,16 +31,12 @@ namespace Lobster
 
 	Scene::~Scene()
     {
-		for (GameObject* gameObject : m_gameObjects)
-		{
+		for (GameObject* gameObject : m_gameObjects) {
 			if (gameObject)	delete gameObject;
 			gameObject = nullptr;
 		}
 		if (m_skybox) delete m_skybox;
 		m_skybox = nullptr;
-
-		if (m_physicsSystem) delete m_physicsSystem;
-		m_physicsSystem = nullptr;
     }
 
 	void Scene::OnBegin() {
@@ -76,7 +71,7 @@ namespace Lobster
 		//LOG("Serializing Scene");
 		std::stringstream ss;
 		{
-			cereal::BinaryOutputArchive oarchive(ss);
+			cereal::JSONOutputArchive oarchive(ss);
 			oarchive(*this);
 		}
 		INFO("Scene saved!");
@@ -85,7 +80,7 @@ namespace Lobster
 
 	void Scene::Deserialize(std::stringstream& ss) {
 		//LOG("Deserializing Scene");
-		cereal::BinaryInputArchive iarchive(ss);
+		cereal::JSONInputArchive iarchive(ss);
 		try {
 			iarchive(*this);
 		}

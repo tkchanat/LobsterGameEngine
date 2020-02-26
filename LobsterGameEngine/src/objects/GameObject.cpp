@@ -185,13 +185,13 @@ namespace Lobster
 		}
 	}
 
-	void GameObject::Serialize(cereal::BinaryOutputArchive& oarchive)
+	void GameObject::Serialize(cereal::JSONOutputArchive& oarchive)
 	{
 		//LOG("Serializing GameObject {}", m_name);
 		oarchive(*this);
 	}
 
-	void GameObject::Deserialize(cereal::BinaryInputArchive& iarchive)
+	void GameObject::Deserialize(cereal::JSONInputArchive& iarchive)
 	{
 		//LOG("Deserializing GameObject {}", m_name);
 		try {

@@ -101,8 +101,8 @@ namespace Lobster {
 		void GoBack(Sprite2D* sprite);	// move the item to the back by one layer
 		std::vector<Sprite2D*>& GetSpriteList();
 
-		void Serialize(cereal::BinaryOutputArchive& oarchive);
-		void Deserialize(cereal::BinaryInputArchive& iarchive);
+		void Serialize(cereal::JSONOutputArchive& oarchive);
+		void Deserialize(cereal::JSONInputArchive& iarchive);
 	private:
 		friend class cereal::access;
 		template <class Archive> void save(Archive & ar) const {

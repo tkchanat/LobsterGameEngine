@@ -15,12 +15,12 @@ namespace Lobster
 		m_faces[4] = back;
 		m_faces[5] = front;
 		m_cubemap->Set(
-			FileSystem::Path(m_faces[0].c_str()).c_str(),
-			FileSystem::Path(m_faces[1].c_str()).c_str(),
-			FileSystem::Path(m_faces[2].c_str()).c_str(),
-			FileSystem::Path(m_faces[3].c_str()).c_str(),
-			FileSystem::Path(m_faces[4].c_str()).c_str(),
-			FileSystem::Path(m_faces[5].c_str()).c_str()
+			m_faces[0].c_str(),
+			m_faces[1].c_str(),
+			m_faces[2].c_str(),
+			m_faces[3].c_str(),
+			m_faces[4].c_str(),
+			m_faces[5].c_str()
 		);
 	}
 
@@ -52,16 +52,14 @@ namespace Lobster
 			if (ImGui::ImageButton(image ? image->Get() : nullptr, ImVec2(64, 64), ImVec2(0, 0), ImVec2(1, 1), 1)) {
 				std::string fullpath = FileSystem::OpenFileDialog();
 				if (!fullpath.empty()) {
-					std::string relative_path = fs::relative(fs::path(fullpath), FileSystem::GetCurrentWorkingDirectory()).string();
-					StringOps::ReplaceAll(relative_path, "\\", "/");
-					m_faces[i] = relative_path;
+					m_faces[i] = FileSystem::Path(fullpath);
 					m_cubemap->Set(
-						FileSystem::Path(m_faces[0].c_str()).c_str(),
-						FileSystem::Path(m_faces[1].c_str()).c_str(),
-						FileSystem::Path(m_faces[2].c_str()).c_str(),
-						FileSystem::Path(m_faces[3].c_str()).c_str(),
-						FileSystem::Path(m_faces[4].c_str()).c_str(),
-						FileSystem::Path(m_faces[5].c_str()).c_str()
+						m_faces[0].c_str(),
+						m_faces[1].c_str(),
+						m_faces[2].c_str(),
+						m_faces[3].c_str(),
+						m_faces[4].c_str(),
+						m_faces[5].c_str()
 					);
 				}
 			}

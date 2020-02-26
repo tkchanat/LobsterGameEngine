@@ -33,7 +33,7 @@ namespace Lobster
 		size_t m_uniformDataSize;
 		bool b_dirty;
 	public:
-		virtual ~Material();
+		~Material();
 		void OnImGuiRender();
 		void SetRawUniform(const char* name, void* data);
 		void SetRawTexture2D(int slot, Texture2D* data);

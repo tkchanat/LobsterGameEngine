@@ -46,8 +46,8 @@ namespace Lobster
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 
-		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 	private:
 		friend class cereal::access;
 		template <class Archive> void save(Archive & ar) const {

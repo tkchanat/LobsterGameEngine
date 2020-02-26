@@ -256,12 +256,12 @@ namespace Lobster
 		_simulateElapsedTime = 0.f;
 	}
 
-	void ParticleComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
+	void ParticleComponent::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
 		oarchive(*this);
 	}
 
-	void ParticleComponent::Deserialize(cereal::BinaryInputArchive & iarchive)
+	void ParticleComponent::Deserialize(cereal::JSONInputArchive & iarchive)
 	{
 		try {
 			iarchive(*this);

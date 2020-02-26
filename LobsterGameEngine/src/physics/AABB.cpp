@@ -57,7 +57,6 @@ namespace Lobster
 		if (m_mesh) delete m_mesh;
 		m_vertexMaterial = nullptr;
 		m_mesh = nullptr;
-		m_vertexBuffer = nullptr;
 	}
 
 	void AABB::SetOwner(GameObject* owner) {

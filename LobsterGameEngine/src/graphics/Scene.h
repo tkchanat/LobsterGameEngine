@@ -19,8 +19,7 @@ namespace Lobster
     private:
 		Skybox* m_skybox;
         std::vector<GameObject*> m_gameObjects;
-		PhysicsSystem* m_physicsSystem;
-		CameraComponent* m_gameCamera = nullptr; // a reference to game camera for easy access
+		CameraComponent* m_gameCamera = nullptr; // a reference to game camera for easy access in script
 		std::string m_name;
     public:
         Scene(const char* scenePath = nullptr);

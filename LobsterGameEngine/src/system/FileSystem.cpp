@@ -48,7 +48,9 @@ namespace Lobster {
 				}
 			}
 			else {
-				return pathRelativeToWorkingDir.string();
+				std::string return_path = pathRelativeToWorkingDir.string();
+				StringOps::ReplaceAll(return_path, "\\", "/");
+				return return_path;
 			}
 		}
 		else {
@@ -57,7 +59,9 @@ namespace Lobster {
 				return path;
 			// remove the two slashes suffix
 			if (path.substr(0, 1) == "/") path.substr(1, path.size() - 1);
-			return Join(m_workingDir, path);
+			std::string return_path = Join(m_workingDir, path);
+			StringOps::ReplaceAll(return_path, "\\", "/");
+			return return_path;
 		}
 	}
 
@@ -134,7 +138,7 @@ namespace Lobster {
 		else if (p.extension() == ".glsl") {
 			subfolder = PATH_SHADERS;
 		}
-		else if (p.extension() == ".png") {
+		else if (p.extension() == ".png" || p.extension() == ".jpg") {
 			subfolder = PATH_TEXTURES;
 		}
 		else if (p.extension() == ".wav") {
@@ -149,7 +153,10 @@ namespace Lobster {
 		else if (p.extension() == ".lobster") {
 			subfolder = PATH_SCENES;
 		}
-		else return "";
+		else {
+			throw std::runtime_error("Please add new extension");
+			return "";
+		}
 		addResource(p.string(), subfolder);
 		return Path(Join(subfolder, p.filename().string()));
 	}

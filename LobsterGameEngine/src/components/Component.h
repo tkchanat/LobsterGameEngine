@@ -62,8 +62,8 @@ namespace Lobster
         virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender() = 0;
 		virtual void SetOwner(GameObject* owner) { gameObject = owner; }
-		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) = 0;
-		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) = 0;
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) = 0;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) = 0;
         inline virtual void SetOwnerTransform(Transform* t) { transform = t; }
         inline void RemoveOwner() { gameObject = nullptr; }
 		inline GameObject* GetOwner() { return gameObject; }	//	TODO: Discuss if this class is needed, used for print intersection result only for now.
