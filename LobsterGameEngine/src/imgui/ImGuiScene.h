@@ -105,26 +105,6 @@ namespace Lobster
 			}
 		}
 
-		// Modified version from ImGuizmo::ComputeCameraRay()
-		void ComputeCameraRay(glm::vec3& origin, glm::vec3& direction)
-		{
-			ImGuiIO& io = ImGui::GetIO();
-			CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
-			glm::mat4 viewMat = camera->GetViewMatrix();
-			glm::mat4 projMat = camera->GetProjectionMatrix();
-			glm::mat4 viewProjInv = glm::inverse(projMat * viewMat);
-
-			float mox = ((io.MousePos.x - window_pos.x) / window_size.x) * 2.f - 1.f;
-			float moy = (1.f - ((io.MousePos.y - window_pos.y) / window_size.y)) * 2.f - 1.f;
-
-			glm::vec4 rayOrigin = viewProjInv * glm::vec4(mox, moy, 0.f, 1.f);
-			rayOrigin /= rayOrigin.w;
-			origin = rayOrigin;
-			glm::vec4 rayEnd = viewProjInv * glm::vec4(mox, moy, 1.f, 1.f);
-			rayEnd /= rayEnd.w;
-			direction = glm::normalize(glm::vec3(rayEnd - rayOrigin));
-		}
-
 		void SelectObject(glm::vec3 pos, glm::vec3 dir) {
 			const std::vector<GameObject*>& gameObjects = GetScene()->m_gameObjects;
 			GameObject* nearestGameObject = nullptr; 
@@ -256,7 +236,8 @@ namespace Lobster
 					// Cast ray and select object (only activated by click but not drag)
 					if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !b_mouseDownSelect && !b_gizmoUsing) {
 						glm::vec3 pos, dir;
-						ComputeCameraRay(pos, dir);
+						CameraComponent* cam = m_editorCamera->GetComponent<CameraComponent>();
+						Input::ComputeCameraRay(cam->GetViewMatrix(), cam->GetProjectionMatrix(), pos, dir, winpos, winsize);
 						SelectObject(pos, dir);
 						b_mouseDownSelect = true;
 					}

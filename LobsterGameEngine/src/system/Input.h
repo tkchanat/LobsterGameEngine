@@ -26,10 +26,12 @@ namespace Lobster
 		static bool IsKeyHold(int key);
 		static bool IsMouseUp(int button);
 		static bool IsMouseDown(int button);
-		static bool IsMouseHold(int button);
+		static bool IsMouseHold(int button);		
 		static void GetMousePos(double& x, double& y);
 		static void GetWindowPos(int* x, int* y);
 		static void GetWindowSize(int* x , int* y);
+		static void ComputeCameraRay(glm::mat4 view, glm::mat4 proj, glm::vec3& origin, glm::vec3& direction,
+			glm::vec2 window_pos = glm::vec2(-1, -1), glm::vec2 window_size = glm::vec2(-1, -1));
 		static double GetMousePosX();
 		static double GetMousePosY();
 		static double GetMouseDeltaX();

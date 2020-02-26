@@ -14,13 +14,13 @@ namespace Lobster
     class Scene
     {
 		friend class ImGuiHierarchy;
-		friend class ImGuiSkyboxEditor;
 		friend class ImGuiScene;
 		friend class ImGuiToolbar;
     private:
 		Skybox* m_skybox;
         std::vector<GameObject*> m_gameObjects;
 		PhysicsSystem* m_physicsSystem;
+		CameraComponent* m_gameCamera = nullptr; // a reference to game camera for easy access
 		std::string m_name;
     public:
         Scene(const char* scenePath = nullptr);
@@ -28,12 +28,14 @@ namespace Lobster
 		void OnBegin();
         void OnUpdate(double deltaTime);
 		void OnPhysicsUpdate(double deltaTime);
+		void SetGameCamera(CameraComponent* camera);
 		std::stringstream Serialize();
 		void Deserialize(std::stringstream& ss);
         Scene* AddGameObject(GameObject* gameObject);		
 		Scene* RemoveGameObject(GameObject* gameObject);
 		Scene* RemoveGameObjectByName(std::string name);
 		bool IsObjectNameDuplicated(std::string name, std::string except = "");
+		inline CameraComponent* GetGameCamera() const { return m_gameCamera; }
 		inline Skybox* GetSkybox() const { return m_skybox; }
 	private:
 		friend class cereal::access;

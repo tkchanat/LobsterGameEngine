@@ -43,10 +43,12 @@ namespace Lobster
 						// TODO new a scene in a more proper way
 						app->OpenScene("");
 						GameObject* camera = new GameObject("Main Camera");
-						camera->AddComponent(new CameraComponent());
+						CameraComponent* comp = new CameraComponent();
+						camera->AddComponent(comp);
 						camera->AddComponent(new AudioListener());
 						camera->transform.Translate(0, 2, 10);
 						app->GetCurrentScene()->AddGameObject(camera);
+						app->GetCurrentScene()->SetGameCamera(comp);
 						GameObject* light = new GameObject("Directional Light");
 						light->AddComponent(new LightComponent(LightType::DIRECTIONAL_LIGHT));
 						app->GetCurrentScene()->AddGameObject(light);

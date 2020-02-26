@@ -131,6 +131,34 @@ namespace Lobster
 		glfwGetWindowSize(window, x, y);
 	}
 
+	// Modified version from ImGuizmo::ComputeCameraRay()	
+	void Input::ComputeCameraRay(glm::mat4 view, glm::mat4 proj, glm::vec3& origin, glm::vec3& direction,
+		glm::vec2 window_pos, glm::vec2 window_size)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		// if window pos and window size are not input, default to be the size and position of the glfw window
+		if (window_pos[0] < 0 || window_pos[1] < 0) {
+			int wx, wy;
+			GetWindowPos(&wx, &wy);
+			window_pos = glm::vec2(wx, wy);
+		}
+		if (window_size[0] < 0 || window_size[1] < 0) {
+			int wx, wy;
+			GetWindowSize(&wx, &wy);
+			window_size = glm::vec2(wx, wy);
+		}
+		glm::mat4 viewProjInv = glm::inverse(proj * view);
+		float mox = ((io.MousePos.x - window_pos.x) / window_size.x) * 2.f - 1.f;
+		float moy = (1.f - ((io.MousePos.y - window_pos.y) / window_size.y)) * 2.f - 1.f;
+
+		glm::vec4 rayOrigin = viewProjInv * glm::vec4(mox, moy, 0.f, 1.f);
+		rayOrigin /= rayOrigin.w;
+		origin = rayOrigin;
+		glm::vec4 rayEnd = viewProjInv * glm::vec4(mox, moy, 1.f, 1.f);
+		rayEnd /= rayEnd.w;
+		direction = glm::normalize(glm::vec3(rayEnd - rayOrigin));
+	}
+
 	double Input::GetMousePosX() {
 		GLFWwindow* window = Application::GetInstance()->GetWindow()->GetPtr();
 		double x, y;

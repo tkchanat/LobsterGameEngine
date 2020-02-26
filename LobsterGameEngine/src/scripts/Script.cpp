@@ -170,6 +170,16 @@ namespace Lobster {
 	PhysicsComponent* FunctionBinder::GetPhysicsComponent(GameObject* gameObject) {
 		return gameObject->GetComponent<PhysicsComponent>();
 	}
+	bool FunctionBinder::RayIntersect(CameraComponent* camera, PhysicsComponent* phys, float distanceThreshold = 10000.f) {
+		glm::vec3 origin, direction;
+		Input::ComputeCameraRay(camera->GetViewMatrix(), camera->GetProjectionMatrix(), origin, direction);
+		float t = -1;
+		for (Collider* collider : phys->GetColliders()) {
+			collider->Intersects(origin, direction, t);
+		}
+		if (t < 0 || t > distanceThreshold) return false;
+		return true;
+	}
 
 	void Script::Bind() {
 		// Class/function binding
@@ -184,10 +194,12 @@ namespace Lobster {
 			.addFunction("GetMouseDeltaY", Input::GetMouseDeltaY)
 			.addFunction("IsMouseDown", Input::IsMouseDown)
 			.addFunction("IsMouseHold", Input::IsMouseHold)
+			.addFunction("IsMouseUp", Input::IsMouseUp)
 			.addFunction("LockCursor", Input::LockCursor)
 			.addFunction("UnlockCursor", Input::UnlockCursor)
 			.addFunction("DisableCursor", FunctionBinder::DisableCursor)
 			.addFunction("EnableCursor", FunctionBinder::EnableCursor)
+			.addFunction("RayIntersect", FunctionBinder::RayIntersect)
 			// utilities
 			.addFunction("normalize", FunctionBinder::Normalize)
 			.addFunction("GetAudioSource", FunctionBinder::GetAudioSource)
@@ -269,6 +281,7 @@ namespace Lobster {
 			// Scene
 			.beginClass<Scene>("Scene")
 			.addFunction("AddGameObject", &Scene::AddGameObject)
+			.addFunction("GetGameCamera", &Scene::GetGameCamera)
 			//.addFunction("RemoveGameObject", ) <- overloaded function
 			//.addFunction("GetGameObjects", &Scene::GetGameObjects)
 			.endClass()
@@ -279,6 +292,8 @@ namespace Lobster {
 		lua_setglobal(L, "transform");
 		push(L, gameObject); // pointer to 'GameObject', C++ lifetime
 		lua_setglobal(L, "this");
+		push(L, Application::GetInstance()->GetCurrentScene()); // pointer to current scene, C++ lifetime
+		lua_setglobal(L, "scene");
 	}
 
 }

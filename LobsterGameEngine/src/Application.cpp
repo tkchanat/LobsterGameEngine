@@ -132,10 +132,12 @@ namespace Lobster
 		//}
 
 		GameObject* camera = new GameObject("Main Camera");
-		camera->AddComponent(new CameraComponent());
+		CameraComponent* comp = new CameraComponent();
+		camera->AddComponent(comp);
 		camera->AddComponent(new AudioListener());
 		camera->transform.Translate(0, 2, 10);
 		m_scene->AddGameObject(camera);
+		m_scene->SetGameCamera(comp);
 
 		GameObject* light = new GameObject("Directional Light");
 		light->AddComponent(new LightComponent(LightType::DIRECTIONAL_LIGHT));

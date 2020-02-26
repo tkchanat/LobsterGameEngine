@@ -19,7 +19,8 @@ namespace Lobster
 		SCRIPT_COMPONENT,
 		AUDIO_SOURCE_COMPONENT,
 		AUDIO_LISTENER_COMPONENT,
-		PARTICLE_COMPONENT
+		PARTICLE_COMPONENT,
+		AI_COMPONENT
 	};
 
 	//	Warning 2: Remember to register your component name (in proper English) in Component.cpp too.

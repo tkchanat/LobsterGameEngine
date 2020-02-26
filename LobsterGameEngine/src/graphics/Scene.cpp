@@ -68,6 +68,10 @@ namespace Lobster
 		}
 	}
 
+	void Scene::SetGameCamera(CameraComponent* camera) {
+		m_gameCamera = camera;
+	}
+
 	std::stringstream Scene::Serialize() {
 		//LOG("Serializing Scene");
 		std::stringstream ss;

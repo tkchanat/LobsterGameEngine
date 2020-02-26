@@ -10,6 +10,7 @@
 #include "system/UndoSystem.h"
 #include "scripts/Script.h"
 #include "components/ParticleComponent.h"
+#include "ai/AIComponent.h"
 
 namespace Lobster
 {
@@ -72,6 +73,11 @@ namespace Lobster
 							ParticleComponent* particleComp = new ParticleComponent();
 							selectedGO->AddComponent(particleComp);
 							UndoSystem::GetInstance()->Push(new CreateComponentCommand(particleComp, selectedGO));
+						}
+						if (ImGui::Selectable("AI")) {							
+							AIComponent* ai = new AIComponent();
+							selectedGO->AddComponent(ai);
+							UndoSystem::GetInstance()->Push(new CreateComponentCommand(ai, selectedGO));
 						}
 						if (ImGui::Selectable("Script")) {
 							Script* script = new Script();
