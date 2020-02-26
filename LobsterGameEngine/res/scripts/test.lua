@@ -6,5 +6,9 @@ function OnBegin()
 end
 
 function OnUpdate(dt)
-
+	if(Lobster.IsMouseHold()) then
+		Lobster.GetMouseDeltaY()
+		rigidbody = Lobster.GetPhysicsComponent(this)
+		
+	end
 end
