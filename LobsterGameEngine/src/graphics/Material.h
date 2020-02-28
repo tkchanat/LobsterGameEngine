@@ -44,6 +44,7 @@ namespace Lobster
 		inline std::string GetName() const { return m_name; }
 		inline std::string GetPath() const { return FileSystem::Path(m_name); }
 		inline Shader* GetShader() const { return m_shader; }
+		inline Texture2D* GetTexture(int index) const { return m_textures[index]; }
 		inline RenderingMode GetRenderingMode() const { return m_mode; }
 		inline void SetRenderingMode(RenderingMode mode) { m_mode = mode; }
 	private:

@@ -15,6 +15,7 @@ namespace Lobster
 	struct RenderTargetDesc
 	{
 		bool depthOnly = false;
+		Formats internalFormat = Formats::RGBAFormat;
 		Formats format = Formats::RGBAFormat;
 		Types type = Types::UnsignedByteType;
 		MinMagFilters minFilter = MinMagFilters::LinearFilter;
@@ -35,6 +36,8 @@ namespace Lobster
 		FrameBuffer(int width, int height, const std::vector<RenderTargetDesc>& renderTargetsDesc = std::vector<RenderTargetDesc>());
 		~FrameBuffer();
 		void Bind();
+		void BindRead();
+		void BindDraw();
 		void BindAndClear(uint flag);
 		void Unbind();
 		void Resize(int width, int height);

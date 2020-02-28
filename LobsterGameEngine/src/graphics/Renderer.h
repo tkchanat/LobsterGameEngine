@@ -91,7 +91,9 @@ namespace Lobster
 		Shader* m_spriteShader;
 
 		// renderer resources
+		bool b_deferredRendering;
 		static Renderer* s_instance;
+		FrameBuffer* m_gBuffer;
 		SceneEnvironment m_activeSceneEnvironment;
 		std::list<RenderCommand> m_opaqueQueue;
 		std::list<RenderCommand> m_transparentQueue;
@@ -114,6 +116,7 @@ namespace Lobster
 		static void ClearAllQueues();
 	private:
 		void DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue);
+		void DrawDeferredQueue(CameraComponent* camera, std::list<RenderCommand>& queue);
         void Render(CameraComponent* camera, bool debug = false);
     };
     

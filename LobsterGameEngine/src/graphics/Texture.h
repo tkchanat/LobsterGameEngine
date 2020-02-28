@@ -11,6 +11,7 @@ namespace Lobster
 		RGFormat = GL_RG,
 		RGIntFormat = GL_RG_INTEGER,
 		RGBFormat = GL_RGB,
+		RGB16FFormat = GL_RGB16F,
 		RGBIntFormat = GL_RGB_INTEGER,
 		RGBAFormat = GL_RGBA,
 		RGBAIntFormat = GL_RGBA_INTEGER,

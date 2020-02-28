@@ -25,12 +25,6 @@ namespace Lobster
 			uint targetId;
 			RenderTargetDesc& desc = m_renderTargetsDesc[i];
 			glGenTextures(1, &targetId);
-			glBindTexture(GL_TEXTURE_2D, targetId);
-			glTexImage2D(GL_TEXTURE_2D, 0, (GLint)desc.format, m_width, m_height, 0, (GLint)desc.format, (GLint)desc.type, NULL);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint)desc.minFilter);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLint)desc.magFilter);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLint)desc.wrappingS);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLint)desc.wrappingT);
 			m_renderTargets[i] = targetId;
 		}
 		AssembleFrameBuffer();
@@ -50,6 +44,16 @@ namespace Lobster
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 	}
 
+	void FrameBuffer::BindRead()
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FBO);
+	}
+
+	void FrameBuffer::BindDraw()
+	{
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_FBO);
+	}
+
 	void FrameBuffer::BindAndClear(uint flag)
 	{
 		// Bind
@@ -59,7 +63,7 @@ namespace Lobster
 		glFlag |= (flag & ClearFlag::COLOR) ? GL_COLOR_BUFFER_BIT : 0;
 		glFlag |= (flag & ClearFlag::DEPTH) ? GL_DEPTH_BUFFER_BIT : 0;
 		glFlag |= (flag & ClearFlag::STENCIL) ? GL_STENCIL_BUFFER_BIT : 0;
-		glClearColor(0, 0, 0, 1);
+		glClearColor(0.25, 0.25, 0.25, 1);
 		glClear(glFlag);
 	}
 
@@ -84,12 +88,20 @@ namespace Lobster
 
 	void FrameBuffer::AssembleFrameBuffer()
 	{
-		// Configure render targets
 		Bind();
+
+		bool depthOnly = std::any_of(m_renderTargetsDesc.begin(), m_renderTargetsDesc.end(), [](const RenderTargetDesc& desc) { return desc.depthOnly; });
+
+		// Configure render targets
 		for (int i = 0; i < m_renderTargetsDesc.size(); ++i) {
 			RenderTargetDesc& desc = m_renderTargetsDesc[i];
 			glBindTexture(GL_TEXTURE_2D, m_renderTargets[i]);
-			if (desc.depthOnly) {
+			glTexImage2D(GL_TEXTURE_2D, 0, (GLint)desc.internalFormat, m_width, m_height, 0, (GLint)desc.format, (GLint)desc.type, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint)desc.minFilter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLint)desc.magFilter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLint)desc.wrappingS);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLint)desc.wrappingT);
+			if (depthOnly) {
 				float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 				glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_renderTargets[i], 0);
@@ -98,21 +110,24 @@ namespace Lobster
 			}
 			else {
 				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_renderTargets[i], 0);
-				glBindRenderbuffer(GL_RENDERBUFFER, m_RBO);
-				glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_width, m_height);
-				glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_RBO);
 			}
+			glBindTexture(GL_TEXTURE_2D, 0);
 		}
-		glBindTexture(GL_TEXTURE_2D, 0);
-
 		// Multiple render targets (if applicable)
 		std::vector<uint> attachments(m_renderTargetsDesc.size());
 		std::iota(std::begin(attachments), std::end(attachments), GL_COLOR_ATTACHMENT0);
 		glDrawBuffers(m_renderTargetsDesc.size(), attachments.data());
 
+		// Configure render buffer object
+		if (!depthOnly) {
+			glBindRenderbuffer(GL_RENDERBUFFER, m_RBO);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_width, m_height);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_RBO);
+		}
+
 		// Check completeness
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
+		int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE) {
 			LOG("Framebuffer is not complete, you dumb ass!");
 		}
 

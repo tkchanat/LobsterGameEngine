@@ -46,7 +46,7 @@ in mat3 frag_TBN;
 out vec4 FragColor;
 
 uniform float AmbientStrength = 0.25;
-uniform sampler2D DiffuseMap;
+uniform sampler2D AlbedoMap;
 uniform sampler2D NormalMap;
 uniform vec4 DiffuseColor = vec4(0, 1, 0, 1);
 uniform vec4 SpecularColor = vec4(1, 1, 1, 1);
@@ -61,7 +61,7 @@ vec4 CalcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir)
     vec3 reflectDir = reflect(-lightDir, normal);
     float multiplier = pow(max(dot(viewDir, reflectDir), 0.0), 16.0 * (Shininess + EPSILON));
     // combine results
-    vec4 diffuse = TextureExists(DiffuseMap) ? texture(DiffuseMap, frag_texcoord) * DiffuseColor : DiffuseColor;
+    vec4 diffuse = TextureExists(AlbedoMap) ? texture(AlbedoMap, frag_texcoord) * DiffuseColor : DiffuseColor;
     vec4 specular = Shininess * multiplier * SpecularColor;
     vec3 color = (diffuse * intensity + specular).rgb;
     return vec4(color, diffuse.a);
@@ -81,7 +81,7 @@ vec4 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir)
     vec3 reflectDir = reflect(-lightDir, normal);
     float multiplier = pow(max(dot(viewDir, reflectDir), 0.0), 16.0 * (Shininess + EPSILON));
     // combine results
-    vec4 diffuse = TextureExists(DiffuseMap) ? texture(DiffuseMap, frag_texcoord) * DiffuseColor : DiffuseColor;
+    vec4 diffuse = TextureExists(AlbedoMap) ? texture(AlbedoMap, frag_texcoord) * DiffuseColor : DiffuseColor;
     vec4 specular = Shininess * multiplier * SpecularColor;
     vec3 color = (diffuse * intensity + specular).rgb * radiance;
     return vec4(color, diffuse.a);

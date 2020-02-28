@@ -124,13 +124,13 @@ namespace Lobster
 		//GameObject* sphere = new GameObject("sphere");
 		//sphere->AddComponent(new MeshComponent(FileSystem::Path("meshes/sphere.obj").c_str()));
 		//m_scene->AddGameObject(sphere);
-		//for (int i = 0; i < 5; ++i)
-		//{
-		//	GameObject* sphere = (new GameObject(std::to_string(i).c_str()));
-		//	sphere->AddComponent(new MeshComponent(FileSystem::Path("meshes/sphere.obj").c_str(), "materials/cube.mat"));
-		//	sphere->transform.WorldPosition = glm::vec3(0, 0, (i - 2.0)*2.5);
-		//	m_scene->AddGameObject(sphere);
-		//}
+		for (int i = 0; i < 5; ++i)
+		{
+			GameObject* sphere = (new GameObject(std::to_string(i).c_str()));
+			sphere->AddComponent(new MeshComponent(FileSystem::Path("meshes/sphere.obj").c_str(), "materials/cube.mat"));
+			sphere->transform.WorldPosition = glm::vec3(0, 0, (i - 2.0)*2.5);
+			m_scene->AddGameObject(sphere);
+		}
 
 		GameObject* camera = new GameObject("Main Camera");
 		CameraComponent* comp = new CameraComponent();
