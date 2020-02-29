@@ -25,8 +25,8 @@ namespace Lobster
 		// Create frame buffer for second pass
         glm::ivec2 size = Application::GetInstance()->GetWindow()->GetSize();
 		std::vector<RenderTargetDesc> desc(3);
-		desc[0].internalFormat = Formats::RGB16FFormat;
-		desc[0].format = Formats::RGBFormat;
+		desc[0].internalFormat = Formats::RGBA16FFormat;
+		desc[0].format = Formats::RGBAFormat;
 		desc[0].type = Types::FloatType;
 		desc[1].internalFormat = Formats::RGB16FFormat;
 		desc[1].format = Formats::RGBFormat;
@@ -45,14 +45,6 @@ namespace Lobster
 		m_spriteMesh = MeshFactory::Sprite();
 
 		s_instance = this;
-
-		// listen events
-		EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {
-			if (e->Key == GLFW_KEY_D)
-			{
-				b_deferredRendering = !b_deferredRendering;
-			}
-		}));
     }
     
     Renderer::~Renderer()
@@ -133,7 +125,7 @@ namespace Lobster
 			useShader->SetUniform("sys_brdfLUTMap", 10);
 			
 			if (boundedMaterial != useMaterial) {
-				useMaterial->SetUniforms();
+				useMaterial->SetUniforms(useShader);
 				boundedMaterial = useMaterial;
 			}
 
@@ -147,9 +139,11 @@ namespace Lobster
 		// Geometry pass
 		m_gBuffer->BindAndClear(ClearFlag::COLOR | ClearFlag::DEPTH);
 		Shader* useShader = ShaderLibrary::Use("shaders/GBuffer.glsl");
+		Material* boundedMaterial = nullptr;
 		useShader->Bind();
 		useShader->SetUniform("sys_view", camera->GetViewMatrix());
 		useShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
+		useShader->SetUniform("sys_cameraPosition", camera->GetPosition());
 		for (std::list<RenderCommand>::iterator it = queue.begin(); it != queue.end(); ++it) {
 			RenderCommand& command = *it;
 			Material* useMaterial = command.UseMaterial;
@@ -163,22 +157,13 @@ namespace Lobster
 				useShader->SetUniform("sys_animate", false);
 			}
 			// Fragment shader uniforms
-			Texture2D* albedoMap = useMaterial->GetTexture(0);
-			Texture2D* normalMap = useMaterial->GetTexture(1);
-			useShader->SetTexture2D(0, albedoMap ? albedoMap->Get() : nullptr);
-			useShader->SetTexture2D(1, normalMap ? normalMap->Get() : nullptr);
-			useShader->SetUniform("AlbedoMap", 0);
-			useShader->SetUniform("NormalMap", 1);
-			//useShader->SetTextureCube(8, m_activeSceneEnvironment.Skybox->GetIrradiance());
-			//useShader->SetTextureCube(9, m_activeSceneEnvironment.Skybox->GetPrefilter());
-			//useShader->SetTexture2D(10, m_activeSceneEnvironment.Skybox->GetBRDF());
-			//for (int i = 0; i < MAX_DIRECTIONAL_SHADOW; ++i) {
-			//	useShader->SetTexture2D(11 + i, LightLibrary::GetDirectionalShadowMap(i));
-			//	useShader->SetUniform(("sys_shadowMap[" + std::to_string(i) + "]").c_str(), 11 + i);
-			//}
-			//useShader->SetUniform("sys_irradianceMap", 8);
-			//useShader->SetUniform("sys_prefilterMap", 9);
-			//useShader->SetUniform("sys_brdfLUTMap", 10);
+			if (boundedMaterial != useMaterial) {
+ 				useShader->SetTexture2D(2, nullptr); // placeholder
+ 				useShader->SetTexture2D(3, nullptr); // placeholder
+ 				useShader->SetTexture2D(4, nullptr); // placeholder
+				useMaterial->SetUniforms(useShader);
+				boundedMaterial = useMaterial;
+			}
 			command.UseVertexArray->Draw();
 		}
 		m_gBuffer->Unbind();
@@ -187,9 +172,6 @@ namespace Lobster
 		FrameBuffer* frameBuffer = camera->GetFrameBuffer();
 		m_gBuffer->BindRead();
 		frameBuffer->BindDraw();
-		// blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
-		// the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
-		// depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
 		glm::ivec2 src_size = m_gBuffer->GetSize();
 		glm::ivec2 dst_size = frameBuffer->GetSize();
 		glBlitFramebuffer(0, 0, src_size.x, src_size.y, 0, 0, dst_size.x, dst_size.y, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
@@ -201,14 +183,23 @@ namespace Lobster
 		useShader->SetTexture2D(0, m_gBuffer->Get(0));
 		useShader->SetTexture2D(1, m_gBuffer->Get(1));
 		useShader->SetTexture2D(2, m_gBuffer->Get(2));
+		useShader->SetUniform("sys_gNormalDepth", 0);
+		useShader->SetUniform("sys_gMetalRoughAO", 1);
+		useShader->SetUniform("sys_gAlbedo", 2);
+		useShader->SetUniform("sys_view", camera->GetViewMatrix());
+		useShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
 		useShader->SetUniform("sys_cameraPosition", camera->GetPosition());
 		for (int i = 0; i < MAX_DIRECTIONAL_SHADOW; ++i) {
 			useShader->SetTexture2D(11 + i, LightLibrary::GetDirectionalShadowMap(i));
 			useShader->SetUniform(("sys_shadowMap[" + std::to_string(i) + "]").c_str(), 11 + i);
 		}
-		useShader->SetUniform("sys_positionGBuffer", 0);
-		useShader->SetUniform("sys_normalGBuffer", 1);
-		useShader->SetUniform("sys_albedoGBuffer", 2);
+		useShader->SetTextureCube(8, m_activeSceneEnvironment.Skybox->GetIrradiance());
+		useShader->SetTextureCube(9, m_activeSceneEnvironment.Skybox->GetPrefilter());
+		useShader->SetTexture2D(10, m_activeSceneEnvironment.Skybox->GetBRDF());
+		useShader->SetUniform("sys_irradianceMap", 8);
+		useShader->SetUniform("sys_prefilterMap", 9);
+		useShader->SetUniform("sys_brdfLUTMap", 10);
+
 		Renderer::SetDepthTest(false);
 		m_postProcessMesh->Draw();
 		Renderer::SetDepthTest(true, DEPTH_LESS);

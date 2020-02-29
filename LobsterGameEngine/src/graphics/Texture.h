@@ -14,6 +14,7 @@ namespace Lobster
 		RGB16FFormat = GL_RGB16F,
 		RGBIntFormat = GL_RGB_INTEGER,
 		RGBAFormat = GL_RGBA,
+		RGBA16FFormat = GL_RGBA16F,
 		RGBAIntFormat = GL_RGBA_INTEGER,
 		DepthComponentFormat = GL_DEPTH_COMPONENT
 	};

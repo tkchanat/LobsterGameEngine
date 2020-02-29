@@ -38,8 +38,8 @@ void main()
 }
 
 ///FragmentShader
-layout (location = 0) out vec3 gPosition;
-layout (location = 1) out vec3 gNormal;
+layout (location = 0) out vec4 gNormalDepth;
+layout (location = 1) out vec3 gMetalRoughAO;
 layout (location = 2) out vec4 gAlbedo;
 in vec3 frag_position;
 in vec3 frag_normal;
@@ -48,10 +48,19 @@ in mat3 frag_TBN;
 
 uniform sampler2D AlbedoMap;
 uniform sampler2D NormalMap;
+uniform sampler2D RoughnessMap;
+uniform sampler2D MetallicMap;
+uniform sampler2D AmbientOcclusionMap;
 
 void main()
 {    
-    gPosition = frag_position;
-    gNormal = TextureExists(NormalMap) ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
-    gAlbedo = texture(AlbedoMap, frag_texcoord);
+	vec3 normal = TextureExists(NormalMap) ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
+	vec4 albedo = TextureExists(AlbedoMap) ? texture(AlbedoMap, frag_texcoord) : vec4(1, 1, 1, 1);
+	float roughness = TextureExists(RoughnessMap) ? texture(RoughnessMap, frag_texcoord).r : 0.5;
+	float metallic = TextureExists(MetallicMap) ? texture(MetallicMap, frag_texcoord).r : 0.0;
+	float ambientOcclusion = TextureExists(AmbientOcclusionMap) ? texture(AmbientOcclusionMap, frag_texcoord).r : 1.0;
+	float depth = distance(sys_cameraPosition, frag_position);
+    gNormalDepth = vec4(normal, depth);
+    gMetalRoughAO = vec3(metallic, roughness, ambientOcclusion);
+	gAlbedo = albedo;
 }  

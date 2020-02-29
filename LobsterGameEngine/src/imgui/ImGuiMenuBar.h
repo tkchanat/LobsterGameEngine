@@ -185,10 +185,18 @@ namespace Lobster
 				// ==========================================
 				// Scene Settings
 				static bool show_skyboxEditor = false;
-				if (ImGui::BeginMenu("Scene"))
+				static bool use_deferred_pipeline = false;
+				if (ImGui::BeginMenu("Settings"))
 				{
 					if (ImGui::MenuItem("Skybox")) {
 						show_skyboxEditor = true;
+					}
+					if (ImGui::BeginMenu("Render pipelines")) {
+						ImGui::Checkbox("Use deferred pipeline", &use_deferred_pipeline);
+						if (ImGui::IsItemDeactivatedAfterChange()) {
+							Renderer::SetDeferredPipeline(use_deferred_pipeline);
+						}
+						ImGui::EndMenu();
 					}
 					ImGui::EndMenu();
 				}

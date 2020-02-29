@@ -114,6 +114,7 @@ namespace Lobster
 		static void EndScene();
 		static void ClearOverlayQueue();
 		static void ClearAllQueues();
+		inline static void SetDeferredPipeline(bool status) { s_instance->b_deferredRendering = status; }
 	private:
 		void DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue);
 		void DrawDeferredQueue(CameraComponent* camera, std::list<RenderCommand>& queue);

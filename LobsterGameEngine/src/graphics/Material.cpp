@@ -268,8 +268,9 @@ namespace Lobster
 		m_textures[slot] = data;
 	}
 
-	void Material::SetUniforms()
+	void Material::SetUniforms(Shader* targetShader)
 	{
+		if (targetShader == nullptr) return;
 		if (m_uniformData == nullptr) return;
 		auto declaration = m_shader->GetUniformDeclarations();
 		size_t offset = 0;
@@ -279,9 +280,9 @@ namespace Lobster
 			if (decl.Type == UniformDeclaration::SAMPLER2D) {
 				uint slot = *(uint*)data;
 				Texture2D* texture = m_textures[slot];
-				m_shader->SetTexture2D(slot, texture ? texture->Get() : nullptr);
+				targetShader->SetTexture2D(slot, texture ? texture->Get() : nullptr);
 			}
-			m_shader->SetUniform(decl.Name.c_str(), decl.Type, data);
+			targetShader->SetUniform(decl.Name.c_str(), decl.Type, data);
 			offset += decl.Size();
 		}
 	}

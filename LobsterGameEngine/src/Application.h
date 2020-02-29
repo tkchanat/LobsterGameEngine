@@ -26,7 +26,7 @@ namespace Lobster
 		glm::vec2 gameTabPos;
 		glm::vec2 gameTabSize;
 		std::string title = "Lobster Engine";
-		bool vsync = true;
+		bool vsync = false;
 	};
 
     class Application
