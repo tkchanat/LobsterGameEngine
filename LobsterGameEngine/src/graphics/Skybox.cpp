@@ -53,6 +53,7 @@ namespace Lobster
 				std::string fullpath = FileSystem::OpenFileDialog();
 				if (!fullpath.empty()) {
 					m_faces[i] = FileSystem::Path(fullpath);
+					m_faces[i] = FileSystem::Path(m_faces[i]);
 					m_cubemap->Set(
 						m_faces[0].c_str(),
 						m_faces[1].c_str(),
@@ -68,6 +69,30 @@ namespace Lobster
 			}
 		}
 		ImGui::End();
+	}
+
+	void Skybox::Serialize(cereal::JSONOutputArchive& oarchive)
+	{
+		oarchive(*this);
+	}
+
+	void Skybox::Deserialize(cereal::JSONInputArchive& iarchive)
+	{
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing Skybox failed. Reason: {}", e.what());
+			return;
+		}
+		m_cubemap->Set(
+			m_faces[0].c_str(),
+			m_faces[1].c_str(),
+			m_faces[2].c_str(),
+			m_faces[3].c_str(),
+			m_faces[4].c_str(),
+			m_faces[5].c_str()
+		);
 	}
 
 }

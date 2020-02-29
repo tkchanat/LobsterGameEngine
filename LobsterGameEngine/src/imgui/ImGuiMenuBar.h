@@ -193,6 +193,8 @@ namespace Lobster
 					}
 					if (ImGui::BeginMenu("Render pipelines")) {
 						ImGui::Checkbox("Use deferred pipeline", &use_deferred_pipeline);
+						if (ImGui::IsItemHovered())
+							ImGui::SetTooltip("Standardized to PBR shading");
 						if (ImGui::IsItemDeactivatedAfterChange()) {
 							Renderer::SetDeferredPipeline(use_deferred_pipeline);
 						}
