@@ -5,6 +5,7 @@
 #include "events/EventCollection.h"
 #include "imgui/ImGuiAbout.h"
 #include "imgui/ImGuiExport.h"
+#include "imgui/ImGuiScene.h"
 #include "graphics/meshes/MeshFactory.h"
 #include "graphics/Skybox.h"
 #include "system/UndoSystem.h"
@@ -188,6 +189,10 @@ namespace Lobster
 				static bool use_deferred_pipeline = false;
 				if (ImGui::BeginMenu("Settings"))
 				{
+					if (ImGui::BeginMenu("Editor")) {
+						ImGuiScene::ShowGridSettings();
+						ImGui::EndMenu();
+					}
 					if (ImGui::MenuItem("Skybox")) {
 						show_skyboxEditor = true;
 					}

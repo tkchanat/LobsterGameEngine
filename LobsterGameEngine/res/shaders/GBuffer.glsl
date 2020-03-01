@@ -51,12 +51,16 @@ uniform sampler2D NormalMap;
 uniform sampler2D RoughnessMap;
 uniform sampler2D MetallicMap;
 uniform sampler2D AmbientOcclusionMap;
+uniform vec3 Albedo = vec3(1, 1, 1);
+uniform float Opacity = 1.0;
+uniform float Metallic = 0.25;
+uniform float Roughness = 0.5;
 
 void main()
 {    
 	vec3 normal = TextureExists(NormalMap) ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
-	vec4 albedo = TextureExists(AlbedoMap) ? texture(AlbedoMap, frag_texcoord) : vec4(1, 1, 1, 1);
-	float roughness = TextureExists(RoughnessMap) ? texture(RoughnessMap, frag_texcoord).r : 0.5;
+	vec4 albedo = TextureExists(AlbedoMap) ? texture(AlbedoMap, frag_texcoord) : vec4(Albedo, Opacity);
+	float roughness = TextureExists(RoughnessMap) ? texture(RoughnessMap, frag_texcoord).r : 1.0;
 	float metallic = TextureExists(MetallicMap) ? texture(MetallicMap, frag_texcoord).r : 0.0;
 	float ambientOcclusion = TextureExists(AmbientOcclusionMap) ? texture(AmbientOcclusionMap, frag_texcoord).r : 1.0;
 	float depth = distance(sys_cameraPosition, frag_position);

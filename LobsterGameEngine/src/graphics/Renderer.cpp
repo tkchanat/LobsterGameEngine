@@ -161,6 +161,9 @@ namespace Lobster
  				useShader->SetTexture2D(2, nullptr); // placeholder
  				useShader->SetTexture2D(3, nullptr); // placeholder
  				useShader->SetTexture2D(4, nullptr); // placeholder
+				useShader->SetUniform("MetallicMap", 2); // placeholder
+				useShader->SetUniform("RoughnessMap", 3); // placeholder
+				useShader->SetUniform("AmbientOcclusionMap", 4); // placeholder
 				useMaterial->SetUniforms(useShader);
 				boundedMaterial = useMaterial;
 			}
