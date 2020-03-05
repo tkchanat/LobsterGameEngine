@@ -21,9 +21,11 @@ namespace Lobster {
 	}
 
 	bool PathFinder::Find(Node* destination = nullptr) {
-		const int MAX_ITER = 100000;
+		const int MAX_ITER = 1000;
 		if (destination) dest = destination;
-		auto compare = [](Node* left, Node* right) { return left->f < right->f; };
+		if (at == destination) return true;
+		auto compare = [](Node* left, Node* right) -> bool { return left->f < right->f; };
+		auto compareLink = [](Link* a, Link* b) -> bool { return a->from->Distance(a->to) < b->from->Distance(b->to); };
 		std::priority_queue<Node*, std::vector<Node*>, decltype(compare)> queue(compare);
 		std::map<Node*, bool> bmap; // to keep track of the nodes in queue
 		queue.push(at);
@@ -34,17 +36,17 @@ namespace Lobster {
 		while (!queue.empty()) {
 			Node* current = queue.top();
 			if (current == dest) {
-				moveSequence.push_back(current);
 				return true;
 			}
 			queue.pop();
 			bmap[current] = false;
-			for (Link* link : current->links) {				
+			std::sort(current->links.begin(), current->links.end(), compareLink);
+			for (Link* link : current->links) {
 				Node* neighbor = (link->from == current ? link->to : link->from);
 				// accumulate the distance to neighbor
 				float gTemp = current->g + current->Distance(neighbor);
 				if (gTemp < neighbor->g) {
-					moveSequence.push_back(current);
+					pathsWalked[neighbor] = current;
 					neighbor->g = gTemp;
 					// f = g(x) + h(x), h here we use the linear distance between two nodes in 3D space
 					neighbor->f = neighbor->g + neighbor->Distance(dest);
@@ -56,7 +58,7 @@ namespace Lobster {
 			}
 			iter++;
 			if (iter > MAX_ITER) {
-				throw std::exception("Exceed 100000 iterations, stopping.");
+				throw std::exception("Exceed 1000 iterations, stopping.");
 			}
 		}
 		return false;
@@ -67,7 +69,7 @@ namespace Lobster {
 	}
 
 	void PathFinder::OnImGuiRender() {
-		if (ImGui::CollapsingHeader("AI Component", &m_show, ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::CollapsingHeader("Path Finder", &m_show, ImGuiTreeNodeFlags_DefaultOpen)) {
 			ImGui::Checkbox("Enable##ai-enable", &m_enabled);
 			if (ImGui::BeginCombo("Algorithm", (type == PathFinderType::None ? "None" : "A*"))) {
 				if (ImGui::Selectable("None")) {
@@ -89,6 +91,8 @@ namespace Lobster {
 						if (at) at->attached = false;
 						at = node;
 						at->attached = true;
+						// also update another slot
+						if (dest) dest->attached = true;
 					}
 				}
 				ImGui::EndCombo();
@@ -104,6 +108,8 @@ namespace Lobster {
 						if (dest) dest->attached = false;
 						dest = node;
 						dest->attached = true;
+						// also update another slot
+						if (at) at->attached = true;
 					}
 				}
 				ImGui::EndCombo();
@@ -116,10 +122,10 @@ namespace Lobster {
 			if (ImGui::Button("Test")) {
 				bool find = Find();
 				std::stringstream ss;
-				for (Node* node : moveSequence) {
-					ss << node->id << " -> ";
+				for (Node* current = dest; current; current = pathsWalked[current]) {
+					ss << current->id << " <- ";
 				}
-				moveSequence.clear();
+				pathsWalked.clear();
 				LOG(find ? "Connected" : "Not Connected");
 				LOG(ss.str().c_str());
 				// important: reset node status every time after pathfind

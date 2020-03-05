@@ -84,7 +84,8 @@ uniform mat4 sys_world;
 uniform mat4 sys_view;
 uniform mat4 sys_projection;
 uniform mat4 sys_bones[)"+ std::to_string(MAX_BONES) + R"(];
-uniform bool sys_animate = false;)");
+uniform bool sys_animate = false;
+uniform vec3 sys_cameraPosition;)");
 
 		StringOps::ReplaceAll(gs, "///GeometryShader", 
 			R"(#version 410 core

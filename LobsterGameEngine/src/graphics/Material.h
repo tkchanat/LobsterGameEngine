@@ -37,13 +37,14 @@ namespace Lobster
 		void OnImGuiRender();
 		void SetRawUniform(const char* name, void* data);
 		void SetRawTexture2D(int slot, Texture2D* data);
-		void SetUniforms();
+		void SetUniforms(Shader* targetShader);
 		void SaveConfiguration();
 		std::stringstream Serialize();
 		void Deserialize(std::stringstream ss);
 		inline std::string GetName() const { return m_name; }
 		inline std::string GetPath() const { return FileSystem::Path(m_name); }
 		inline Shader* GetShader() const { return m_shader; }
+		inline Texture2D* GetTexture(int index) const { return m_textures[index]; }
 		inline RenderingMode GetRenderingMode() const { return m_mode; }
 		inline void SetRenderingMode(RenderingMode mode) { m_mode = mode; }
 	private:

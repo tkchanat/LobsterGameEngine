@@ -16,6 +16,14 @@ namespace Lobster {
 		id = std::string("Node ") + std::to_string(cnt++);
 	}
 
+	Node::~Node() {
+		// clear all links connected to this node
+		for (Link* link : links) {
+			delete link;
+		}
+		links.clear();
+	}
+
 	float Node::Distance(const Node* another) {
 		return glm::distance(glm::vec3(coord[0], coord[1], coord[2]), glm::vec3(another->coord[0], another->coord[1], another->coord[2]));
 	}
@@ -52,11 +60,9 @@ namespace Lobster {
 				ImGui::SameLine();
 				// cross button
 				std::string crossName = std::string("x##x-") + link->from->id + "-" + link->to->id + "-" + id;
-				if (ImGui::Button(crossName.c_str())) {
-					link->from->RemoveLink(link);
-					link->to->RemoveLink(link);
-					parent->RemoveLink(link);
+				if (ImGui::Button(crossName.c_str())) {					
 					delete link;
+					parent->RemoveLink(link);
 					it--;
 				}
 				ImGui::NextColumn();
@@ -110,6 +116,11 @@ namespace Lobster {
 		distance = to - from;
 	}
 
+	Link::~Link() {
+		from->RemoveLink(this);
+		to->RemoveLink(this);
+	}
+
 	ImGuiNodeGraphEditor::ImGuiNodeGraphEditor() {
 		if (s_editor) throw std::exception("A NodeGraphEditor is already created.");
 		s_editor = this;				
@@ -145,7 +156,7 @@ namespace Lobster {
 			Node* node = *it;
 			node->Show();
 			// delete the node if the user cross the node
-			if (!node->show) {
+			if (!node->show) {				
 				delete node;
 				nodes.erase(it--);
 			}

@@ -27,7 +27,8 @@ namespace Lobster {
 		float g = FLT_MAX;
 
 		Node(ImGuiNodeGraphEditor* parent);
-		Node(ImGuiNodeGraphEditor* parent, float x, float y, float z);		
+		Node(ImGuiNodeGraphEditor* parent, float x, float y, float z);
+		~Node();
 		float Distance(const Node* another);
 		Link* IsConnectedTo(Node* node);
 		void RemoveLink(Link* target);
@@ -40,6 +41,7 @@ namespace Lobster {
 		float distance;
 
 		Link(Node* from, Node* to);
+		~Link();
 	};
 
 	class ImGuiNodeGraphEditor : public ImGuiComponent {

@@ -11,7 +11,7 @@ namespace Lobster {
 		Node* dest = nullptr;
 		enum PathFinderType { None, Astar } type = None;
 
-		std::vector<Node*> moveSequence;
+		std::map<Node*, Node*> pathsWalked;
 	public:
 		PathFinder();
 		~PathFinder();		

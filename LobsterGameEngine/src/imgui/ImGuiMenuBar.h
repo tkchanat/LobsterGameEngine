@@ -5,6 +5,7 @@
 #include "events/EventCollection.h"
 #include "imgui/ImGuiAbout.h"
 #include "imgui/ImGuiExport.h"
+#include "imgui/ImGuiScene.h"
 #include "imgui/ImGuiNodeGraphEditor.h"
 #include "graphics/meshes/MeshFactory.h"
 #include "graphics/Skybox.h"
@@ -189,10 +190,24 @@ namespace Lobster
 				// ==========================================
 				// Scene Settings
 				static bool show_skyboxEditor = false;
-				if (ImGui::BeginMenu("Scene"))
+				static bool use_deferred_pipeline = false;
+				if (ImGui::BeginMenu("Settings"))
 				{
+					if (ImGui::BeginMenu("Editor")) {
+						ImGuiScene::ShowGridSettings();
+						ImGui::EndMenu();
+					}
 					if (ImGui::MenuItem("Skybox")) {
 						show_skyboxEditor = true;
+					}
+					if (ImGui::BeginMenu("Render pipelines")) {
+						ImGui::Checkbox("Use deferred pipeline", &use_deferred_pipeline);
+						if (ImGui::IsItemHovered())
+							ImGui::SetTooltip("Standardized to PBR shading");
+						if (ImGui::IsItemDeactivatedAfterChange()) {
+							Renderer::SetDeferredPipeline(use_deferred_pipeline);
+						}
+						ImGui::EndMenu();
 					}
 					if (ImGui::MenuItem("Node Graph")) {
 						b_show_nodeGraphEditor = true;

@@ -74,10 +74,13 @@ namespace Lobster
 							selectedGO->AddComponent(particleComp);
 							UndoSystem::GetInstance()->Push(new CreateComponentCommand(particleComp, selectedGO));
 						}
-						if (ImGui::Selectable("AI")) {							
-							PathFinder* ai = new PathFinder();
-							selectedGO->AddComponent(ai);
-							UndoSystem::GetInstance()->Push(new CreateComponentCommand(ai, selectedGO));
+						if (ImGui::BeginMenu("AI")) {
+							if (ImGui::Selectable("Pathfinder")) {
+								PathFinder* ai = new PathFinder();
+								selectedGO->AddComponent(ai);
+								UndoSystem::GetInstance()->Push(new CreateComponentCommand(ai, selectedGO));
+							}														
+							ImGui::EndMenu();
 						}
 						if (ImGui::Selectable("Script")) {
 							Script* script = new Script();
