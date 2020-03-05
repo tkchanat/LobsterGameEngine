@@ -75,7 +75,7 @@ namespace Lobster
 							UndoSystem::GetInstance()->Push(new CreateComponentCommand(particleComp, selectedGO));
 						}
 						if (ImGui::Selectable("AI")) {							
-							AIComponent* ai = new AIComponent();
+							PathFinder* ai = new PathFinder();
 							selectedGO->AddComponent(ai);
 							UndoSystem::GetInstance()->Push(new CreateComponentCommand(ai, selectedGO));
 						}

@@ -4,16 +4,22 @@
 
 namespace Lobster {
 
-	class AIComponent : public Component {
+	class PathFinder : public Component {
 	private:
-		bool m_showNodeEditor = false;
-		ImGuiNodeGraphEditor* nodeEditor;
-	public:
-		AIComponent();
-		~AIComponent();
+		bool m_enabled = true;
+		Node* at = nullptr;
+		Node* dest = nullptr;
+		enum PathFinderType { None, Astar } type = None;
 
-		void SetGameObjectName(std::string name);
-		virtual void OnUpdate(double deltaTime) override {}
+		std::vector<Node*> moveSequence;
+	public:
+		PathFinder();
+		~PathFinder();		
+
+		void AttachNode(Node* node); // move the object towards the node
+		bool Find(Node* destination); // calculate the shortest path and store the sequence in moveSequence
+
+		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 
 		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override {};

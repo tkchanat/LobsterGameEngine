@@ -3,73 +3,68 @@
 
 namespace Lobster {
 
-	static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
-	static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
+	// This class supposes to be a UI editor for node graph
+	// however, it is too cumbersome and common libraries found on Internet does not help a lot
+	// therefore, I temporarily set it as a simple ImGui-based nodes setter
+	// and we can go back to this if this engine is going to be further developed
+	// -AG	
+	struct Link;
+	class ImGuiNodeGraphEditor;
 
-	struct Node;
-	struct Pin {
-		int ID;
-		Node* Parent;
-		std::string Name;
-		enum class PinType {} Type;
+	struct Node {		
+		inline static int cnt = 0;
+		// internal members
+		Node* targetNode = nullptr;
+		// public members		
+		ImGuiNodeGraphEditor* parent = nullptr;
+		std::string id;		
+		bool show = true;
+		bool attached = false;
+		float coord[3];
+		std::vector<Link*> links;
+		// states
+		float f = FLT_MAX;
+		float g = FLT_MAX;
 
-		Pin(int id, const char* name) : ID(id), Parent(nullptr), Name(name) {}
-		void Draw() const {
-
-		}
+		Node(ImGuiNodeGraphEditor* parent);
+		Node(ImGuiNodeGraphEditor* parent, float x, float y, float z);		
+		float Distance(const Node* another);
+		Link* IsConnectedTo(Node* node);
+		void RemoveLink(Link* target);
+		void Show();
 	};
 
-	struct Node {
-		int ID;
-		std::string Name;
-		std::vector<Pin> Inputs;
-		std::vector<Pin> Outputs;
-		ImColor Color;
-		enum NodeType { Default } Type;
-		ImVec2 Size;
+	struct Link {
+		Node* from = nullptr;
+		Node* to = nullptr;
+		float distance;
 
-		std::string State;
-		std::string SavedState;
-
-		Node(int id, const char* name, ImColor color = ImColor(255, 255, 255)) :
-			ID(id), Name(name), Color(color), Type(NodeType::Default), Size(0, 0) {}		
-		void Draw() const {
-			ImGui::Text(Name.c_str());
-			for (const Pin& pin : Inputs) {
-				pin.Draw();
-			}
-			for (const Pin& pin : Outputs) {
-				pin.Draw();
-			}
-		}
+		Link(Node* from, Node* to);
 	};
 
 	class ImGuiNodeGraphEditor : public ImGuiComponent {
 	private:
+		inline static ImGuiNodeGraphEditor* s_editor = nullptr;
+
 		std::string gameObjName;
+		std::vector<Node*> nodes;
+		std::vector<Link*> links;
 
-		inline static int s_nodeId = 1;
-		std::vector<Node> nodes;
-	public:
-		ImGuiNodeGraphEditor() {
-			
-		}
+		const std::string chainImgPath = "textures/ui/chain.png";
+	public:		
+		ImGuiNodeGraphEditor();
+		~ImGuiNodeGraphEditor();
+		inline static ImGuiNodeGraphEditor* GetInstance() { return s_editor; }
+		void SetGameObjectName(std::string name);
+		void ResetNodeState(); // to reset the dirty state of all nodes
+		inline std::vector<Node*>& GetNodes() { return nodes; }
+		inline std::vector<Link*>& GetLinks() { return links; }
+		void RemoveLink(Link* link);
 
-		~ImGuiNodeGraphEditor() {
-			
-		}
+		virtual void Show(bool* p_open);
 
-		void SetGameObjectName(std::string name) {
-			gameObjName = name;
-		}
-
-		virtual void Show(bool* p_open) {
-			ImGui::SetNextWindowSize(ImVec2(700, 600));
-			ImGui::Begin("Node Graph Editor", p_open);
-			ImGui::Text("// TODO");
-			ImGui::End();
-		}
 	};
+
 
 }
 
