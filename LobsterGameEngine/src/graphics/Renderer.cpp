@@ -14,7 +14,7 @@ namespace Lobster
 	Renderer* Renderer::s_instance = nullptr;
     
     Renderer::Renderer() :
-		b_deferredRendering(false),
+		b_deferredRendering(true),
 		m_gBuffer(nullptr)
     {
 		// Check if renderer already exists
@@ -213,11 +213,8 @@ namespace Lobster
 		if (!camera) return;
 
 		// =====================================================
-		// [First Pass] Render the scene to frame buffer
+		// Render the scene to frame buffer
 		// Render order: Background -> Opaque -> Transparent(sorted) -> Overlay
-		
-		// Update lightings
-		LightLibrary::Update(m_opaqueQueue);
 
 		// Set renderer configurations
 		FrameBuffer* renderTarget = camera->GetFrameBuffer();
@@ -282,13 +279,27 @@ namespace Lobster
 		renderTarget->Unbind();
 
 		// =====================================================
-		// [Second Pass] Render the stored frame buffer in rect
+		// Render the stored frame buffer in rect
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		Renderer::SetDepthTest(false);
 		m_postProcessShader->Bind();
 		m_postProcessShader->SetTexture2D(0, renderTarget->Get(0));
+		m_postProcessShader->SetTexture2D(1, m_gBuffer->Get(0));
+		m_postProcessShader->SetUniform("sys_cameraPosition", camera->GetPosition());
+		m_postProcessShader->SetUniform("sys_view", camera->GetViewMatrix());
+		m_postProcessShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
+		m_postProcessShader->SetUniform("screenTexture", 0);
+		m_postProcessShader->SetUniform("sys_gNormalDepth", 1);
+		m_postProcessShader->SetUniform("sys_ppBlur", b_ppBlur);
+		m_postProcessShader->SetUniform("sys_ppSSR", b_ppSSR);
 		m_postProcessMesh->Draw();
 		Renderer::SetDepthTest(true);
+
+		glm::ivec2 buf_size = renderTarget->GetSize();
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		renderTarget->BindDraw();
+		glBlitFramebuffer(0, 0, buf_size.x, buf_size.y, 0, 0, buf_size.x, buf_size.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     }
 
 	void Renderer::BeginScene(TextureCube * skybox)
@@ -338,6 +349,16 @@ namespace Lobster
 		s_instance->m_transparentQueue.clear();
 		s_instance->m_overlayQueue.clear();
 		s_instance->m_debugQueue.clear();
+	}
+
+	void Renderer::OnImGuiRender()
+	{
+		ImGui::Text("Render Pipeline");
+		ImGui::Checkbox("Deferred Rendering", &s_instance->b_deferredRendering);
+		ImGui::Separator();
+		ImGui::Text("Post Processing");
+		ImGui::Checkbox("Blur", &s_instance->b_ppBlur);
+		ImGui::Checkbox("Screen Space Reflection", &s_instance->b_ppSSR);
 	}
 
 }

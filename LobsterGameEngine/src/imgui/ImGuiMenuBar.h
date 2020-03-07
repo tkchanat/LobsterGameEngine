@@ -196,13 +196,8 @@ namespace Lobster
 					if (ImGui::MenuItem("Skybox")) {
 						show_skyboxEditor = true;
 					}
-					if (ImGui::BeginMenu("Render pipelines")) {
-						ImGui::Checkbox("Use deferred pipeline", &use_deferred_pipeline);
-						if (ImGui::IsItemHovered())
-							ImGui::SetTooltip("Standardized to PBR shading");
-						if (ImGui::IsItemDeactivatedAfterChange()) {
-							Renderer::SetDeferredPipeline(use_deferred_pipeline);
-						}
+					if (ImGui::BeginMenu("Renderer")) {
+						Renderer::OnImGuiRender();
 						ImGui::EndMenu();
 					}
 					ImGui::EndMenu();
