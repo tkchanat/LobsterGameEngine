@@ -6,6 +6,7 @@
 #include "imgui/ImGuiAbout.h"
 #include "imgui/ImGuiExport.h"
 #include "imgui/ImGuiScene.h"
+#include "imgui/ImGuiNodeGraphEditor.h"
 #include "graphics/meshes/MeshFactory.h"
 #include "graphics/Skybox.h"
 #include "system/UndoSystem.h"
@@ -17,13 +18,16 @@ namespace Lobster
 	{
 	private:
 		ImGuiAbout* m_about;
+		ImGuiNodeGraphEditor* m_nodeGraphEditor;
 		ImGuiExport* m_export;
 		int m_prevHighlightIndex = -1;	//	Used for undo / redo or other multiple highlight menu items.
 		bool b_show_export = false;
+		bool b_show_nodeGraphEditor = false;
 	public:
 		ImGuiMenuBar() : 
 			m_about(new ImGuiAbout()), 
-			m_export(new ImGuiExport()) 
+			m_export(new ImGuiExport()),
+			m_nodeGraphEditor(new ImGuiNodeGraphEditor())
 		{
 			EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {
 				if (e->Mod & GLFW_MOD_CONTROL) {
@@ -200,10 +204,16 @@ namespace Lobster
 						Renderer::OnImGuiRender();
 						ImGui::EndMenu();
 					}
+					if (ImGui::MenuItem("Node Graph")) {
+						b_show_nodeGraphEditor = true;
+					}
 					ImGui::EndMenu();
 				}
 				if (show_skyboxEditor) {
 					GetScene()->GetSkybox()->OnImGuiRender(&show_skyboxEditor);
+				}
+				if (b_show_nodeGraphEditor) {
+					m_nodeGraphEditor->Show(&b_show_nodeGraphEditor);
 				}
 				// ==========================================
 				// Window				
