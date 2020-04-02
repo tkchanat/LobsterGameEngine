@@ -11,5 +11,5 @@ void main()
 ///FragmentShader
 void main()
 {             
-    // gl_FragDepth = gl_FragCoord.z;
+    gl_FragDepth = gl_FragCoord.z;
 }  

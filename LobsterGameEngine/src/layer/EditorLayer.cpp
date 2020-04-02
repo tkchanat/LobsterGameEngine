@@ -25,7 +25,7 @@ namespace Lobster
 	uint EditorLayer::s_dockspace_id = 0; 
 	GameObject* EditorLayer::s_selectedGameObject = nullptr;
 	ImGuiUIEditor* EditorLayer::s_uiEditor = nullptr;
-	std::vector<GizmosCommand> ImGuiScene::m_gizmosQueue;
+	ImGuiScene* ImGuiScene::s_instance = nullptr;
 	SSFLog ImGuiConsole::log;
 
 	EditorLayer::EditorLayer() :

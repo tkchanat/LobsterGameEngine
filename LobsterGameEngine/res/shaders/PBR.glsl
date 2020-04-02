@@ -51,8 +51,9 @@ uniform sampler2D MetallicMap;
 uniform sampler2D AmbientOcclusionMap;
 
 uniform vec3 Albedo = vec3(1, 1, 1);
-uniform float Metallic = 0.0;
-uniform float Roughness = 0.0;
+uniform float Opacity = 1.0;
+uniform float Metallic = 0.25;
+uniform float Roughness = 0.5;
 
 float Distribution(float cosLh, float roughness)
 {
@@ -167,7 +168,7 @@ vec3 IBL(vec3 f0, vec3 Lr, vec3 view, vec3 albedo, vec3 normal, float roughness,
 void main()
 {
 	// texture maps
-	vec3 albedo = TextureExists(AlbedoMap) ? texture(AlbedoMap, frag_texcoord).rgb : Albedo;
+	vec4 albedo = TextureExists(AlbedoMap) ? texture(AlbedoMap, frag_texcoord) : vec4(Albedo, Opacity);
 	vec3 normal = TextureExists(NormalMap) ? normalize(frag_TBN * normalize(texture(NormalMap, frag_texcoord).rgb * 2.0 - 1.0)) : normalize(frag_normal);
 	float roughness = TextureExists(RoughnessMap) ? texture(RoughnessMap, frag_texcoord).r : Roughness;
 	float metallic = TextureExists(MetallicMap) ? texture(MetallicMap, frag_texcoord).r : Metallic;
@@ -176,7 +177,7 @@ void main()
 	const vec3 Fdielectric = vec3(0.04);
 	vec3 view = normalize(sys_cameraPosition - frag_position);
 	vec3 Lr = 2.0 * max(dot(normal, view), 0.0) * normal - view;
-	vec3 f0 = mix(Fdielectric, albedo, metallic); // Fresnel reflectance
+	vec3 f0 = mix(Fdielectric, albedo.rgb, metallic); // Fresnel reflectance
 	
 	vec3 LightContribution = vec3(0.0);
 	for(int i = 0; i < Lights.directionalLightCount; ++i) {
@@ -191,13 +192,13 @@ void main()
         shadow = lightSpacePosition.z > 1.0 ? 0.0 : shadow;
         if(i > MAX_DIRECTIONAL_SHADOW) shadow = 0.0;
 		// merge lightings
-		LightContribution += (1.0 - shadow) * Lights.directionalLights[i].intensity * DirectionalLighting(Lights.directionalLights[i], f0, view, albedo, normal, roughness, metallic);
+		LightContribution += (1.0 - shadow) * Lights.directionalLights[i].intensity * DirectionalLighting(Lights.directionalLights[i], f0, view, albedo.rgb, normal, roughness, metallic);
 	}
 	for(int i = 0; i < Lights.pointLightCount; ++i) {
-		LightContribution += PointLighting(Lights.pointLights[i], f0, view, albedo, normal, roughness, metallic);
+		LightContribution += PointLighting(Lights.pointLights[i], f0, view, albedo.rgb, normal, roughness, metallic);
 	}
 
-	vec3 IBLContribution = IBL(f0, Lr, view, albedo, normal, roughness, metallic, ambientOcclusion);
-	vec4 result = vec4(LightContribution + IBLContribution, 1.0);
+	vec3 IBLContribution = IBL(f0, Lr, view, albedo.rgb, normal, roughness, metallic, ambientOcclusion);
+	vec4 result = vec4(LightContribution + IBLContribution, albedo.a);
 	out_color = vec4(result);
 } 

@@ -41,24 +41,28 @@ namespace Lobster
 		template <class Archive>
 		void save(Archive & ar) const
 		{
+			// Scene Objects
 			std::vector<std::string> childrenNames;
 			for (auto child : m_gameObjects) childrenNames.push_back(child->GetName());
 			ar(childrenNames);
-
 			for (auto gameObject : m_gameObjects) {
 				gameObject->Serialize(ar);
 			}
+			// Skybox
+			m_skybox->Serialize(ar);
 		}
 		template <class Archive>
 		void load(Archive & ar)
 		{
+			// Scene Objects
 			std::vector<std::string> childrenNames;
 			ar(childrenNames);
 			for (auto name : childrenNames) AddGameObject(new GameObject(name.c_str()));
-
 			for (auto gameObject : m_gameObjects) {
 				gameObject->Deserialize(ar);
 			}
+			// Skybox
+			m_skybox->Deserialize(ar);
 		}
     };
     

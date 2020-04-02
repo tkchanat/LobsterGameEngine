@@ -24,6 +24,8 @@ namespace Lobster
 	class ImGuiScene : public ImGuiComponent
 	{
 	private:
+		// instance 
+		static ImGuiScene* s_instance;
 		// window-related variable
 		ImVec2 window_pos;
 		ImVec2 window_size;
@@ -34,7 +36,7 @@ namespace Lobster
 		ImGuizmo::MODE m_mode = ImGuizmo::LOCAL;
 		glm::vec3 m_originalScale;
 		// Custom gizmos
-		static std::vector<GizmosCommand> m_gizmosQueue;
+		std::vector<GizmosCommand> m_gizmosQueue;
 		// camera staring point
 		glm::vec3 at = glm::vec3(0, 0, 0);
 		// grid line
@@ -59,6 +61,12 @@ namespace Lobster
 			m_gridVertexArray(nullptr),
 			b_showProfiler(true)
 		{
+			if (s_instance) {
+				WARN("ImGuiScene already exists!");
+				return;
+			}
+			s_instance = this;
+
 			CameraComponent* camera = new CameraComponent();
 			camera->SetFar(10000.f);
 			m_editorCamera = new GameObject("EditorCamera");
@@ -80,7 +88,7 @@ namespace Lobster
 		}
 		
 		inline CameraComponent* GetCamera() { return m_editorCamera->GetComponent<CameraComponent>(); }
-		static void SubmitGizmos(GizmosCommand command) { m_gizmosQueue.push_back(command); }
+		static inline void SubmitGizmos(GizmosCommand command) { s_instance->m_gizmosQueue.push_back(command); }
 
 		~ImGuiScene()
 		{
@@ -268,18 +276,6 @@ namespace Lobster
 					}
 				}
 			}
-		
-			// right-click settings pop up
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4, 4));
-			if (ImGui::BeginPopupContextItem()) {
-				ImGui::Checkbox("Show Reference Grid", &b_showGrid);
-				ImGui::Separator();
-				ImGui::Text("Grid Color");
-				ImGui::ColorEdit3("", glm::value_ptr(m_gridColor), 0);
-				m_gridMaterial->SetRawUniform("color", glm::value_ptr(m_gridColor));
-				ImGui::EndPopup();
-			}
-			ImGui::PopStyleVar();
 
 			ImGui::End();
 			ImGui::PopStyleVar();
@@ -310,6 +306,15 @@ namespace Lobster
 			}
 			// clear queue for gizmos
 			m_gizmosQueue.clear(); 
+		}
+
+		static void ShowGridSettings() {
+			// grid settings
+			ImGui::Checkbox("Show Reference Grid", &s_instance->b_showGrid);
+			ImGui::ColorEdit3("Grid Color", glm::value_ptr(s_instance->m_gridColor), 0);
+			if (ImGui::IsItemDeactivatedAfterEdit()) {
+				s_instance->m_gridMaterial->SetRawUniform("color", glm::value_ptr(s_instance->m_gridColor));
+			}
 		}
 
 		private:

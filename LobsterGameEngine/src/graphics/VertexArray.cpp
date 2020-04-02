@@ -58,6 +58,7 @@ namespace Lobster
 			glBindVertexArray(m_ids[i]);
 			glDrawElements((GLenum)m_primitive, m_indexBuffers[i]->GetCount(), GL_UNSIGNED_INT, NULL);
 		}
+		glBindVertexArray(0);
 	}
 
 }

@@ -13,16 +13,27 @@ namespace Lobster
 
 	Renderer* Renderer::s_instance = nullptr;
     
-    Renderer::Renderer()
+    Renderer::Renderer() :
+		b_deferredRendering(false),
+		m_gBuffer(nullptr)
     {
 		// Check if renderer already exists
-		if (s_instance)
-		{
+		if (s_instance) {
 			throw std::runtime_error("Renderer already exists!");
 			return;
 		}
 		// Create frame buffer for second pass
         glm::ivec2 size = Application::GetInstance()->GetWindow()->GetSize();
+		std::vector<RenderTargetDesc> desc(3);
+		desc[0].internalFormat = Formats::RGBA16FFormat;
+		desc[0].format = Formats::RGBAFormat;
+		desc[0].type = Types::FloatType;
+		desc[1].internalFormat = Formats::RGB16FFormat;
+		desc[1].format = Formats::RGBFormat;
+		desc[1].type = Types::FloatType;
+		desc[2].format = Formats::RGBAFormat;
+		desc[2].type = Types::UnsignedByteType;
+		m_gBuffer = new FrameBuffer(size.x, size.y, desc);
 
 		m_postProcessShader = ShaderLibrary::Use("shaders/PostProcessing.glsl");
 		m_postProcessMesh = MeshFactory::Plane();
@@ -114,13 +125,87 @@ namespace Lobster
 			useShader->SetUniform("sys_brdfLUTMap", 10);
 			
 			if (boundedMaterial != useMaterial) {
-				useMaterial->SetUniforms();
+				useMaterial->SetUniforms(useShader);
 				boundedMaterial = useMaterial;
 			}
 
 			command.UseVertexArray->Draw();
 			//queue.pop_front();
 		}
+	}
+
+	void Renderer::DrawDeferredQueue(CameraComponent * camera, std::list<RenderCommand>& queue)
+	{
+		// Geometry pass
+		m_gBuffer->BindAndClear(ClearFlag::COLOR | ClearFlag::DEPTH);
+		Shader* useShader = ShaderLibrary::Use("shaders/GBuffer.glsl");
+		Material* boundedMaterial = nullptr;
+		useShader->Bind();
+		useShader->SetUniform("sys_view", camera->GetViewMatrix());
+		useShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
+		useShader->SetUniform("sys_cameraPosition", camera->GetPosition());
+		for (std::list<RenderCommand>::iterator it = queue.begin(); it != queue.end(); ++it) {
+			RenderCommand& command = *it;
+			Material* useMaterial = command.UseMaterial;
+			// Vertex shader uniforms
+			useShader->SetUniform("sys_world", command.UseWorldTransform);
+			if (command.UseBoneTransforms) {
+				useShader->SetUniform("sys_bones[0]", MAX_BONES, command.UseBoneTransforms);
+				useShader->SetUniform("sys_animate", true);
+			}
+			else {
+				useShader->SetUniform("sys_animate", false);
+			}
+			// Fragment shader uniforms
+			if (boundedMaterial != useMaterial) {
+ 				useShader->SetTexture2D(2, nullptr); // placeholder
+ 				useShader->SetTexture2D(3, nullptr); // placeholder
+ 				useShader->SetTexture2D(4, nullptr); // placeholder
+				useShader->SetUniform("MetallicMap", 2); // placeholder
+				useShader->SetUniform("RoughnessMap", 3); // placeholder
+				useShader->SetUniform("AmbientOcclusionMap", 4); // placeholder
+				useMaterial->SetUniforms(useShader);
+				boundedMaterial = useMaterial;
+			}
+			command.UseVertexArray->Draw();
+		}
+		m_gBuffer->Unbind();
+
+		// Copy content of geometry's depth buffer to default frame buffer's depth buffer
+		FrameBuffer* frameBuffer = camera->GetFrameBuffer();
+		m_gBuffer->BindRead();
+		frameBuffer->BindDraw();
+		glm::ivec2 src_size = m_gBuffer->GetSize();
+		glm::ivec2 dst_size = frameBuffer->GetSize();
+		glBlitFramebuffer(0, 0, src_size.x, src_size.y, 0, 0, dst_size.x, dst_size.y, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+		// Lighting Pass
+		frameBuffer->Bind();
+		useShader = ShaderLibrary::Use("shaders/LightingPass.glsl");
+		useShader->Bind();
+		useShader->SetTexture2D(0, m_gBuffer->Get(0));
+		useShader->SetTexture2D(1, m_gBuffer->Get(1));
+		useShader->SetTexture2D(2, m_gBuffer->Get(2));
+		useShader->SetUniform("sys_gNormalDepth", 0);
+		useShader->SetUniform("sys_gMetalRoughAO", 1);
+		useShader->SetUniform("sys_gAlbedo", 2);
+		useShader->SetUniform("sys_view", camera->GetViewMatrix());
+		useShader->SetUniform("sys_projection", camera->GetProjectionMatrix());
+		useShader->SetUniform("sys_cameraPosition", camera->GetPosition());
+		for (int i = 0; i < MAX_DIRECTIONAL_SHADOW; ++i) {
+			useShader->SetTexture2D(11 + i, LightLibrary::GetDirectionalShadowMap(i));
+			useShader->SetUniform(("sys_shadowMap[" + std::to_string(i) + "]").c_str(), 11 + i);
+		}
+		useShader->SetTextureCube(8, m_activeSceneEnvironment.Skybox->GetIrradiance());
+		useShader->SetTextureCube(9, m_activeSceneEnvironment.Skybox->GetPrefilter());
+		useShader->SetTexture2D(10, m_activeSceneEnvironment.Skybox->GetBRDF());
+		useShader->SetUniform("sys_irradianceMap", 8);
+		useShader->SetUniform("sys_prefilterMap", 9);
+		useShader->SetUniform("sys_brdfLUTMap", 10);
+
+		Renderer::SetDepthTest(false);
+		m_postProcessMesh->Draw();
+		Renderer::SetDepthTest(true, DEPTH_LESS);
 	}
 
 	void Renderer::Render(CameraComponent* camera, bool debug)
@@ -139,9 +224,15 @@ namespace Lobster
 		renderTarget->BindAndClear(ClearFlag::COLOR | ClearFlag::DEPTH);
 		Renderer::SetFaceCulling(true);
 
+		// Opaque
+		if (!b_deferredRendering) {
+			Renderer::DrawQueue(camera, m_opaqueQueue);
+		}
+		else {
+			Renderer::DrawDeferredQueue(camera, m_opaqueQueue);
+		}
 		// Background
-		if (m_activeSceneEnvironment.Skybox)
-		{
+		if (m_activeSceneEnvironment.Skybox) {
 			Renderer::SetFaceCulling(true, CULL_FRONT);
 			Renderer::SetDepthTest(true, DEPTH_LEQUAL);
 			m_skyboxShader->Bind();
@@ -154,9 +245,6 @@ namespace Lobster
 			Renderer::SetDepthTest(true, DEPTH_LESS);
 			Renderer::SetFaceCulling(true, CULL_BACK);
 		}
-
-		// Opaque		
-		Renderer::DrawQueue(camera, m_opaqueQueue);
 		// Transparent(sorted)		
 		Renderer::SetAlphaBlend(true);
 		glDepthMask(GL_FALSE);

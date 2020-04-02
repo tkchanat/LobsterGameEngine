@@ -23,6 +23,7 @@ namespace Lobster
 		std::vector<RenderTargetDesc> renderTargetsDesc;
 		RenderTargetDesc depthDesc;
 		depthDesc.depthOnly = true;
+		depthDesc.internalFormat = Formats::DepthComponentFormat;
 		depthDesc.format = Formats::DepthComponentFormat;
 		depthDesc.type = Types::FloatType;
 		renderTargetsDesc.push_back(depthDesc);

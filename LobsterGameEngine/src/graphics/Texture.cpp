@@ -114,6 +114,10 @@ namespace Lobster
 
 	void TextureCube::Set(const char * right, const char * left, const char * up, const char * down, const char * back, const char * front)
 	{
+		if (!(right && left && up && down && back && front)) {
+			WARN("One of the faces is missing, abort setting cubemap...");
+			return;
+		}
 		std::vector<std::string> faces = { right, left, up, down, back, front };
 		b_loadSuccess = Load(faces);
 		if (!b_loadSuccess) {
