@@ -96,7 +96,18 @@ namespace Lobster
 			std::string materialPath = "materials/" + materialValidName + ".mat";
 			std::string diffuseMapPath = "textures/" + meshValidName + '/' + std::string(diffuseMap.C_Str());
 			std::string normalMapPath  = "textures/" + meshValidName + '/' + std::string(normalMap.C_Str());
+
 			Material* newMaterial = MaterialLibrary::Use(materialPath.c_str());
+			if (!FileSystem::Exist(FileSystem::Path(materialPath))) {
+				glm::vec4 color(diffuseColor.r, diffuseColor.g, diffuseColor.b, 1.0);
+				newMaterial->SetRawUniform("DiffuseColor", &color);
+				if (diffuseMap.C_Str() && FileSystem::Exist(FileSystem::Path(diffuseMapPath))) {
+					newMaterial->SetRawTexture2D(0, TextureLibrary::Use(diffuseMapPath.c_str()));
+				}
+				if (normalMap.C_Str() && FileSystem::Exist(FileSystem::Path(normalMapPath))) {
+					newMaterial->SetRawTexture2D(1, TextureLibrary::Use(normalMapPath.c_str()));
+				}
+			}
 			meshInfo.Materials.push_back(newMaterial);
 		}
 

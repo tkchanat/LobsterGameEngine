@@ -2,44 +2,41 @@
 #include "Scene.h"
 #include "graphics/meshes/MeshFactory.h"
 #include "graphics/Renderer.h"
+#include "graphics/Skybox.h"
 #include "objects/GameObject.h"
 
 namespace Lobster
 {
     
     Scene::Scene(const char * scenePath) :
-		m_skybox(nullptr),
-		m_physicsSystem(new PhysicsSystem())
+		m_skybox(nullptr)
     {
 		// hard-coded skybox
-		m_skybox = new TextureCube(
-			"textures/skybox/px.png",
-			"textures/skybox/nx.png",
-			"textures/skybox/py.png",
-			"textures/skybox/ny.png",
-			"textures/skybox/pz.png",
-			"textures/skybox/nz.png"
-		);
+		std::string faces[6] = { 
+			FileSystem::Path("textures/skybox/px.png"),
+			FileSystem::Path("textures/skybox/nx.png"),
+			FileSystem::Path("textures/skybox/py.png"),
+			FileSystem::Path("textures/skybox/ny.png"),
+			FileSystem::Path("textures/skybox/pz.png"),
+			FileSystem::Path("textures/skybox/nz.png") 
+		};
+		m_skybox = new Skybox(faces[0].c_str(), faces[1].c_str(), faces[2].c_str(), faces[3].c_str(), faces[4].c_str(), faces[5].c_str());
 
 		// If scenePath is set, load and deserialize scene data
-		if (scenePath[0] != '\0') {
-			std::stringstream ss = FileSystem::ReadStringStream(FileSystem::Path(scenePath).c_str());
+		if (scenePath && scenePath[0] != '\0') {
+			std::stringstream ss = FileSystem::ReadStringStream(scenePath);
 			Deserialize(ss);
 		}
     }
 
 	Scene::~Scene()
     {
-		for (GameObject* gameObject : m_gameObjects)
-		{
-			if(gameObject)	delete gameObject;
+		for (GameObject* gameObject : m_gameObjects) {
+			if (gameObject)	delete gameObject;
 			gameObject = nullptr;
 		}
 		if (m_skybox) delete m_skybox;
 		m_skybox = nullptr;
-
-		if (m_physicsSystem) delete m_physicsSystem;
-		m_physicsSystem = nullptr;
     }
 
 	void Scene::OnBegin() {
@@ -50,7 +47,7 @@ namespace Lobster
     
     void Scene::OnUpdate(double deltaTime)
     {
-		Renderer::BeginScene(m_skybox);
+		Renderer::BeginScene(m_skybox->Get());
         for(GameObject* gameObject : m_gameObjects)
         {
             gameObject->OnUpdate(deltaTime);
@@ -66,11 +63,15 @@ namespace Lobster
 		}
 	}
 
+	void Scene::SetGameCamera(CameraComponent* camera) {
+		m_gameCamera = camera;
+	}
+
 	std::stringstream Scene::Serialize() {
 		//LOG("Serializing Scene");
 		std::stringstream ss;
 		{
-			cereal::BinaryOutputArchive oarchive(ss);
+			cereal::JSONOutputArchive oarchive(ss);
 			oarchive(*this);
 		}
 		INFO("Scene saved!");
@@ -79,12 +80,12 @@ namespace Lobster
 
 	void Scene::Deserialize(std::stringstream& ss) {
 		//LOG("Deserializing Scene");
-		cereal::BinaryInputArchive iarchive(ss);
+		cereal::JSONInputArchive iarchive(ss);
 		try {
 			iarchive(*this);
 		}
 		catch (std::exception e) {
-			LOG("Deserializing Scene {} failed");
+			WARN("Deserializing Scene failed. Reason: {}", e.what());
 		}
 	}
     
@@ -112,22 +113,6 @@ namespace Lobster
 			}
 		}
 		return this;
-	}
-
-	// Deprecated
-	const std::vector<GameObject*>& Scene::GetGameObjects() {
-		return m_gameObjects;
-	}
-
-	GameObject * Scene::GetGameObject(GameObject * gameObject)
-	{
-		std::stack<GameObject*> parents;
-		GameObject* parent = gameObject->GetParent();
-		while (parent != nullptr) {
-			parents.push(parent);
-			parent = parent->GetParent();
-		}
-		return nullptr;
 	}
     
 	bool Scene::IsObjectNameDuplicated(std::string name, std::string except) {

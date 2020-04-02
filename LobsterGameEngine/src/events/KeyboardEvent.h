@@ -10,9 +10,9 @@ namespace Lobster {
     public:
         int Key;
         bool Hold;
+		int Mod;
     public:
-        KeyPressedEvent(int key, bool hold) : Event(EVENT_KEY_PRESSED), Key(key), Hold(hold) {}
-        ~KeyPressedEvent() = default;
+        KeyPressedEvent(int key, bool hold, int mod) : Event(EVENT_KEY_PRESSED), Key(key), Hold(hold), Mod(mod) {}
     };
 
     class KeyReleasedEvent : public Event
@@ -21,7 +21,6 @@ namespace Lobster {
         int Key;
     public:
         KeyReleasedEvent(int key) : Event(EVENT_KEY_RELEASED), Key(key) {}
-        ~KeyReleasedEvent() = default;
     };
     
 } // namespace SSF

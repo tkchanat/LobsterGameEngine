@@ -5,7 +5,9 @@
 #include "graphics/meshes/MeshFactory.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image.h"
+#include "stb_image_resize.h"
 
 namespace Lobster
 {
@@ -14,7 +16,7 @@ namespace Lobster
 	// Texture2D
 	// =======================================================
 	Texture2D::Texture2D(const char* path) :
-		m_id(0), m_path(FileSystem::Path(path)), m_name(path)
+		m_id(0), m_name(path)
 	{
 		//	Generate texture
 		glGenTextures(1, &m_id);
@@ -27,11 +29,11 @@ namespace Lobster
 		b_loadSuccess = Load();
 		if (!b_loadSuccess)
 		{
-			WARN("Couldn't load texture {}", m_path);
+			WARN("Couldn't load texture {}", m_name);
 		}
 	}
 
-	Texture2D::Texture2D(byte* buffer, const char* id, int w, int h) : m_id(0), m_path(""), m_name(id)
+	Texture2D::Texture2D(byte* buffer, const char* id, int w, int h) : m_id(0), m_name(id)
 	{
 		//	Generate texture
 		glGenTextures(1, &m_id);
@@ -57,7 +59,7 @@ namespace Lobster
 	bool Texture2D::Load()
 	{
 		//	Use stb load image
-		byte* data = stbi_load(m_path.c_str(), &m_width, &m_height, &m_channelCount, 4);
+		byte* data = stbi_load(FileSystem::Path(m_name).c_str(), &m_width, &m_height, &m_channelCount, 4);
 		if (data == nullptr)
 		{
 			return false;
@@ -77,14 +79,14 @@ namespace Lobster
 	const glm::mat4 captureViews[] =
 	{
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
-		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
 	};
 
-	TextureCube::TextureCube(const char* right, const char* left, const char* up, const char* down, const char* back, const char* front)
+	TextureCube::TextureCube()
 	{
 		// Generate and bind texture
 		glGenTextures(1, &m_id);
@@ -95,27 +97,9 @@ namespace Lobster
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		m_rightPath = FileSystem::Path(right);
-		m_leftPath	= FileSystem::Path(left);
-		m_upPath	= FileSystem::Path(up);
-		m_downPath	= FileSystem::Path(down);
-		m_backPath	= FileSystem::Path(back);
-		m_frontPath = FileSystem::Path(front);
-
-		b_loadSuccess = Load();
-		if (!b_loadSuccess)
-		{
-			WARN("Couldn't load cube map");
-		}
-
+		// Frame buffers
 		glGenFramebuffers(1, &m_captureFrameBuffer);
 		glGenRenderbuffers(1, &m_captureRenderBuffer);
-		GLint originalViewport[4];
-		glGetIntegerv(GL_VIEWPORT, originalViewport);
-		GenerateIrradianceMap();
-		GeneratePrefilterMap();
-		GenerateBRDFMap();
-		glViewport(originalViewport[0], originalViewport[1], originalViewport[2], originalViewport[3]);
 	}
 
 	TextureCube::~TextureCube()
@@ -128,35 +112,68 @@ namespace Lobster
 		glDeleteTextures(1, &m_brdfId);
 	}
 
-	bool TextureCube::Load()
+	void TextureCube::Set(const char * right, const char * left, const char * up, const char * down, const char * back, const char * front)
 	{
-		//  Specify in OpenGL cube map enum order
-		std::vector<std::string> faces = {
-			m_rightPath,
-			m_leftPath,
-			m_upPath,
-			m_downPath,
-			m_backPath,
-			m_frontPath
-		};
+		std::vector<std::string> faces = { right, left, up, down, back, front };
+		b_loadSuccess = Load(faces);
+		if (!b_loadSuccess) {
+			WARN("Couldn't load cube map");
+		}
+	}
 
-		//  Load individual 2D texture
+	bool TextureCube::Load(const std::vector<std::string>& faces)
+	{
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
-		for (unsigned int i = 0; i < faces.size(); i++)
-		{
-			unsigned char *data = stbi_load(faces[i].c_str(), &m_width, &m_height, &m_channelCount, 4);
-			if (data)
-			{
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-				stbi_image_free(data);
-			}
-			else
-			{
-				WARN("Cubemap texture failed to load at path: {}", faces[i]);
-				stbi_image_free(data);
-				return false;
+		int max_width = 1;
+		int max_height = 1;
+		struct ImageDesc {
+			int width, height;
+			int channels;
+			unsigned char* data;
+		} desc[6];
+		// Load individual 2D texture	
+		for (int i = 0; i < 6; ++i) {
+			desc[i].data = stbi_load(faces[i].c_str(), &desc[i].width, &desc[i].height, &desc[i].channels, 3);
+			if (desc[i].width > max_width) max_width = desc[i].width;
+			if (desc[i].height > max_height) max_height = desc[i].height;
+		}
+		m_width = max_width;
+		m_height = max_height;
+		// Resize images to fix max_width and max_height
+		for (int i = 0; i < 6; ++i) {
+			if (desc[i].width != max_width || desc[i].height != max_height) {
+				unsigned char* input_pixels = desc[i].data;
+				unsigned char* output_pixels = new unsigned char[max_width * max_height * 3];
+				int result = stbir_resize_uint8(input_pixels, desc[i].width, desc[i].height, 0, output_pixels, max_width, m_height, 0, 3);
+				if (result) {
+					stbi_image_free(input_pixels);
+					desc[i].data = output_pixels;
+				}
 			}
 		}
+		// Set images to GPU
+		for (int i = 0; i < 6; ++i) {
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, max_width, max_height, 0, GL_RGB, GL_UNSIGNED_BYTE, desc[i].data);
+		}
+		// Memory cleaning
+		bool failed = false;
+		for (int i = 0; i < 6; ++i) {
+			failed |= desc[i].data == nullptr;
+			stbi_image_free(desc[i].data);
+			desc[i].data = nullptr;
+		}
+		if (failed) {
+			WARN("Cubemap texture failed to load");
+			return false;
+		}
+
+		// Generate PBR resources
+		GLint originalViewport[4];
+		glGetIntegerv(GL_VIEWPORT, originalViewport);
+		GenerateIrradianceMap();
+		GeneratePrefilterMap();
+		GenerateBRDFMap();
+		glViewport(originalViewport[0], originalViewport[1], originalViewport[2], originalViewport[3]);
 		return true;
 	}
 
@@ -292,21 +309,26 @@ namespace Lobster
 			throw std::runtime_error("TextureLibrary already existed!");
 		}
 		s_instance = new TextureLibrary();
-		s_instance->m_placeholder = TextureLibrary::Use("textures/image_not_found.png");
+	}
+
+	void TextureLibrary::Clear()
+	{
+		for (std::pair<std::string, Texture2D*> element : s_instance->m_textures) {
+			if(element.second)
+				delete element.second;
+			element.second = nullptr;
+		}
+		s_instance->m_textures.clear();
 	}
 
 	Texture2D* TextureLibrary::Use(const char* path)
 	{
-		for (Texture2D* texture : s_instance->m_textures)
-		{
-			if (texture->GetName() == path)
-			{
-				return texture;
-			}
+		if (s_instance->m_textures.find(path) == s_instance->m_textures.end()) {
+			Texture2D* newTexture = new Texture2D(path);
+			s_instance->m_textures[path] = newTexture;
+			return newTexture;
 		}
-		Texture2D* newTexture = new Texture2D(path);
-		s_instance->m_textures.push_back(newTexture);
-		return newTexture;
+		return s_instance->m_textures[path];
 	}
 
 	Texture2D* TextureLibrary::Use(const char* id, byte* buffer, int w, int h) {
@@ -314,27 +336,22 @@ namespace Lobster
 		sprintf(name, "textsprite-%s", id);
 		// search for texture with given id
 		Texture2D* texFound = nullptr;
-		int it = 0;
-		for (Texture2D*& texture : s_instance->m_textures) {			
-			if (texture->GetName() == name) {
-				texFound = texture;
-				break;
-			}
-			it++;
-		}		
+		if (s_instance->m_textures.find(name) != s_instance->m_textures.end()) {
+			texFound = s_instance->m_textures[std::string(name)];
+		}
 		// search for texture only: return texture found
 		if (!buffer || !w || !h) {
 			return texFound;
 		}
 		// edit texture: delete and return a new one
 		else if (texFound) {			
-			delete texFound;			
-			texFound = s_instance->m_textures[it] = new Texture2D(buffer, name, w, h);
+			delete texFound;
+			texFound = s_instance->m_textures[std::string(name)] = new Texture2D(buffer, name, w, h);
 		}
 		// add texture: create a new one and push into library
 		else {
 			texFound = new Texture2D(buffer, name, w, h);
-			s_instance->m_textures.push_back(texFound);
+			s_instance->m_textures[std::string(name)] = texFound;
 		}			
 		return texFound;
 	}

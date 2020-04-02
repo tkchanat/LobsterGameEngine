@@ -13,6 +13,7 @@ namespace Lobster {
 		Sprite2D* selectedSprite = nullptr;
 		float pmx, pmy;			// to save the intial position of mouse on the sprite
 		float xOnRightClick, yOnRightClick; // to save the position of mouse on right click
+		
 	public:
 		ImGuiUIEditor() {
 		}
@@ -52,10 +53,10 @@ namespace Lobster {
 				yOnRightClick = io.MousePos.y;
 			}
 			// right clicking the background			
+			float x = (xOnRightClick - windowPos.x) / windowSize.x;
+			float y = (yOnRightClick - windowPos.y) / windowSize.y;
 			if (ImGui::BeginPopupContextWindow((const char*)0, 1, false)) {	
-				float x = (xOnRightClick - windowPos.x) / windowSize.x;
-				float y = (yOnRightClick - windowPos.y) / windowSize.y;
-				if (ImGui::BeginMenu("Add Image")) {					
+				if (ImGui::BeginMenu("Image")) {					
 					for (std::string& name : ImGuiAssets::ListResources(PATH_SPRITES)) {
 						if (ImGui::MenuItem(name.c_str())) {							
 							ui->AddSprite(new ImageSprite2D(name.c_str(), windowSize.x, windowSize.y, x, y));
@@ -64,22 +65,78 @@ namespace Lobster {
 					}
 					ImGui::EndMenu();
 				}
-				if (ImGui::MenuItem("Add Text")) {
-					ui->AddSprite(new TextSprite2D("Enter Your Text Here.", "TimesNewRoman.ttf",
-						windowSize.x, windowSize.y, x, y));
-					ImGui::CloseCurrentPopup();
+				if (ImGui::BeginMenu("Static Text")) {
+					fs::path subdir = FileSystem::Path(PATH_FONT);
+					static std::string textContent = "Input Your Text Here";
+					static std::string fontType = "TimesNewRoman.ttf";
+					ImGui::InputText("Text Content", &textContent[0], 1024);
+					if (ImGui::BeginCombo("Font Type", fontType.c_str())) {
+						for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {
+							std::string displayName = dirEntry.path().stem().string();
+							if (ImGui::Selectable(displayName.c_str(), false)) {
+								fontType = dirEntry.path().filename().string();
+							}
+						}
+						ImGui::EndCombo();
+					}
+					if (ImGui::Button("Confirm")) {
+						ui->AddSprite(new TextSprite2D(textContent.c_str(), fontType.c_str(), 24.0f, windowSize.x, windowSize.y, x, y));
+						ImGui::CloseCurrentPopup();
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Cancel")) {
+						ImGui::CloseCurrentPopup();
+					}
+					ImGui::EndMenu();
 				}
-				ImGui::MenuItem("Dynamic Sprites");
+				if (ImGui::BeginMenu("Dynamic Text")) {
+					fs::path subdir = FileSystem::Path(PATH_FONT);
+					static std::string varname, scriptName;
+					static std::string fontType = "TimesNewRoman.ttf";
+					// script
+					if (ImGui::BeginCombo("Script", (scriptName.empty() ? "None" : scriptName.c_str()))) {
+						if (ImGui::Selectable("None")) {
+							scriptName.clear();
+						}
+						for (const auto& dirEntry : fs::recursive_directory_iterator(FileSystem::Path(PATH_SCRIPTS))) {
+							std::string displayName = dirEntry.path().filename().string();
+							if (ImGui::Selectable(displayName.c_str())) {
+								scriptName = displayName;
+							}							
+						}
+						ImGui::EndCombo();
+					}
+					// variable name in script
+					ImGui::InputText("Variable", &varname[0], 64);					
+					const static char* vtypeStr[] = { "int", "float", "string" };
+					// variable type
+					static DynamicTextSprite2D::SupportedVarType vtype;
+					ImGui::Combo("Type", (int*)&vtype, vtypeStr, IM_ARRAYSIZE(vtypeStr));
+					// font type
+					if (ImGui::BeginCombo("Font Type", fontType.c_str())) {
+						for (const auto& dirEntry : fs::recursive_directory_iterator(subdir)) {
+							std::string displayName = dirEntry.path().stem().string();
+							if (ImGui::Selectable(displayName.c_str(), false)) {
+								fontType = dirEntry.path().filename().string();
+							}
+						}
+						ImGui::EndCombo();
+					}
+					if (ImGui::Button("Confirm")) {
+						ui->AddSprite(new DynamicTextSprite2D(scriptName.c_str(), varname.c_str(), vtype, fontType.c_str(), 24.0f,
+							windowSize.x, windowSize.y, x, y));
+						ImGui::CloseCurrentPopup();
+					}
+					ImGui::EndMenu();
+				}
 				ImGui::EndPopup();
 			}
 		}
 
 		virtual void Show(bool* p_open) override {
-			static Config config;
-			ImGui::SetNextWindowContentSize(ImVec2(config.width, config.height));
+			Config& config = Application::GetInstance()->GetConfig();
+			ImGui::SetNextWindowContentSize(ImVec2(config.defaultWidth, config.defaultHeight));
 			ImGui::Begin("UI Editor", p_open, ImGuiWindowFlags_HorizontalScrollbar);
-			// recalculate the position information for this window
-			static Config winConfig;
 			// only display the ui editor when GameUI exists
 			if (ui) {				
 				if (ImGui::BeginChild("Editor 2D"), true) {
@@ -89,8 +146,8 @@ namespace Lobster {
 					int i = 0;
 					for (Sprite2D* sprite : ui->GetSpriteList()) {
 						// calculate the x, y, width, height
-						float x = winConfig.width * sprite->x;
-						float y = winConfig.height * sprite->y;
+						float x = config.defaultWidth * sprite->x;
+						float y = config.defaultHeight * sprite->y;
 						ImGui::SetCursorPos(ImVec2(x, y));
 						// display sprite
 						sprite->OnImGuiRender();								
@@ -104,7 +161,7 @@ namespace Lobster {
 						char c[64]; 
 						sprintf(c, "sprite-%2d", i); // name each popup with distinct name
 						if (ImGui::BeginPopupContextItem(c)) {
-							sprite->ImGuiMenu(ui, ImVec2(winConfig.width, winConfig.height));
+							sprite->ImGuiMenu(ui, ImVec2(config.defaultWidth, config.defaultHeight));
 							ImGui::EndPopup();
 						}
 						i++;
@@ -114,8 +171,8 @@ namespace Lobster {
 						// move sprite to a new position
 						float startPosX = io.MousePos.x - pmx;
 						float startPosY = io.MousePos.y - pmy;
-						selectedSprite->x = startPosX / winConfig.width;
-						selectedSprite->y = startPosY / winConfig.height;
+						selectedSprite->x = startPosX / config.defaultWidth;
+						selectedSprite->y = startPosY / config.defaultHeight;
 						selectedSprite->Clip();
 					}
 					else if (!ImGui::IsMouseDown(0) && !ImGui::IsMouseDown(1)) {

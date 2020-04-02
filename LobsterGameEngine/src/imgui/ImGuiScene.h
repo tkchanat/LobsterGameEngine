@@ -82,13 +82,6 @@ namespace Lobster
 		inline CameraComponent* GetCamera() { return m_editorCamera->GetComponent<CameraComponent>(); }
 		static void SubmitGizmos(GizmosCommand command) { m_gizmosQueue.push_back(command); }
 
-		// Check if moues is inside the "scene" window 
-		bool insideWindow(const ImVec2& mouse, const ImVec2& pos, const ImVec2& size) {
-			if (mouse.x >= pos.x && mouse.x <= pos.x + size.x && mouse.y >= pos.y && mouse.y <= pos.y + size.y)
-				return true;
-			return false;
-		}
-
 		~ImGuiScene()
 		{
 			if (m_editorCamera) delete m_editorCamera;
@@ -112,28 +105,8 @@ namespace Lobster
 			}
 		}
 
-		// Modified version from ImGuizmo::ComputeCameraRay()
-		void ComputeCameraRay(glm::vec3& origin, glm::vec3& direction)
-		{
-			ImGuiIO& io = ImGui::GetIO();
-			CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
-			glm::mat4 viewMat = camera->GetViewMatrix();
-			glm::mat4 projMat = camera->GetProjectionMatrix();
-			glm::mat4 viewProjInv = glm::inverse(projMat * viewMat);
-
-			float mox = ((io.MousePos.x - window_pos.x) / window_size.x) * 2.f - 1.f;
-			float moy = (1.f - ((io.MousePos.y - window_pos.y) / window_size.y)) * 2.f - 1.f;
-
-			glm::vec4 rayOrigin = viewProjInv * glm::vec4(mox, moy, 0.f, 1.f);
-			rayOrigin /= rayOrigin.w;
-			origin = rayOrigin;
-			glm::vec4 rayEnd = viewProjInv * glm::vec4(mox, moy, 1.f, 1.f);
-			rayEnd /= rayEnd.w;
-			direction = glm::normalize(glm::vec3(rayEnd - rayOrigin));
-		}
-
 		void SelectObject(glm::vec3 pos, glm::vec3 dir) {
-			const std::vector<GameObject*>& gameObjects = GetScene()->GetGameObjects();
+			const std::vector<GameObject*>& gameObjects = GetScene()->m_gameObjects;
 			GameObject* nearestGameObject = nullptr; 
 			float tmin = FLT_MAX;
 			for (GameObject* gameObject : gameObjects) {
@@ -177,6 +150,7 @@ namespace Lobster
 			ImGui::Begin("Scene", p_open, ImGuiWindowFlags_None);
 			window_pos = ImGui::GetWindowPos();
 			window_size = ImGui::GetWindowSize();
+			ImGuiIO& io = ImGui::GetIO();
 
 			// draw scene
 			CameraComponent* camera = m_editorCamera->GetComponent<CameraComponent>();
@@ -190,8 +164,7 @@ namespace Lobster
 				if (gameObject)
 				{
 					glm::mat4 transformMatrix = gameObject->transform.GetMatrix();
-					ImGuizmo::SetDrawlist();
-					ImGuiIO& io = ImGui::GetIO();
+					ImGuizmo::SetDrawlist();					
 					ImGuizmo::SetRect(window_pos.x, window_pos.y, window_size.x, window_size.y);
 					if (Input::IsKeyDown(GLFW_KEY_W))
 						m_operation = ImGuizmo::TRANSLATE;
@@ -250,7 +223,10 @@ namespace Lobster
 			// Control the camera ONLY IF window is focused and mouse on the window			
 			{
 				float deltaTime = ImGui::GetIO().DeltaTime;
-				if (ImGui::IsWindowFocused() && insideWindow(ImGui::GetIO().MousePos, ImGui::GetWindowPos(), ImGui::GetWindowSize()))
+				glm::vec2 mouse = glm::vec2(io.MousePos.x, io.MousePos.y);
+				glm::vec2 winpos = glm::vec2(window_pos.x, window_pos.y);
+				glm::vec2 winsize = glm::vec2(window_size.x, window_size.y);
+				if (ImGui::IsWindowFocused() && Input::InsideWindow(mouse, winpos, winsize))
 				{
 					glm::vec2 lastScroll = Input::GetLastScroll();
 					glm::vec2 mouseDelta = Input::GetMouseDelta();
@@ -260,7 +236,8 @@ namespace Lobster
 					// Cast ray and select object (only activated by click but not drag)
 					if (Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !b_mouseDownSelect && !b_gizmoUsing) {
 						glm::vec3 pos, dir;
-						ComputeCameraRay(pos, dir);
+						CameraComponent* cam = m_editorCamera->GetComponent<CameraComponent>();
+						Input::ComputeCameraRay(cam->GetViewMatrix(), cam->GetProjectionMatrix(), pos, dir, winpos, winsize);
 						SelectObject(pos, dir);
 						b_mouseDownSelect = true;
 					}
@@ -285,7 +262,7 @@ namespace Lobster
 						at += t;
 					}
 					// Zoom
-					else if (lastScroll.y != 0 && insideWindow(ImGui::GetIO().MousePos, ImGui::GetWindowPos(), ImGui::GetWindowSize())) {
+					else if (lastScroll.y != 0) {
 						glm::vec3 zoom = -lastScroll.y * m_editorCamera->transform.Forward();
 						m_editorCamera->transform.WorldPosition += zoom * 50.0f * deltaTime;
 					}

@@ -12,6 +12,7 @@ namespace Lobster {
 	}
 
 	void GameUI::SortSprites() {
+		if (spriteList.size() <= 1) return;
 		std::sort(spriteList.begin(), spriteList.end(), Sprite2D::Compare);
 	}
 
@@ -49,5 +50,18 @@ namespace Lobster {
 
 	std::vector<Sprite2D*>& GameUI::GetSpriteList() {
 		return spriteList;
+	}
+
+	void GameUI::Serialize(cereal::JSONOutputArchive& oarchive) {
+		oarchive(*this);
+	}
+
+	void GameUI::Deserialize(cereal::JSONInputArchive& iarchive) {
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing GameUI failed, reason: {}", e.what());
+		}
 	}
 }

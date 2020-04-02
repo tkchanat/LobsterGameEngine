@@ -56,8 +56,8 @@ namespace Lobster
 		virtual void OnBegin(); // call when the object is initialized in game mode
 		virtual void OnEnd();
         void OnUpdate(double deltaTime);
-		void Serialize(cereal::BinaryOutputArchive& oarchive);
-		void Deserialize(cereal::BinaryInputArchive& iarchive);
+		void Serialize(cereal::JSONOutputArchive& oarchive);
+		void Deserialize(cereal::JSONInputArchive& iarchive);
 		//	To update ImGui components that describes this game object's attributes
 		virtual void OnImGuiRender();		
 		GameObject* AddComponent(Component* component);

@@ -22,6 +22,10 @@ namespace Lobster {
 		}
 	}
 
+	Rigidbody::~Rigidbody()
+	{
+	}
+
 	void Rigidbody::OnAttach() {
 		AABB* boundingBox = new AABB(this, Transform());
 		std::pair<glm::vec3, glm::vec3> pair = gameObject->GetBound();

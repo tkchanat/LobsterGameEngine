@@ -5,8 +5,8 @@ namespace Lobster
 {
 
     class CameraComponent;
-	class TextureCube;
 	class LightComponent;
+	class Skybox;
 
 	//	This class encapsulates all the game objects and elements in the game world.
 	//	A scene currently only allows one main camera, and a list of game objects.
@@ -14,25 +14,28 @@ namespace Lobster
     class Scene
     {
 		friend class ImGuiHierarchy;
+		friend class ImGuiScene;
+		friend class ImGuiToolbar;
     private:
-		TextureCube* m_skybox;
+		Skybox* m_skybox;
         std::vector<GameObject*> m_gameObjects;
-		PhysicsSystem* m_physicsSystem;
+		CameraComponent* m_gameCamera = nullptr; // a reference to game camera for easy access in script
 		std::string m_name;
     public:
-        Scene(const char* scenePath);
+        Scene(const char* scenePath = nullptr);
         ~Scene();
 		void OnBegin();
         void OnUpdate(double deltaTime);
 		void OnPhysicsUpdate(double deltaTime);
+		void SetGameCamera(CameraComponent* camera);
 		std::stringstream Serialize();
 		void Deserialize(std::stringstream& ss);
         Scene* AddGameObject(GameObject* gameObject);		
 		Scene* RemoveGameObject(GameObject* gameObject);
 		Scene* RemoveGameObjectByName(std::string name);
-		const std::vector<GameObject*>& GetGameObjects();
-		GameObject* GetGameObject(GameObject* gameObject);
 		bool IsObjectNameDuplicated(std::string name, std::string except = "");
+		inline CameraComponent* GetGameCamera() const { return m_gameCamera; }
+		inline Skybox* GetSkybox() const { return m_skybox; }
 	private:
 		friend class cereal::access;
 		template <class Archive>

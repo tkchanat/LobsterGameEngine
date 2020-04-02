@@ -24,8 +24,7 @@ namespace Lobster {
 		};
 
 	public:
-		PhysicsSystem();
-
+		static void Initialize();
 		inline static PhysicsSystem* GetInstance() { return m_instance; }
 	};
 }

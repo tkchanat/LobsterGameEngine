@@ -93,13 +93,13 @@ namespace Lobster
 		glfwSetKeyCallback(m_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
 			switch (action) {
 			case GLFW_PRESS:
-				EventQueue::GetInstance()->AddEvent<KeyPressedEvent>(key, false);
+				EventQueue::GetInstance()->AddEvent<KeyPressedEvent>(key, false, mods);
 				break;
 			case GLFW_RELEASE:
 				EventQueue::GetInstance()->AddEvent<KeyReleasedEvent>(key);
 				break;
 			case GLFW_REPEAT:
-				EventQueue::GetInstance()->AddEvent<KeyPressedEvent>(key, true);
+				EventQueue::GetInstance()->AddEvent<KeyPressedEvent>(key, true, mods);
 				break;
 			}
 		});
@@ -127,12 +127,12 @@ namespace Lobster
 		});
 
 		/* Listen for Lobster Callback */
-		EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {
-			if (e->Key == GLFW_KEY_ESCAPE)
-			{
-				b_isRunning = false;
-			}
-		}));
+		//EventDispatcher::AddCallback(EVENT_KEY_PRESSED, new EventCallback<KeyPressedEvent>([this](KeyPressedEvent* e) {
+		//	if (e->Key == GLFW_KEY_ESCAPE)
+		//	{
+		//		b_isRunning = false;
+		//	}
+		//}));
 		EventDispatcher::AddCallback(EVENT_WINDOW_CLOSED, new EventCallback<WindowClosedEvent>([this](WindowClosedEvent* e) {
 			b_isRunning = false;
 		}));

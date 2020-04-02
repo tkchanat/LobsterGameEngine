@@ -50,7 +50,7 @@ namespace Lobster
 		if (!exists) return anim;
 		std::stringstream ss = FileSystem::ReadStringStream(FileSystem::Path(path).c_str(), true);
 		try {
-			cereal::BinaryInputArchive iarchive(ss);
+			cereal::JSONInputArchive iarchive(ss);
 			iarchive(anim);
 		}
 		catch (std::exception e) {
@@ -67,7 +67,7 @@ namespace Lobster
 		const AnimationInfo& anim = m_animations[animation];
 		std::stringstream ss;
 		{
-			cereal::BinaryOutputArchive oarchive(ss);
+			cereal::JSONOutputArchive oarchive(ss);
 			oarchive(anim);
 		}
 		FileSystem::WriteStringStream(FileSystem::Path(anim.Name).c_str(), ss, true);
@@ -257,6 +257,7 @@ namespace Lobster
 						if (ImGui::Button("Load Material (.mat)")) {
 							std::string path = FileSystem::OpenFileDialog();
 							if (!path.empty()) {
+								path = FileSystem::Path(path);
 								m_meshInfo.Materials[i] = MaterialLibrary::Use(path.c_str());
 							}
 						}
@@ -388,13 +389,13 @@ namespace Lobster
 		return finalScale;
 	}
 
-	void MeshComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
+	void MeshComponent::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
 		//LOG("Serializing MeshComponent {}", m_meshPath);
 		oarchive(*this);
 	}
 
-	void MeshComponent::Deserialize(cereal::BinaryInputArchive & iarchive)
+	void MeshComponent::Deserialize(cereal::JSONInputArchive & iarchive)
 	{
 		//LOG("Deserializing MeshComponent {}", m_meshPath);
 		try {

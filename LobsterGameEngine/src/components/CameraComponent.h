@@ -25,7 +25,7 @@ namespace Lobster
         glm::mat4 m_projectionMatrix;
 		glm::mat4 m_orthoMatrix;
 		FrameBuffer* m_frameBuffer;
-		bool b_uiEditor = false;
+		bool b_uiEditor = false;		
 		GameUI* gameUI = nullptr;
 		
 		static CameraComponent* s_activeCamera;
@@ -39,8 +39,8 @@ namespace Lobster
         virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnBegin() override;
-		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override;
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 		glm::mat4 GetViewMatrix();
 		inline void SetFar(float f) { m_farPlane = f; ResizeProjection(m_width, m_height); }
 		inline void SetNear(float n) { m_nearPlane = n; ResizeProjection(m_width, m_height); }
@@ -52,19 +52,25 @@ namespace Lobster
 		static inline CameraComponent* GetActiveCamera() { return s_activeCamera; }
 	private:
 		friend class cereal::access;
-		template <class Archive>
-		void save(Archive & ar) const
+		template <class Archive> void save(Archive & ar) const
 		{
 			ar(m_fieldOfView);
 			ar(m_nearPlane, m_farPlane);
-			//gameUI->Serialize();
+			bool hasUi = (bool) gameUI;
+			ar(hasUi);
+			if (hasUi)
+				gameUI->Serialize(ar);
 		}
-		template <class Archive>
-		void load(Archive & ar)
+		template <class Archive> void load(Archive & ar)
 		{
 			ar(m_fieldOfView);
 			ar(m_nearPlane, m_farPlane);
-			//gameUI->Deserialize();
+			bool hasUi;
+			ar(hasUi);
+			if (hasUi) {
+				gameUI = new GameUI();
+				gameUI->Deserialize(ar);
+			}
 		}
     };
     

@@ -13,6 +13,12 @@ namespace Lobster {
 		luaL_openlibs(L);		
 	}
 
+	Script::Script(const char* file) : Component(SCRIPT_COMPONENT) {
+		L = luaL_newstate();
+		luaL_openlibs(L);
+		loadScript(file);
+	}
+
 	Script::~Script() {
 		lua_close(L);
 		L = nullptr;
@@ -68,6 +74,40 @@ namespace Lobster {
 		}
 	}
 
+	void Script::Execute(std::string funcName) {
+		if (Application::GetMode() != GAME) return;
+		if (filename.size() == 0 || errmsg.size() > 0) return;
+		LuaRef lua_Func = getGlobal(L, funcName.c_str());
+		try {
+			lua_Func();
+		}
+		catch (LuaException const& e) {
+			// not editing errmsg here (nowhere to display), use log instead
+			static char lastWarn[256] = "";
+			if (strcmp(lastWarn, e.what())) {
+				strcpy(lastWarn, e.what());
+				LOG(lastWarn);
+			}
+		}
+	}
+
+	LuaRef Script::GetVar(std::string varName) {
+		if (Application::GetMode() != GAME) return LuaRef(L);
+		if (varName.empty() || filename.empty() || errmsg.size() > 0) return LuaRef(L);
+		LuaRef lua_Var = getGlobal(L, varName.c_str());
+		if (lua_Var.isNil()) {
+			// not editing errmsg here (nowhere to display), use log instead
+			char buffer[256];			
+			static char prevBuffer[256];
+			sprintf(buffer, "%s: %s does not exist", filename.c_str(), varName.c_str());
+			if (strcmp(buffer, prevBuffer) != 0) {				
+				LOG(buffer);
+				strcpy(prevBuffer, buffer);
+			}
+		}
+		return lua_Var;
+	}
+
 	void Script::OnBegin() {		
 		if (Application::GetMode() != GAME) return;
 		if (filename.size() == 0 || errmsg.size() > 0) return;
@@ -90,6 +130,14 @@ namespace Lobster {
 		catch (LuaException const& e) {
 			errmsg += "OnUpdate(): " + std::string(e.what()) + "\n";
 		}
+	}
+
+	void Script::Serialize(cereal::JSONOutputArchive& oarchive) {
+		oarchive(*this);
+	}
+
+	void Script::Deserialize(cereal::JSONInputArchive& iarchive) {
+		iarchive(*this);
 	}
 	
 	void FunctionBinder::DisableCursor() {
@@ -122,6 +170,16 @@ namespace Lobster {
 	PhysicsComponent* FunctionBinder::GetPhysicsComponent(GameObject* gameObject) {
 		return gameObject->GetComponent<PhysicsComponent>();
 	}
+	bool FunctionBinder::RayIntersect(CameraComponent* camera, PhysicsComponent* phys, float distanceThreshold = 10000.f) {
+		glm::vec3 origin, direction;
+		Input::ComputeCameraRay(camera->GetViewMatrix(), camera->GetProjectionMatrix(), origin, direction);
+		float t = -1;
+		for (Collider* collider : phys->GetColliders()) {
+			collider->Intersects(origin, direction, t);
+		}
+		if (t < 0 || t > distanceThreshold) return false;
+		return true;
+	}
 
 	void Script::Bind() {
 		// Class/function binding
@@ -136,10 +194,12 @@ namespace Lobster {
 			.addFunction("GetMouseDeltaY", Input::GetMouseDeltaY)
 			.addFunction("IsMouseDown", Input::IsMouseDown)
 			.addFunction("IsMouseHold", Input::IsMouseHold)
+			.addFunction("IsMouseUp", Input::IsMouseUp)
 			.addFunction("LockCursor", Input::LockCursor)
 			.addFunction("UnlockCursor", Input::UnlockCursor)
 			.addFunction("DisableCursor", FunctionBinder::DisableCursor)
 			.addFunction("EnableCursor", FunctionBinder::EnableCursor)
+			.addFunction("RayIntersect", FunctionBinder::RayIntersect)
 			// utilities
 			.addFunction("normalize", FunctionBinder::Normalize)
 			.addFunction("GetAudioSource", FunctionBinder::GetAudioSource)
@@ -174,6 +234,7 @@ namespace Lobster {
 			// Physics Component
 			.deriveClass<PhysicsComponent, Component>("PhysicsComponent")
 			.addFunction("ApplyForce", &PhysicsComponent::ApplyForce)
+			.addFunction("AddVelocity", &PhysicsComponent::AddVelocity)
 			.endClass()
 			// Camera Component
 			.deriveClass<CameraComponent, Component>("CameraComponent")
@@ -198,6 +259,8 @@ namespace Lobster {
 			.addFunction("SetFontSize", &TextSprite2D::SetFontSize)
 			.addFunction("SetColor", &TextSprite2D::SetColor)
 			.endClass()
+			.deriveClass<DynamicTextSprite2D, TextSprite2D>("DynamicTextSprite2D")
+			.endClass()
 			// Audio Component
 			.beginClass<AudioSource>("AudioSource")
 			.addFunction("Play", &AudioSource::Play)
@@ -219,8 +282,9 @@ namespace Lobster {
 			// Scene
 			.beginClass<Scene>("Scene")
 			.addFunction("AddGameObject", &Scene::AddGameObject)
+			.addFunction("GetGameCamera", &Scene::GetGameCamera)
 			//.addFunction("RemoveGameObject", ) <- overloaded function
-			.addFunction("GetGameObjects", &Scene::GetGameObjects)
+			//.addFunction("GetGameObjects", &Scene::GetGameObjects)
 			.endClass()
 			.endNamespace();
 		getGlobalNamespace(L).beginNamespace("Lobster").endNamespace();
@@ -229,6 +293,8 @@ namespace Lobster {
 		lua_setglobal(L, "transform");
 		push(L, gameObject); // pointer to 'GameObject', C++ lifetime
 		lua_setglobal(L, "this");
+		push(L, Application::GetInstance()->GetCurrentScene()); // pointer to current scene, C++ lifetime
+		lua_setglobal(L, "scene");
 	}
 
 }

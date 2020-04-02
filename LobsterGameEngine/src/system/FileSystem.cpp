@@ -3,33 +3,71 @@
 
 #ifdef LOBSTER_PLATFORM_WIN
 #include <Commdlg.h>
+#include <shlobj_core.h>
 #endif
 
 namespace Lobster {
 
 	FileSystem* FileSystem::m_instance = nullptr;
 	std::string FileSystem::m_workingDir;
+	std::string FileSystem::m_executableDir;
 	std::map<std::string, std::vector<std::string>> FileSystem::m_directory;
 
 	FileSystem::FileSystem() {
 		if (m_instance)
 			throw std::runtime_error("File system already created. Do you really need two file systems?");
 		m_instance = this;
+		m_executableDir = fs::current_path().string();
 	}
 
-	std::string FileSystem::Path(std::string path) {
-		// if path is absolute, add it into res/ and use the relative one		
-		// TODO delete this if not required
+	// Convert the provided path into relative path, with the following format:
+	// #Absolute path:		Copy into project resources and return the relative path inside resources folder
+	// #<folder>/<file>:	Append working directory before the file 
+	// #Relative path:		NOT SUPPORTED! Never provide this path to the function though this function tries its best to ignore.
+	// Note: Path can take both <res-folder>/<file> or absolute path, but not other format
+	std::string FileSystem::Path(std::string path, int flags) {
+		// if path is absolute, add it into res/ and use the relative one
 		fs::path p(path);
 		if (p.is_absolute()) {
-			std::string relative = m_instance->addResourceIfNecessary(path);
-			if (!relative.empty())
-				return relative;
+			// not allow to copy but absolute => just do nothing and return original path
+			if (flags & Flag_SuppressCopying) return path;
+			// make use of current_path to move relatively
+			fs::path tempCurrentPath = fs::current_path();
+			fs::current_path(m_workingDir);
+			fs::path pathRelativeToWorkingDir = fs::relative(p);
+			fs::current_path(tempCurrentPath); // restore current path
+			// if path is already inside res/, just change the path into relative without adding
+			if (pathRelativeToWorkingDir.empty() || pathRelativeToWorkingDir.string()[0] == '.') {
+				std::string relative = m_instance->addResourceIfNecessary(path);
+				if (!relative.empty())
+					return relative;
+				else {
+					char msg[512];
+					sprintf(msg, "FileSystem::Path() does not support conversion of path %s", path.c_str());
+					throw std::exception(msg);
+				}
+			}
+			else {
+				std::string return_path = pathRelativeToWorkingDir.string();
+				StringOps::ReplaceAll(return_path, "\\", "/");
+				return return_path;
+			}
 		}
-		// sometimes it yields a/b\c/d, nevermind it is just fine
-		// remove the two slashes suffix
-		path = (path.substr(0, 1).compare("/") == 0 ? path.substr(1, path.size() - 1) : path);
-		return Join(m_workingDir, path);
+		else {
+			// if path is relative starting with ../, ignore and return the original path
+			if (path[0] == '.') 
+				return path;
+			// remove the two slashes suffix
+			if (path.substr(0, 1) == "/") path.substr(1, path.size() - 1);
+			std::string return_path = Join(m_workingDir, path);
+			StringOps::ReplaceAll(return_path, "\\", "/");
+			return return_path;
+		}
+	}
+
+	std::string FileSystem::RelativeToAbsolute(std::string path)
+	{
+		return fs::canonical(fs::path(path)).string();
 	}
 
 	// To join the two string with a slash regardless of OS
@@ -75,7 +113,7 @@ namespace Lobster {
 	std::string FileSystem::addResource(std::string path, std::string type) {	
 		fs::path source = path;
 		fs::path target = m_workingDir;
-		target = Join(target.string(), (type.size() == 0 ? source.filename().string() : Join(type, source.filename().string())));
+		target = Join(target.string(), (type.empty() ? source.filename().string() : Join(type, source.filename().string())));
 		LOG(target.string() + " loaded");
 		if (!fs::exists(target))
 			fs::copy_file(source, target);
@@ -85,25 +123,40 @@ namespace Lobster {
 	}
 
 	// Same as addResource(std::string path, std::string type),
-// except letting the system determine the type itself
-// If no file is added, empty string will be returned
+	// except letting the system determine the type itself
+	// If no file is added, empty string will be returned
 	std::string FileSystem::addResourceIfNecessary(std::string path) {
 		// TODO check any object with the same name
 		fs::path p(path);
 		std::string subfolder;
 		if (p.extension() == ".obj" || p.extension() == ".mtl") {
-			subfolder = "meshes";
+			subfolder = PATH_MESHES;
 		}
 		else if (p.extension() == ".mat") {
-			subfolder = "materials";
+			subfolder = PATH_MATERIALS;
 		}
 		else if (p.extension() == ".glsl") {
-			subfolder = "shaders";
+			subfolder = PATH_SHADERS;
 		}
-		else if (p.extension() == ".png") {
-			subfolder = "textures";
+		else if (p.extension() == ".png" || p.extension() == ".jpg") {
+			subfolder = PATH_TEXTURES;
 		}
-		else return "";
+		else if (p.extension() == ".wav") {
+			subfolder = PATH_AUDIO;
+		}
+		else if (p.extension() == ".anim") {
+			subfolder = PATH_ANIMATIONS;
+		}
+		else if (p.extension() == ".lua") {
+			subfolder = PATH_SCRIPTS;
+		}
+		else if (p.extension() == ".lobster") {
+			subfolder = PATH_SCENES;
+		}
+		else {
+			throw std::runtime_error("Please add new extension");
+			return "";
+		}
 		addResource(p.string(), subfolder);
 		return Path(Join(subfolder, p.filename().string()));
 	}
@@ -161,7 +214,7 @@ namespace Lobster {
 
 		// Use native windows file dialog box
 		OPENFILENAME ofn;       // common dialog box structure
-		wchar_t lpBuffer[FILE_DIALOG_MAX_BUFFER];
+		wchar_t lpBuffer[MAX_FILE_BUFFER_SIZE];
 
 		// Initialize OPENFILENAME
 		ZeroMemory(&ofn, sizeof(ofn));
@@ -203,9 +256,54 @@ namespace Lobster {
 		}
 		
 #endif        
-        path = fs::relative(fs::path(buffer), executablePath).string();
-        StringOps::ReplaceAll(path, "\\", "/");
-        fs::current_path(executablePath);
+		path = buffer;
+		StringOps::ReplaceAll(path, "\\", "/");
+		fs::current_path(executablePath);
+		return path;
+	}
+
+	std::string FileSystem::OpenDirectoryDialog()
+	{
+		char buffer[MAX_FILE_BUFFER_SIZE];
+		std::string path;
+
+#ifdef LOBSTER_PLATFORM_MAC
+		throw std::runtime_error("We don't support mac for now!");
+#elif defined LOBSTER_PLATFORM_WIN
+
+		BROWSEINFO browseinfo;
+		wchar_t pszDisplayName[MAX_FILE_BUFFER_SIZE];
+		memset(&browseinfo, 0, sizeof(BROWSEINFO));
+		browseinfo.hwndOwner = NULL;
+		browseinfo.pidlRoot = NULL;
+		browseinfo.pszDisplayName = pszDisplayName;
+		browseinfo.lpszTitle = L"Select Folder";
+		browseinfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
+		browseinfo.lpfn = NULL;
+		browseinfo.lParam = NULL;
+		browseinfo.iImage = 0;
+
+		LPITEMIDLIST pidl = NULL;
+		if ((pidl = SHBrowseForFolder(&browseinfo)) != NULL) {
+			wchar_t buf[MAX_FILE_BUFFER_SIZE];
+			if (SHGetPathFromIDList(pidl, buf)) {
+				int pos = 0;
+				while (buf[pos] != '\0') {
+					buffer[pos] = (char)buf[pos];
+					pos++;
+				}
+				buffer[pos] = '\0';
+			}
+		}
+		else {
+			buffer[0] = '\0';
+		}
+#else
+		throw std::runtime_error("We don't support linux for now!");
+#endif
+
+		if (buffer[0] == '\0') return "";
+		path = buffer;
 		return path;
 	}
 
@@ -284,7 +382,7 @@ namespace Lobster {
 
 	std::filesystem::file_time_type FileSystem::LastModified(const char * path)
 	{
-		return fs::last_write_time(fs::path(Path(path)));
+		return fs::last_write_time(fs::path(path));
 	}
 
 	std::stringstream FileSystem::ReadStringStream(const char * path, bool binary)
@@ -301,7 +399,7 @@ namespace Lobster {
 	}
 
 	void FileSystem::WriteStringStream(const char * path, const std::stringstream & ss, bool binary)
-	{
+	{		
 		int flags = std::ios::out;
 		if (binary) flags |= std::ios::binary;
 		std::ofstream outFile(path, flags);
@@ -309,5 +407,8 @@ namespace Lobster {
 			outFile << ss.rdbuf();
 			outFile.close();
 		}
+		else {
+			WARN("Unable to save file at {}.", path);
+		}				
 	}
 }

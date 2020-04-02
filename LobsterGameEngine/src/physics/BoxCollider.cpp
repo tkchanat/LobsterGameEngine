@@ -66,7 +66,7 @@ namespace Lobster {
 	}
 
 	void BoxCollider::Draw() {
-#ifdef LOBSTER_BUILD_DEBUG
+#ifdef LOBSTER_BUILD_EDITOR
 		// validate data, and return if we haven't define game object yet
 		if (!physics) return;
 		if (!m_vertexMaterial || !m_mesh)

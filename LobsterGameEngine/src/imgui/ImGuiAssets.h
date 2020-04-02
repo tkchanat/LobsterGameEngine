@@ -2,7 +2,6 @@
 #include "ImGuiComponent.h"
 #include "layer/EditorLayer.h"
 
-#include "ImGuiFileBrowser.h"
 #include "audio/AudioSystem.h"
 #include "system/UndoSystem.h"
 
@@ -15,7 +14,6 @@ namespace Lobster
 		AudioClip* audioPlaying = nullptr;
 		std::string subdirSelected = "meshes"; // by default
 		std::string pathSelected;
-		ImGui::FileBrowser fileDialog;
 	public:
 		void ConfirmDeleteDialog() {
 			ImGui::SetNextWindowSize(ImVec2(400, 120));
@@ -140,17 +138,13 @@ namespace Lobster
 			// ============ control button group ============
 			// File browser to choose files to import
 			if (ImGui::Button("Import")) {
-				fileDialog.Open();
+				//fileDialog.Open();
+				std::string fullpath = FileSystem::OpenFileDialog();
+				if (!fullpath.empty()) {
+					LOG(fullpath.c_str());
+					FileSystem::GetInstance()->addResource(fullpath, subdirSelected);
+				}
 			}
-			fileDialog.Display();
-			if (fileDialog.HasSelected())
-			{
-				LOG(fileDialog.GetSelected().string());
-				if (subdirSelected == "audio")
-					FileSystem::GetInstance()->addResource(fileDialog.GetSelected().string());
-				fileDialog.ClearSelected();
-			}
-
 			// The "Add" and "Delete" function in mesh
 			if (subdirSelected == "meshes" && itemSelected != -1) {				
 				ImGui::SameLine();

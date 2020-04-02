@@ -70,7 +70,6 @@ extern "C" {
 #include "events/EventCollection.h"
 #include "events/EventDispatcher.h"
 #include "imgui/ImGuiConsole.h"
-#include "imgui/ImGuiFileBrowser.h"
 #include "system/FileSystem.h"
 #include "system/Timer.h"
 #include "system/ThreadPool.h"
@@ -88,6 +87,7 @@ extern "C" {
 #define MAX_DIRECTIONAL_SHADOW 2
 #define MAX_POINT_SHADOW 3
 #define MAX_PARTICLES 1024
+#define MAX_FILE_BUFFER_SIZE 256
 
 #define PATH_AUDIO "audio"
 #define PATH_MESHES "meshes"
@@ -97,6 +97,8 @@ extern "C" {
 #define PATH_SPRITES "sprites"
 #define PATH_FONT "textures/font"
 #define PATH_SCRIPTS "scripts"
+#define PATH_ANIMATIONS "animations"
+#define PATH_SCENES "scenes"
 
 #define BIT(x) 1 << x
 

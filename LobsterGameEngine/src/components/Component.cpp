@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "objects/GameObject.h"
+#include "scripts/Script.h"
 
 namespace Lobster
 {
@@ -14,7 +15,8 @@ namespace Lobster
 		"Script Component",
 		"Audio Source Component",
 		"Audio Listener Component",
-		"Particle Component"
+		"Particle Component",
+		"Script Component"
 	};
 
 	void Component::RemoveComponent(Component* comp) 
@@ -40,6 +42,8 @@ namespace Lobster
 			return new AudioListener();
 		case ComponentType::PARTICLE_COMPONENT:
 			return new ParticleComponent();
+		case ComponentType::SCRIPT_COMPONENT:
+			return new Script();
 		default:
 			assert(false && "Please register your own typeName-to-component conversion here!");
 			break;

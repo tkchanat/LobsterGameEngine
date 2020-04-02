@@ -47,13 +47,20 @@ namespace Lobster
 		m_orthoMatrix = glm::ortho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
 		m_frustum.SetFromMatrix(m_projectionMatrix);
 	}
+
+	void CameraComponent::OnBegin() {
+		if (!gameUI) return;
+		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
+			sprite->OnBegin();
+		}
+	}
     
     void CameraComponent::OnUpdate(double deltaTime)
     {
 		m_frustum.Update();
 		//m_frustum.Draw(glm::inverse(m_viewMatrix));
 
-#ifdef LOBSTER_BUILD_DEBUG
+#ifdef LOBSTER_BUILD_EDITOR
 		// submit gizmos command
 		GizmosCommand command;
 		command.texture = "textures/ui/camera.png";
@@ -117,21 +124,17 @@ namespace Lobster
 	void CameraComponent::DrawUI() {
 		if (!gameUI) return;
 		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
-			sprite->SubmitDrawCommand();
+			sprite->OnUpdate();			
 		}
 	}
 
-	void CameraComponent::OnBegin() {
-
-	}
-		
-	void CameraComponent::Serialize(cereal::BinaryOutputArchive & oarchive)
+	void CameraComponent::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
 		//LOG("Serializing CameraComponent");
 		oarchive(*this);
 	}
 
-	void CameraComponent::Deserialize(cereal::BinaryInputArchive & iarchive)
+	void CameraComponent::Deserialize(cereal::JSONInputArchive & iarchive)
 	{
 		//LOG("Deserializing CameraComponent");
 		try {
@@ -140,7 +143,7 @@ namespace Lobster
 			ResizeProjection(size.x, size.y);
 		}
 		catch (std::exception e) {
-			LOG("Deserializing CameraComponent failed");
+			LOG("Deserializing CameraComponent failed, reason: {}", e.what());
 		}
 	}
 

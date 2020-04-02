@@ -178,11 +178,12 @@ namespace Lobster
 			m_spriteShader->SetUniform("sys_projection", camera->GetOrthoMatrix());
 			m_spriteShader->SetUniform("alpha", command.alpha);
 			m_spriteShader->SetUniform("sys_background", 0);
-			m_spriteShader->SetUniform("sys_spriteTexture", 1);			
+			m_spriteShader->SetUniform("sys_spriteTexture", 1);	
+			m_spriteShader->SetUniform("blend", glm::vec4(command.blendR, command.blendG, command.blendB, command.blendA));
 			m_spriteMesh->Draw();
 		}
 		// Debug
-#ifdef LOBSTER_BUILD_DEBUG
+#ifdef LOBSTER_BUILD_EDITOR
 		if (debug) {
 			Renderer::DrawQueue(camera, m_debugQueue);
 		}

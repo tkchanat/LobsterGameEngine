@@ -1,6 +1,5 @@
 #pragma once
-
-#include "components/Component.h"
+#include "pch.h"
 #include "objects/GameObject.h"
 #include "objects/Transform.h"
 
@@ -19,7 +18,9 @@ namespace Lobster
 		static LightComponent* GetLightComponent(GameObject* gameObject);
 		static MeshComponent* GetMeshComponent(GameObject* gameObject);
 		static ParticleComponent* GetParticleComponent(GameObject* gameObject);
-		static PhysicsComponent* GetPhysicsComponent(GameObject* gameObject);				
+		static PhysicsComponent* GetPhysicsComponent(GameObject* gameObject);
+		// ray casting & intersection
+		static bool RayIntersect(CameraComponent* camera, PhysicsComponent* collider, float distanceThreshold);
 	};
     
 	//	This class is a component for user to define custom scripts with Lua.
@@ -33,15 +34,28 @@ namespace Lobster
 		void loadScript(const char* file);
     public:
 		Script();
+		Script(const char* file);
 		~Script();	
 		// pass class/object information to Lua via LuaBridge
 		void Bind(); 
+		// these functions should ONLY be called as non-component (e.g. UI button call)
+		void Execute(std::string funcName);
+		luabridge::LuaRef GetVar(std::string varName);
+		// =====================
 		virtual void OnBegin() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
 
-		virtual void Serialize(cereal::BinaryOutputArchive& oarchive) override {}
-		virtual void Deserialize(cereal::BinaryInputArchive& iarchive) override {}
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
+	private:
+		friend class cereal::access;
+		template <class Archive> void save(Archive & ar) const {
+			ar(filename);
+		}
+		template <class Archive> void load(Archive & ar) {
+			ar(filename);
+		}
     };
     
 }

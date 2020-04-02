@@ -19,7 +19,7 @@ namespace Lobster
 			// Check for Enumeration Support
 			ALboolean enumeration = alcIsExtensionPresent(m_device, "ALC_ENUMERATION_EXT");
 			if (enumeration == AL_TRUE) {
-				ListAllDevices(alcGetString(NULL, ALC_DEVICE_SPECIFIER));
+				//ListAllDevices(alcGetString(NULL, ALC_DEVICE_SPECIFIER));
 			}
 			else {
 				CRITICAL("OpenAL enumeration is not supported.");
@@ -66,7 +66,7 @@ namespace Lobster
 		ALvoid *data;
 		LoadWAVFile(file, &format, &data, &size, &freq);
 		// TODO check if loaded successfully
-		AudioClip* ac = new AudioClip(fs::path(file).filename().string().c_str());
+		AudioClip* ac = new AudioClip(fs::path(file).filename().string().c_str());		
 		ac->BindBuffer(format, data, size, freq);
 		s_instance->m_audioClips.push_back(ac);
 		return ac;

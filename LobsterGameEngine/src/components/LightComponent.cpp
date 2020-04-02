@@ -32,6 +32,8 @@ namespace Lobster
 	LightComponent::~LightComponent()
 	{
 		if (b_isVirtuallyDeleted == false) LightLibrary::RemoveLight(this, m_type);
+		if (m_depthBuffer) delete m_depthBuffer;
+		m_depthBuffer = nullptr;
 	}
 
 	void LightComponent::VirtualCreate() {
@@ -55,7 +57,7 @@ namespace Lobster
 
 	void LightComponent::OnUpdate(double deltaTime)
 	{
-#ifdef LOBSTER_BUILD_DEBUG
+#ifdef LOBSTER_BUILD_EDITOR
 		GizmosCommand command;
 		command.texture = "textures/ui/light.png";
 		command.position = transform->WorldPosition;
@@ -141,13 +143,13 @@ namespace Lobster
 	}
 
 
-    void LightComponent::Serialize(cereal::BinaryOutputArchive& oarchive)
+    void LightComponent::Serialize(cereal::JSONOutputArchive& oarchive)
     {
         //LOG("Serializing LightComponent");
         oarchive(*this);
     }
 
-    void LightComponent::Deserialize(cereal::BinaryInputArchive& iarchive)
+    void LightComponent::Deserialize(cereal::JSONInputArchive& iarchive)
     {
         //LOG("Deserializing LightComponent");
         try {

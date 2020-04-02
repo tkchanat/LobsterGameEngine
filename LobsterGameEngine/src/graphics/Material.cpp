@@ -22,7 +22,6 @@ namespace Lobster
 		b_dirty(false)
     {
 		Deserialize(FileSystem::ReadStringStream(FileSystem::Path(m_name).c_str()));
-		if(m_uniformData == nullptr) InitializeUniformsFromShader();
 		AssignTextureSlot();
     }
 
@@ -39,6 +38,12 @@ namespace Lobster
 		if (m_uniformData == nullptr) m_uniformData = new byte[m_uniformDataSize];
 		InitializeUniformsFromShader();
 		AssignTextureSlot();
+	}
+
+	Material::~Material()
+	{
+		if (m_uniformData) delete m_uniformData;
+		m_uniformData = nullptr;
 	}
 
 	void Material::InitializeUniformsFromShader()
@@ -119,10 +124,6 @@ namespace Lobster
 		if (m_uniformData) delete[] m_uniformData;
 		m_uniformData = newBuffer;
 	}
-    
-    Material::~Material()
-    {
-    }
 
 	void Material::OnImGuiRender()
 	{
@@ -171,6 +172,7 @@ namespace Lobster
 					if (ImGui::ImageButton(m_textures[*(uint*)data] ? m_textures[*(uint*)data]->Get() : notFound->Get(), previewSize)) {
 						std::string path = FileSystem::OpenFileDialog();
 						if (!path.empty()) {
+							path = FileSystem::Path(path);
 							m_textures[*(uint*)data] = TextureLibrary::Use(path.c_str());
 							b_dirty = true;
 						}
@@ -320,6 +322,7 @@ namespace Lobster
 			m_shader = ShaderLibrary::Use("shaders/Phong.glsl");
 			m_uniformDataSize = m_shader->GetUniformBufferSize();
 			if (m_uniformData == nullptr) m_uniformData = new byte[m_uniformDataSize];
+			InitializeUniformsFromShader();
 			WARN("Couldn't load material {}, setting to default. Exception: {}", m_name, e.what());
 		};
 	}

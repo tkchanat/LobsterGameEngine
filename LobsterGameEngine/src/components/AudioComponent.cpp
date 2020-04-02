@@ -30,14 +30,17 @@ namespace Lobster {
 	}
 
 	void AudioSource::OnUpdate(double deltaTime) {
-		// update data for attached clip
-		m_clip->SetGain(m_gain);
-		m_clip->SetPitch(m_pitch);		
-		// update source position
-		if (transform && m_clip && m_enable3d) {
-			glm::vec3 position = transform->WorldPosition;
-			alSource3f(m_clip->GetSource(), AL_POSITION, position[0], position[1], position[2]);
-		}
+		if (Application::GetMode() != GAME) return;
+		if (m_clip) {			
+			// update data for attached clip
+			m_clip->SetGain(m_gain);
+			m_clip->SetPitch(m_pitch);
+			// update source position
+			if (transform && m_enable3d) {
+				glm::vec3 position = transform->WorldPosition;
+				alSource3f(m_clip->GetSource(), AL_POSITION, position[0], position[1], position[2]);
+			}
+		}		
 	}
 
 	void AudioSource::OnImGuiRender() {
@@ -158,11 +161,10 @@ namespace Lobster {
 		// load audios only when it is not loaded
 		std::string path = FileSystem::Join("audio", m_clipName);
 		AudioClip* ac = AudioSystem::AddAudioClip(FileSystem::Path(path).c_str());
-		m_clip = ac;
+		m_clip = ac;		
 	}
 
 	void AudioSource::OnEnd() {
-		if (sourceList.empty()) return;
 		// stop all audios playing
 		for (AudioSource* src : sourceList) {
 			if (src->m_clip) {
@@ -172,15 +174,14 @@ namespace Lobster {
 				src->m_clip = nullptr;
 			}			
 		}
-		sourceList.clear();
 	}
 
-	void AudioSource::Serialize(cereal::BinaryOutputArchive & oarchive)
+	void AudioSource::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
 		oarchive(*this);
 	}
 
-	void AudioSource::Deserialize(cereal::BinaryInputArchive & iarchive)
+	void AudioSource::Deserialize(cereal::JSONInputArchive & iarchive)
 	{
 		try {
 			iarchive(*this);
@@ -190,7 +191,7 @@ namespace Lobster {
 		}
 	}
 
-	void AudioSource::Play() {
+	void AudioSource::Play() {		
 		if (m_clip) m_clip->Play();
 	}
 
@@ -227,8 +228,8 @@ namespace Lobster {
 
 	void AudioListener::OnUpdate(double deltaTime) {
 		// update the positional information and play audio (automatically)
-		if (Application::GetMode() == ApplicationMode::GAME) {
-			for (AudioSource* src : AudioSource::sourceList) {
+		if (Application::GetMode() == ApplicationMode::GAME) {			
+			for (AudioSource* src : AudioSource::sourceList) {								
 				if (!src->m_clip) continue;
 				if (src->m_enable3d) {
 					// Note: AudioClip::position will not update itself
@@ -249,9 +250,9 @@ namespace Lobster {
 					alSourcei(src->m_clip->GetSource(), AL_SOURCE_RELATIVE, AL_TRUE);
 					alSource3f(src->m_clip->GetSource(), AL_POSITION, 0.0f, 0.0f, 0.0f);
 				}
-				if (src->m_loop) src->done = false;
+				if (src->m_loop) src->done = false;						
 				if (!src->done && src->m_clip->GetSourceState() != AL_PLAYING) {
-					src->m_clip->Play();
+					src->m_clip->Play();					
 					if (!src->m_loop) src->done = true;
 				}
 			}
@@ -264,12 +265,12 @@ namespace Lobster {
 		}
 	}
 
-	void AudioListener::Serialize(cereal::BinaryOutputArchive & oarchive)
+	void AudioListener::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
 		oarchive(*this);
 	}
 
-	void AudioListener::Deserialize(cereal::BinaryInputArchive & iarchive)
+	void AudioListener::Deserialize(cereal::JSONInputArchive & iarchive)
 	{
 		try {
 			iarchive(*this);

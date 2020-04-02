@@ -4,18 +4,19 @@
 #include "graphics/Renderer.h"
 #include "components/CameraComponent.h"
 
-
 namespace Lobster {
 
 	class ImGuiGame : public ImGuiComponent {
 	private:
-		// window-related variable
-		ImVec2 window_pos;
-		ImVec2 window_size;
+		// window-related variable, will be updated per frame
+		static ImVec2 window_pos;
+		static ImVec2 window_size;
 		// profiler
 		bool b_showProfiler;
 	public:
 		ImGuiGame() = default;
+		inline static glm::vec2 GetWindowPos() { return glm::vec2(window_pos.x, window_pos.y); }
+		inline static glm::vec2 GetWindowSize() { return glm::vec2(window_size.x, window_size.y); }
 
 		virtual void Show(bool* p_open) override {
 			// Scene window
@@ -23,6 +24,9 @@ namespace Lobster {
 			ImGui::Begin("Game", p_open, ImGuiWindowFlags_None);
 			window_pos = ImGui::GetWindowPos();
 			window_size = ImGui::GetWindowSize();
+			Config& config = Application::GetInstance()->GetConfig();
+			config.gameTabPos = glm::vec2(window_pos.x, window_pos.y);
+			config.gameTabSize = glm::vec2(window_size.x, window_size.y);
 
 			// draw scene
 			CameraComponent* camera = CameraComponent::GetActiveCamera();
@@ -42,4 +46,8 @@ namespace Lobster {
 		}
 
 	};
+
+	// static initialization
+	ImVec2 ImGuiGame::window_pos = ImVec2(0, 0);
+	ImVec2 ImGuiGame::window_size = ImVec2(0, 0);
 }
