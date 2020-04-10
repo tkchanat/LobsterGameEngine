@@ -123,7 +123,7 @@ namespace Lobster
 		Shader* shader = ShaderLibrary::Use("shaders/ShadowMapping.glsl");
 		shader->Bind();
 		glm::mat4 lightProjection, lightView;
-		float near_plane = 0.1f, far_plane = 20.0f;
+		float near_plane = 0.1f, far_plane = 80.0f;
 		lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
 		lightView = glm::lookAt(transform->WorldPosition, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
 		m_lightSpaceMatrix = lightProjection * lightView;
@@ -220,9 +220,10 @@ namespace Lobster
 		}
 	}
 
-	void LightLibrary::Update(const std::list<RenderCommand>& queue)
+	void LightLibrary::Update()
 	{
-		int i = 0; 
+		int i = 0;
+		const std::list<RenderCommand>& queue = Renderer::s_instance->m_opaqueQueue;
 		for (auto dirLight : s_instance->m_directionalLights) {
 			if (i >= MAX_DIRECTIONAL_SHADOW) break;
 			dirLight->RenderDepthMap(queue);

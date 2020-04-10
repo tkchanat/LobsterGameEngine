@@ -98,7 +98,7 @@ namespace Lobster {
 				ImGui::EndCombo();
 			}
 			// select the destination
-			if (ImGui::BeginCombo("Destindestion", (dest ? dest->id.c_str() : "None"))) {
+			if (ImGui::BeginCombo("Destination", (dest ? dest->id.c_str() : "None"))) {
 				if (ImGui::Selectable("None")) {
 					if (dest) dest->attached = false;
 					dest = nullptr;

@@ -97,7 +97,7 @@ namespace Lobster
 		static void Initialize();
 		static void AddLight(LightComponent* light, LightType type);
 		static void RemoveLight(LightComponent* light, LightType type);
-		static void Update(const std::list<RenderCommand>& queue);
+		static void Update();
 		static void* GetDirectionalShadowMap(int index);
 	private:
 		void SetUniforms();

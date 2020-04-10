@@ -180,6 +180,10 @@ namespace Lobster {
 		if (t < 0 || t > distanceThreshold) return false;
 		return true;
 	}
+	void FunctionBinder::RemoveGameObject(Scene* scene, GameObject* gameObject) {
+		scene->RemoveGameObject(gameObject);
+		LOG("???");
+	}
 
 	void Script::Bind() {
 		// Class/function binding
@@ -208,6 +212,7 @@ namespace Lobster {
 			.addFunction("GetMeshComponent", FunctionBinder::GetMeshComponent)
 			.addFunction("GetPhysicsComponent", FunctionBinder::GetPhysicsComponent)
 			.addFunction("GetParticleComponent", FunctionBinder::GetParticleComponent)
+			.addFunction("RemoveGameObject", FunctionBinder::RemoveGameObject)
 			// glm::vec3			
 			.beginClass<glm::vec3>("Vec3")
 			.addConstructor<void(*) (float, float, float)>()
@@ -283,7 +288,6 @@ namespace Lobster {
 			.beginClass<Scene>("Scene")
 			.addFunction("AddGameObject", &Scene::AddGameObject)
 			.addFunction("GetGameCamera", &Scene::GetGameCamera)
-			//.addFunction("RemoveGameObject", ) <- overloaded function
 			//.addFunction("GetGameObjects", &Scene::GetGameObjects)
 			.endClass()
 			.endNamespace();

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "physics/PhysicsSystem.h"
+#include "physics/PhysicsComponent.h"
 
 namespace Lobster {
 	PhysicsSystem* PhysicsSystem::m_instance = nullptr;

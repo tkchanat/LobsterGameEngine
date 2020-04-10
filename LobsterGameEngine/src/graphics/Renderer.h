@@ -79,6 +79,7 @@ namespace Lobster
     class Renderer
     {
 		friend class Application; // placeholder
+		friend class LightLibrary;
 	private:
 		// post processing resources
 		VertexArray* m_postProcessMesh;
@@ -89,9 +90,12 @@ namespace Lobster
 		// sprite resources
 		VertexArray* m_spriteMesh;
 		Shader* m_spriteShader;
-
-		// renderer resources
+		
+		// pipeline settings
 		bool b_deferredRendering;
+		bool b_ppSSR;
+		bool b_ppBlur;
+		// renderer resources
 		static Renderer* s_instance;
 		FrameBuffer* m_gBuffer;
 		SceneEnvironment m_activeSceneEnvironment;
@@ -114,6 +118,7 @@ namespace Lobster
 		static void EndScene();
 		static void ClearOverlayQueue();
 		static void ClearAllQueues();
+		static void OnImGuiRender();
 		inline static void SetDeferredPipeline(bool status) { s_instance->b_deferredRendering = status; }
 	private:
 		void DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue);

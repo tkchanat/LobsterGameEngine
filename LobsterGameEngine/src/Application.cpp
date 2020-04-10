@@ -338,6 +338,7 @@ namespace Lobster
 		//=========================================================
 		// Renderer update
 		Timer renderTimer;
+		LightLibrary::Update();
 		m_renderer->Render(CameraComponent::GetActiveCamera());
 		Profiler::SubmitData("Render Time", renderTimer.GetElapsedTime());
 		m_renderer->ClearOverlayQueue();

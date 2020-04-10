@@ -29,14 +29,15 @@ namespace Lobster {
 		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 		virtual void OnPhysicsUpdate(double deltaTime) = 0;
+		virtual void OnEnd() override { m_velocity = m_acceleration = m_angularVelocity = m_angularAcceleration = glm::vec3(0); }
 
 		//	Block / Overlap / Ignore
 		inline int GetPhysicsType() const { return m_physicsType; }
 		void RemoveCollider(Collider* collider);
 
 		//	ApplyForce: Force in Newton (N).
-		inline void AddVelocity(glm::vec3 velocity) { m_velocity += glm::inverse(transform->LocalRotation) * velocity; }
-		inline void ApplyForce(glm::vec3 force) { m_acceleration += glm::inverse(transform->LocalRotation) * force / m_mass; }
+		inline void AddVelocity(glm::vec3 velocity) { m_velocity += glm::conjugate(transform->LocalRotation) * velocity; }
+		inline void ApplyForce(glm::vec3 force) { m_acceleration += glm::conjugate(transform->LocalRotation) * force / m_mass; }
 
 		inline void AddAngularVelocity(glm::vec3 velocity) { m_angularVelocity += velocity; }
 		inline void ApplyAngularForce(glm::vec3 force) { m_angularVelocity += force / m_mass; }

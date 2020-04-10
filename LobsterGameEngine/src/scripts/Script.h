@@ -21,6 +21,8 @@ namespace Lobster
 		static PhysicsComponent* GetPhysicsComponent(GameObject* gameObject);
 		// ray casting & intersection
 		static bool RayIntersect(CameraComponent* camera, PhysicsComponent* collider, float distanceThreshold);
+		// remove game object in scene
+		static void RemoveGameObject(Scene* scene, GameObject* gameObject);
 	};
     
 	//	This class is a component for user to define custom scripts with Lua.
