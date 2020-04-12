@@ -25,13 +25,20 @@ out FS_OUT {
     vec2 texcoord;
 } fs_out;
 
+uniform int DeadParticleCount;
 uniform int ParticleCutoff; // [0, 1024]
 uniform float ParticleSize;
 uniform mat4 ParticleOrientation;
 
 void main()
 {
+    // cutoff
     if(gl_PrimitiveIDIn >= ParticleCutoff) {
+        EndPrimitive();
+        return;
+    }
+    // dead particles
+    if(ParticleCutoff - gl_PrimitiveIDIn < DeadParticleCount) {
         EndPrimitive();
         return;
     }

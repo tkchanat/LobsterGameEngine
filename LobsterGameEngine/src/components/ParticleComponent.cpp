@@ -15,10 +15,13 @@ namespace Lobster
 	ParticleComponent::ParticleComponent() :
 		Component(PARTICLE_COMPONENT),
 		m_shape(EmitterShape::BOX),
-		b_animated(true),
+		b_animated(false),
 		b_emitOneByOne(false),
 		_simulateElapsedTime(0.0f),
 		_volumeFilled(false),
+		_killExpiredParticle(false),
+		_deathCount(0),
+		m_emissionSpeed(1.0f),
 		m_emissionRate(0.1f),
 		m_emissionAngle(M_PI/6),
 		m_colorStartTransition(glm::vec4(1.0)),
@@ -74,15 +77,24 @@ namespace Lobster
 		// Update particle position
 		if (Application::GetMode() == EDITOR) return;
 		if (b_animated) {
+			// Emit all at once
 			if (!b_emitOneByOne && !_volumeFilled) {
 				m_particleCount = m_particleCutoff;
 				FillVolume();
 				_volumeFilled = true;
 			}
+			// One-by-one
 			else if (b_emitOneByOne && _volumeFilled) {
 				m_particleCount = 0;
 				_volumeFilled = false;
 			}
+			// Check EmitOnce() end condition
+			if (_killExpiredParticle && _deathCount == m_particleCutoff) {
+				_killExpiredParticle = false;
+				b_animated = false;
+				ResetParticleCount();
+			}
+			// Calculate new particle position
 			switch (m_shape)
 			{
 			case EmitterShape::BOX:
@@ -103,6 +115,7 @@ namespace Lobster
 		m_material->SetRawUniform("EmissionShape", (void*)&m_shape);
 		m_material->SetRawUniform("ColorStartTransition", (void*)glm::value_ptr(m_colorStartTransition));
 		m_material->SetRawUniform("ColorEndTransition", (void*)glm::value_ptr(m_colorEndTransition));
+		m_material->SetRawUniform("DeadParticleCount", &_deathCount);
 		m_material->SetRawUniform("ParticleCutoff", &cutoff);
 		m_material->SetRawUniform("ParticleSize", &m_particleSize);
 		m_material->SetRawUniform("ParticleOrientation", (void*)glm::value_ptr(glm::rotate(m_particleOrientation, glm::vec3(0, 0, 1))));
@@ -138,10 +151,22 @@ namespace Lobster
 					UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &b_emitOneByOne, !b_emitOneByOne, b_emitOneByOne, std::string(b_emitOneByOne ? "Enable" : "Disable") + " particle one-to-one emission mode for " + GetOwner()->GetName(), &ParticleComponent::ResetParticleCount));
 				}
 
+				if (ImGui::DragFloat("Emission Speed", &m_emissionSpeed, 0.05f, 0.0, FLT_MAX / INT_MAX)) {
+					m_isChanging = 5;
+				}
+				if (m_isChanging != 5) {
+					m_prevProp[5] = m_emissionSpeed;
+				}
+				else if (ImGui::IsItemActive() == false) {
+					if (m_prevProp[0] != m_emissionSpeed) {
+						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_emissionSpeed, m_prevProp[5], m_emissionSpeed, "Set particle emission speed to " + StringOps::ToString(m_emissionSpeed) + " for " + GetOwner()->GetName()));
+					}
+					m_isChanging = -1;
+				}
+
 				if (ImGui::DragFloat("Emission Rate (per second)", &m_emissionRate, 0.1f)) {
 					m_isChanging = 0;
 				}
-
 				m_emissionRate = m_emissionRate < 0.0f ? 0.0f : m_emissionRate;
 				if (m_isChanging != 0) {
 					m_prevProp[0] = m_emissionRate;
@@ -271,6 +296,15 @@ namespace Lobster
 		}
 	}
 
+	void ParticleComponent::EmitOnce()
+	{
+		b_animated = true;
+		b_emitOneByOne = true;
+		_killExpiredParticle = true;
+		_deathCount = 0;
+		ResetParticleCount();
+	}
+
 	void ParticleComponent::FillVolume()
 	{
 		//Timer timer;
@@ -316,7 +350,7 @@ namespace Lobster
 	{
 		// emit new particle one by one
 		if (b_emitOneByOne) {
-			_simulateElapsedTime += deltaTime / 1000.0; // in seconds
+			_simulateElapsedTime += deltaTime * m_emissionSpeed / 1000.0; // in seconds
 			if (_simulateElapsedTime > m_emissionRate) {
 				if (m_particleCount + 1 < MAX_PARTICLES) {
 					float x = RandomNumber() * 2.f - 1.f;
@@ -330,11 +364,11 @@ namespace Lobster
 
 		// animate particles
 		for (int i = 0; i < m_particleCount; ++i) {
-			m_particlePositions[i].y += deltaTime / 1000.f;
+			m_particlePositions[i].y += deltaTime * m_emissionSpeed / 1000.f;
 			if (m_particlePositions[i].y > 1.f) {
 				m_particlePositions[i].y = std::fmod(m_particlePositions[i].y, 2.f) - 1.99f;
-				if (b_emitOneByOne) {
-					m_particleCount--;
+				if (_killExpiredParticle) {
+					_deathCount++;
 				}
 			}
 		}
@@ -344,7 +378,7 @@ namespace Lobster
 	{
 		// emit new particle one by one
 		if (b_emitOneByOne) {
-			_simulateElapsedTime += deltaTime / 1000.0; // in seconds
+			_simulateElapsedTime += deltaTime * m_emissionSpeed / 1000.0; // in seconds
 			if (_simulateElapsedTime > m_emissionRate) {
 				if (m_particleCount + 1 < MAX_PARTICLES) {
 					float h = 1.f * std::cbrt(RandomNumber());
@@ -359,7 +393,7 @@ namespace Lobster
 		// animate particles
 		for (int i = 0; i < m_particleCount; ++i) {
 			glm::vec3 direction = glm::normalize(m_particlePositions[i]);
-			m_particlePositions[i] += direction * float(deltaTime / 1000.f);
+			m_particlePositions[i] += direction * float(deltaTime * m_emissionSpeed / 1000.f);
 			float dist = glm::length(m_particlePositions[i]);
 			if (dist > 1.f) {
 				dist = std::fmod(dist, 1.f);
@@ -368,8 +402,8 @@ namespace Lobster
 				float t = 2.f * M_PI *RandomNumber();
 				glm::vec3 position = { r*cos(t), h, r*sin(t) };
 				m_particlePositions[i] = glm::normalize(position) * dist;
-				if (b_emitOneByOne) {
-					m_particleCount--;
+				if (_killExpiredParticle) {
+					_deathCount++;
 				}
 			}
 		}
@@ -379,7 +413,7 @@ namespace Lobster
 	{
 		// emit new particle one by one
 		if (b_emitOneByOne) {
-			_simulateElapsedTime += deltaTime / 1000.0; // in seconds
+			_simulateElapsedTime += deltaTime * m_emissionSpeed / 1000.0; // in seconds
 			if (_simulateElapsedTime > m_emissionRate) {
 				if (m_particleCount + 1 < MAX_PARTICLES) {
 					float u = RandomNumber() * 2.f - 1.f;
@@ -400,13 +434,13 @@ namespace Lobster
 		// animate particle
 		for (int i = 0; i < m_particleCount; ++i) {
 			glm::vec3 direction = glm::normalize(m_particlePositions[i]);
-			m_particlePositions[i] += direction * float(deltaTime / 1000.f);
+			m_particlePositions[i] += direction * float(deltaTime * m_emissionSpeed / 1000.f);
 			float dist = glm::length(m_particlePositions[i]);
 			if (dist > 1.f) {
 				dist = std::fmod(dist, 1.f);
 				m_particlePositions[i] = direction * dist;
-				if (b_emitOneByOne) {
-					m_particleCount--;
+				if (_killExpiredParticle) {
+					_deathCount++;
 				}
 			}
 		}
