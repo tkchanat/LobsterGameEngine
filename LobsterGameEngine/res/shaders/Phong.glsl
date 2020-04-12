@@ -25,7 +25,7 @@ void main()
 
 	// pass useful information into fragment shader
     frag_position = vec3(sys_world * BoneMatrix * vec4(in_position, 1.0));
-    frag_normal = mat3(sys_world) * mat3(BoneMatrix) * in_normal;
+    frag_normal = normalize(mat3(sys_world) * mat3(BoneMatrix) * in_normal);
 	frag_texcoord = in_texcoord;
 
 	// calculate tangent space
