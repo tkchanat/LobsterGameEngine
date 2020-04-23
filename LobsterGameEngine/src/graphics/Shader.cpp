@@ -325,7 +325,16 @@ uniform sampler2D sys_shadowMap[MAX_DIRECTIONAL_SHADOW];)");
 		if (location == -1) return;
 		glUniform4fv(location, 1, glm::value_ptr(data));
 	}
-    
+ 
+	void Shader::SetUniform(const char* name, const glm::mat3 &data)
+	{
+		int location = glGetUniformLocation(m_id, name);
+		if (location == -1) {
+			return;
+		}
+		glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(data));
+	}
+
     void Shader::SetUniform(const char* name, const glm::mat4 &data)
     {
         int location = glGetUniformLocation(m_id, name);

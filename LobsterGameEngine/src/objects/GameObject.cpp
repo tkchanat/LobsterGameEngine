@@ -104,7 +104,7 @@ namespace Lobster
 			ImGui::OpenPopup("Rename Game Object");
 		}
 		ImGui::Separator();
-		ImGui::Text("ID: %X", GetId());
+		ImGui::Text("ID: %X (%ld)", GetId(), GetId());
 		//ImGui::Button("Clone"); // TODO implement this
 		//ImGui::SameLine();
 

@@ -292,6 +292,8 @@ namespace Lobster
 		m_postProcessShader->SetUniform("sys_gNormalDepth", 1);
 		m_postProcessShader->SetUniform("sys_ppBlur", b_ppBlur);
 		m_postProcessShader->SetUniform("sys_ppSSR", b_ppSSR);
+		m_postProcessShader->SetUniform("sys_ppUseKernel", b_ppUseKernel);
+		m_postProcessShader->SetUniform("sys_ppKernel", m_ppKernel);
 		m_postProcessMesh->Draw();
 		Renderer::SetDepthTest(true);
 
@@ -306,6 +308,19 @@ namespace Lobster
 	{
 		// set global environment
 		s_instance->m_activeSceneEnvironment.Skybox = skybox;
+	}
+
+	void Renderer::SetApplyKernel(bool apply, glm::mat3 kernel) {
+		s_instance->b_ppUseKernel = apply;
+		s_instance->m_ppKernel = kernel;
+	}
+
+	void Renderer::SetBlur(bool blur) {
+		s_instance->b_ppBlur = blur;
+	}
+
+	void Renderer::SetSSR(bool ssr) {
+		s_instance->b_ppSSR = ssr;
 	}
 
 	void Renderer::Submit(RenderCommand command)
@@ -359,6 +374,9 @@ namespace Lobster
 		ImGui::Text("Post Processing");
 		ImGui::Checkbox("Blur", &s_instance->b_ppBlur);
 		ImGui::Checkbox("Screen Space Reflection", &s_instance->b_ppSSR);
+		if (ImGui::Button("Clear Applied Filters")) {
+			s_instance->b_ppUseKernel = false;
+		}
 	}
 
 }
