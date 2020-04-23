@@ -374,13 +374,13 @@ namespace Lobster {
 	void Rigidbody::Travel(float time, bool gravity, bool damping) {
 		//	First, we update the position here.
 		if (gravity) {
-			glm::vec3 newAcceleration = m_acceleration + GRAVITY;
-			glm::vec3 newVelocity = m_velocity + newAcceleration * time;
-			transform->WorldPosition += newVelocity * time;
-			m_velocity = newVelocity;
-			//transform->WorldPosition += m_velocity * time + 0.5f * m_acceleration * time;
-			//transform->WorldPosition += 0.5f * GRAVITY * time;
-			//m_velocity += (m_acceleration + GRAVITY) * time;
+			//glm::vec3 newAcceleration = m_acceleration + GRAVITY;
+			//glm::vec3 newVelocity = m_velocity + newAcceleration * time;
+			//transform->WorldPosition += newVelocity * time;
+			//m_velocity = newVelocity;
+			transform->WorldPosition += m_velocity * time + 0.5f * m_acceleration * time;
+			transform->WorldPosition += 0.5f * GRAVITY * time;
+			m_velocity += (m_acceleration + GRAVITY) * time;
 		} else {
 			glm::vec3 velocity = glm::vec3(m_velocity.x, 0, m_velocity.z);
 			glm::vec3 accel = glm::vec3(m_acceleration.y, 0, m_acceleration.z);
@@ -420,12 +420,12 @@ namespace Lobster {
 		m_acceleration /= pow(1.0f - m_linearDamping / 100.0f, time);
 
 		//	4. Undo position update.
-		glm::vec3 newAcceleration = m_acceleration + GRAVITY;
-		glm::vec3 newVelocity = m_velocity + newAcceleration * time;
-		transform->WorldPosition -= newVelocity * time;
-		m_velocity = newVelocity - newAcceleration * time;
-		//m_velocity -= ( m_acceleration + GRAVITY) * time;
-		//transform->WorldPosition -= 0.5f * GRAVITY * time;
-		//transform->WorldPosition -= m_velocity * time + 0.5f * m_acceleration * time;
+		//glm::vec3 newAcceleration = m_acceleration + GRAVITY;
+		//glm::vec3 newVelocity = m_velocity + newAcceleration * time;
+		//transform->WorldPosition -= newVelocity * time;
+		//m_velocity = newVelocity - newAcceleration * time;
+		m_velocity -= ( m_acceleration + GRAVITY) * time;
+		transform->WorldPosition -= 0.5f * GRAVITY * time;
+		transform->WorldPosition -= m_velocity * time + 0.5f * m_acceleration * time;
 	}
 }

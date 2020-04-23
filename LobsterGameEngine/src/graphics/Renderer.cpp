@@ -15,7 +15,9 @@ namespace Lobster
     
     Renderer::Renderer() :
 		b_deferredRendering(true),
-		m_gBuffer(nullptr)
+		m_gBuffer(nullptr),
+		b_ppBlur(false),
+		b_ppSSR(false)
     {
 		// Check if renderer already exists
 		if (s_instance) {
