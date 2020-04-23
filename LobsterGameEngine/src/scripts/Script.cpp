@@ -246,6 +246,12 @@ namespace Lobster {
 			.addFunction("GetPosition", &CameraComponent::GetPosition)
 			.addFunction("GetUI", &CameraComponent::GetUI)
 			.endClass()
+			// Particle Component
+			.deriveClass<ParticleComponent, Component>("ParticleComponent")
+			.addFunction("Pause", &ParticleComponent::Pause)
+			.addFunction("Simulate", &ParticleComponent::Simulate)
+			.addFunction("EmitOnce", &ParticleComponent::EmitOnce)
+			.endClass()
 			// UI
 			.beginClass<GameUI>("GameUI")
 			.addFunction("GetSpriteList", &GameUI::GetSpriteList)

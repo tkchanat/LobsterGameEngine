@@ -19,7 +19,7 @@ namespace Lobster
 	private:
 		static const char* shapes[];
 		int m_isChanging = -1;		//	Used for undo system. 0 = emission rate, 1 = emission angle, 2 = particle color, 3 = particle size, 4 = particle orientation.
-		float m_prevProp[5];		//	Used for undo system.
+		float m_prevProp[6];		//	Used for undo system.
 		int m_isChangingColor = -1;	//	Used for undo system. 0 = changing start color, 1 = changing end color.
 		glm::vec4 m_prevColor[2];	//	Used for undo system.
 		Texture2D* m_prevTexture;	//	Used for undo system.
@@ -27,8 +27,11 @@ namespace Lobster
 		EmitterShape m_shape;
 		float _simulateElapsedTime;
 		bool _volumeFilled;
+		bool _killExpiredParticle;
+		int _deathCount;
 		bool b_animated;
 		bool b_emitOneByOne;
+		float m_emissionSpeed;
 		float m_emissionRate;
 		float m_emissionAngle;
 		glm::vec4 m_colorStartTransition;
@@ -55,6 +58,7 @@ namespace Lobster
 
 		void Pause() { b_animated = true; }
 		void Simulate() { b_animated = false; }
+		void EmitOnce();
 
 	private:
 		void FillVolume();
@@ -70,6 +74,7 @@ namespace Lobster
 			ar(m_shape);
 			ar(b_emitOneByOne);
 			ar(m_emissionAngle);
+			ar(m_emissionSpeed);
 			ar(m_emissionRate);
 			ar(m_particleCount);
 			ar(m_particleCutoff);
@@ -86,6 +91,7 @@ namespace Lobster
 			ar(reinterpret_cast<EmitterShape>(m_shape));
 			ar(b_emitOneByOne);
 			ar(m_emissionAngle);
+			ar(m_emissionSpeed);
 			ar(m_emissionRate);
 			ar(m_particleCount);
 			ar(m_particleCutoff);

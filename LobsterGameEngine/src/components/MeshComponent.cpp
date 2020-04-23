@@ -82,8 +82,11 @@ namespace Lobster
 		if (m_animations.empty()) {
 			m_animations = MeshLoader::LoadAnimation(meshPath);
 		}
-		// if no materials are defined, use material of our own
-		if (m_meshInfo.Materials.empty()) m_meshInfo.Materials.push_back((materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault()));
+		// if materialPath is valid and present, use material of our own instead
+		if (materialPath && FileSystem::Exist(FileSystem::Path(materialPath))) {
+			m_meshInfo.Materials.clear();
+			m_meshInfo.Materials.push_back((materialPath ? MaterialLibrary::Use(materialPath) : MaterialLibrary::UseDefault()));
+		}
 	}
 
 	void MeshComponent::LoadFromPrimitive(PrimitiveShape primitive)
