@@ -261,6 +261,13 @@ namespace Lobster {
 			.addFunction("GetOwner", &Component::GetOwner)
 			.addFunction("GetType", &Component::GetType) // LuaBridge does not support enum
 			.endClass()
+			// Mesh Component
+			.deriveClass<MeshComponent, Component>("MeshComponent")
+			.addFunction("PlayAnimation", &MeshComponent::PlayAnimation)
+			.addFunction("PauseAnimation", &MeshComponent::PauseAnimation)
+			.addFunction("StopAnimation", &MeshComponent::StopAnimation)
+			.addFunction("SetTimeMultiplier", &MeshComponent::SetTimeMultiplier)
+			.endClass()
 			// Physics Component
 			.deriveClass<PhysicsComponent, Component>("PhysicsComponent")
 			.addFunction("ApplyForce", &PhysicsComponent::ApplyForce)

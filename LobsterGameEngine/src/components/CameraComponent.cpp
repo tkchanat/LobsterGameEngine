@@ -124,7 +124,7 @@ namespace Lobster
 	void CameraComponent::DrawUI() {
 		if (!gameUI) return;
 		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
-			sprite->OnUpdate();			
+			sprite->OnUpdate(0); // trivial input
 		}
 	}
 

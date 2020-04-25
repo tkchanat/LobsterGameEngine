@@ -43,12 +43,17 @@ namespace Lobster {
 	}
 
 	// do button related work
-	void Sprite2D::OnUpdate() {
+	void Sprite2D::OnUpdate(double dt) {
 		if (!isButton) return;
 		if (scriptOnHover && IsMouseOver()) 
 			scriptOnHover->Execute(funcOnHover.c_str());
-		if (scriptOnClick && IsMouseOver() && Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT))
+		if (scriptOnClick && IsMouseOver() && Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !m_clicked) {
+			m_clicked = true;
 			scriptOnClick->Execute(funcOnClick.c_str());
+		}
+		if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+			m_clicked = false;
+		}
 	}
 
 	void Sprite2D::BasicMenuItem(GameUI* ui, ImVec2 winSize) {
@@ -182,9 +187,9 @@ namespace Lobster {
 		ImGui::ImageButton(GetTexID(), ImVec2(w, h));
 	}
 
-	void ImageSprite2D::OnUpdate() {
+	void ImageSprite2D::OnUpdate(double dt) {
 		// run script
-		Sprite2D::OnUpdate();
+		Sprite2D::OnUpdate(dt);
 		// hover/click color
 		RenderOverlayCommand ocommand;		
 		if (Application::GetMode() == ApplicationMode::GAME && isButton) {
@@ -329,9 +334,9 @@ namespace Lobster {
 		}
 	}
 
-	void TextSprite2D::OnUpdate() {
+	void TextSprite2D::OnUpdate(double dt) {
 		// run script
-		Sprite2D::OnUpdate();
+		Sprite2D::OnUpdate(dt);
 		// hover/click color
 		RenderOverlayCommand ocommand;
 		if (Application::GetMode() == ApplicationMode::GAME && isButton) {
@@ -482,9 +487,10 @@ namespace Lobster {
 		TextSprite2D::OnBegin();
 	}
 
-	void DynamicTextSprite2D::OnUpdate() {
+	void DynamicTextSprite2D::OnUpdate(double dt) {
 		static std::string prevText = text;
 		if (script && Application::GetMode() == GAME) {
+			script->OnUpdate(dt);
 			luabridge::LuaRef ref = script->GetVar(var.c_str());
 			static char prevErrmsg[512];
 			if (!ref.isNil()) {
@@ -525,9 +531,9 @@ namespace Lobster {
 		if (prevText != text) {
 			getTexture(true);
 			prevText = text;
-		}
+		}		
 		// render the text
-		TextSprite2D::OnUpdate();
+		TextSprite2D::OnUpdate(dt);
 	}
 
 	void DynamicTextSprite2D::ImGuiMenu(GameUI* ui, ImVec2 winSize) {
