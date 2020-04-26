@@ -17,7 +17,7 @@ namespace Lobster {
 				collider->OnUpdate(deltaTime);
 				if (Application::GetMode() != GAME) {
 					collider->Draw();
-				}				
+				}
 			}
 		}
 	}
@@ -55,7 +55,8 @@ namespace Lobster {
 				}
 				if (m_isChanging != 0) {
 					m_prevProp[0] = m_mass;
-				} else if (ImGui::IsItemActive() == false) {
+				}
+				else if (ImGui::IsItemActive() == false) {
 					if (m_prevProp[0] != m_mass) {
 						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_mass, m_prevProp[0], m_mass, "Set mass to " + StringOps::ToString(m_mass) + " for " + GetOwner()->GetName()));
 					}
@@ -67,7 +68,8 @@ namespace Lobster {
 				}
 				if (m_isChanging != 1) {
 					m_prevProp[1] = m_linearDamping;
-				} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+				}
+				else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
 					if (m_prevProp[1] != m_linearDamping) {
 						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_linearDamping, m_prevProp[1], m_linearDamping, "Set linear damping factor to " + StringOps::ToString(m_linearDamping, 2) + " for " + GetOwner()->GetName()));
 					}
@@ -79,7 +81,8 @@ namespace Lobster {
 				}
 				if (m_isChanging != 2) {
 					m_prevProp[2] = m_angularDamping;
-				} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+				}
+				else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
 					if (m_prevProp[2] != m_angularDamping) {
 						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_angularDamping, m_prevProp[2], m_angularDamping, "Set angular damping factor to " + StringOps::ToString(m_angularDamping, 2) + " for " + GetOwner()->GetName()));
 					}
@@ -91,7 +94,8 @@ namespace Lobster {
 				}
 				if (m_isChanging != 3) {
 					m_prevProp[3] = m_restitution;
-				} else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
+				}
+				else if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
 					if (m_prevProp[3] != m_restitution) {
 						UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_restitution, m_prevProp[3], m_restitution, "Set elasticity factor to " + StringOps::ToString(m_restitution) + " for " + GetOwner()->GetName()));
 					}
@@ -135,6 +139,7 @@ namespace Lobster {
 		double dt = time;
 
 		std::vector<PhysicsComponent*> collidedObjects;
+		std::vector<PhysicsComponent*> overlapObjects;
 		if (!m_simulate) return;
 
 		for (int i = 0; i < 5; i++) {
@@ -145,14 +150,20 @@ namespace Lobster {
 				c->OnUpdate(dt);
 			}
 
-			//	Next, determine if there exists any collision.
+			//	Next, determine if there exists any collision needed to resolve.
 			bool hasCollided = false;
 			for (PhysicsComponent* obj : collidingChecklist) {
 				if (obj != this && Intersects(obj)) {
-					hasCollided = true;
-
-					if (std::find(collidedObjects.begin(), collidedObjects.end(), obj) == collidedObjects.end()) {
-						collidedObjects.push_back(obj);
+					//	Add to overlap array only if it is overlap. Otherwise only add to collidedObjects.
+					if (OverlapTest(obj)) {
+						if (std::find(overlapObjects.begin(), overlapObjects.end(), obj) == overlapObjects.end()) {
+							overlapObjects.push_back(obj);
+						}
+					} else {
+						hasCollided = true;
+						if (std::find(collidedObjects.begin(), collidedObjects.end(), obj) == collidedObjects.end()) {
+							collidedObjects.push_back(obj);
+						}
 					}
 				}
 			}
@@ -160,9 +171,9 @@ namespace Lobster {
 			//	If there is collision, undo travel. Else, add dt to timestep.
 			if (hasCollided) {
 				UndoTravel(dt);
-				//m_angularVelocity *= 0.8;
 
-			} else {
+			}
+			else {
 				timestep += dt;
 			}
 
@@ -217,7 +228,8 @@ namespace Lobster {
 				if (pairBound.first.x > mappedPosition.x) {
 					displacement.x -= pairBound.first.x - mappedPosition.x;
 					centerOutOfObject = true;
-				} else if (pairBound.second.x < mappedPosition.x) {
+				}
+				else if (pairBound.second.x < mappedPosition.x) {
 					displacement.x += mappedPosition.x - pairBound.second.x;
 					centerOutOfObject = true;
 				}
@@ -225,7 +237,8 @@ namespace Lobster {
 				if (pairBound.first.y > mappedPosition.y) {
 					displacement.y -= pairBound.first.y - mappedPosition.y;
 					centerOutOfObject = true;
-				} else if (pairBound.second.y < mappedPosition.y) {
+				}
+				else if (pairBound.second.y < mappedPosition.y) {
 					displacement.y += mappedPosition.y - pairBound.second.y;
 					centerOutOfObject = true;
 				}
@@ -233,7 +246,8 @@ namespace Lobster {
 				if (pairBound.first.z > mappedPosition.z) {
 					displacement.z -= pairBound.first.z - mappedPosition.z;
 					centerOutOfObject = true;
-				} else if (pairBound.second.z < mappedPosition.z) {
+				}
+				else if (pairBound.second.z < mappedPosition.z) {
 					displacement.z += mappedPosition.z - pairBound.second.z;
 					centerOutOfObject = true;
 				}
@@ -295,11 +309,13 @@ namespace Lobster {
 				if (!(other->m_simulate)) {
 					impulse *= (1 + m_restitution);
 					m_velocity += impulse / m_mass + impulse / other->m_mass;
-				} else {
+				}
+				else {
 					m_velocity += impulse * (1 + m_restitution) / m_mass;
 					other->m_velocity -= impulse * (1 + other->m_restitution) / other->m_mass;
 				}
-			} else {
+			}
+			else {
 				//	If the object is not moving in this frame, we would reduce the angular velocity.
 				//	This is a rough approximation of energy loss due to (air) friction.
 				m_angularVelocity *= 0.9;
@@ -310,7 +326,12 @@ namespace Lobster {
 		//	Only if it doesn't have angular velocity.
 		float epsilon = 0.0001f;
 		if (glm::length(m_angularVelocity) <= epsilon && !centerOutOfObject)
-		Travel(time - timestep, timestep != 0, false);
+			Travel(time - timestep, timestep != 0, false);
+
+		//	Merge everything into collidedObject list for invoking function now.
+		for (PhysicsComponent* obj : overlapObjects) {
+			collidedObjects.push_back(obj);
+		}
 
 		//	Invoke functions for collision handling.
 		//	If previous frame has no collision, call the two functions.
@@ -329,7 +350,8 @@ namespace Lobster {
 			if (std::find(collidedObjects.begin(), collidedObjects.end(), obj) == collidedObjects.end()) {
 				gameObject->OnLeave(obj->GetOwner());
 				obj->GetOwner()->OnLeave(gameObject);
-			} else {
+			}
+			else {
 				gameObject->OnOverlap(obj->GetOwner());
 				obj->GetOwner()->OnOverlap(gameObject);
 			}
@@ -363,12 +385,14 @@ namespace Lobster {
 		//	See which direction has the longest distance - the one with longest distance is the direction of normal.
 		if (glm::length(xDiff) > glm::length(yDiff) && glm::length(xDiff) > glm::length(zDiff)) {
 			normal = xDiff;
-		} else if (glm::length(yDiff) > glm::length(xDiff) && glm::length(yDiff) > glm::length(zDiff)) {
+		}
+		else if (glm::length(yDiff) > glm::length(xDiff) && glm::length(yDiff) > glm::length(zDiff)) {
 			normal = yDiff;
-		} else {
+		}
+		else {
 			normal = zDiff;
 		}
-		
+
 		return glm::normalize(normal);
 	}
 
@@ -382,10 +406,11 @@ namespace Lobster {
 			transform->WorldPosition += m_velocity * time + 0.5f * m_acceleration * time;
 			transform->WorldPosition += 0.5f * GRAVITY * time;
 			m_velocity += (m_acceleration + GRAVITY) * time;
-		} else {
+		}
+		else {
 			glm::vec3 velocity = glm::vec3(m_velocity.x, 0, m_velocity.z);
 			glm::vec3 accel = glm::vec3(m_acceleration.y, 0, m_acceleration.z);
-			transform->WorldPosition += velocity *time + 0.5f * accel * time;
+			transform->WorldPosition += velocity * time + 0.5f * accel * time;
 			m_velocity += m_acceleration * time;
 		}
 
@@ -425,7 +450,7 @@ namespace Lobster {
 		//glm::vec3 newVelocity = m_velocity + newAcceleration * time;
 		//transform->WorldPosition -= newVelocity * time;
 		//m_velocity = newVelocity - newAcceleration * time;
-		m_velocity -= ( m_acceleration + GRAVITY) * time;
+		m_velocity -= (m_acceleration + GRAVITY) * time;
 		transform->WorldPosition -= 0.5f * GRAVITY * time;
 		transform->WorldPosition -= m_velocity * time + 0.5f * m_acceleration * time;
 	}

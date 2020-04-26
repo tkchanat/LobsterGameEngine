@@ -51,6 +51,10 @@ namespace Lobster {
 		return false;
 	}
 
+	bool PhysicsComponent::OverlapTest(PhysicsComponent* other) {
+		return m_physicsType == 1 || other->m_physicsType == 1;
+	}
+
 	void PhysicsComponent::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
 		oarchive(*this);
