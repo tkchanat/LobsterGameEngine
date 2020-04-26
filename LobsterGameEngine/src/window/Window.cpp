@@ -73,7 +73,7 @@ namespace Lobster
 		{
 			std::string path = FileSystem::Path(iconPath);
 			image.pixels = stbi_load(path.c_str(), &image.width, &image.height, 0, 4); //rgba channels 
-			glfwSetWindowIcon(m_window, 1, &image);
+			//glfwSetWindowIcon(m_window, 1, &image);
 			stbi_image_free(image.pixels);
 		}
 

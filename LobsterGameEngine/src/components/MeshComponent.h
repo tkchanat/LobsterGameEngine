@@ -59,11 +59,13 @@ namespace Lobster
         virtual ~MeshComponent() override;
 		virtual void OnAttach() override;
 		virtual void OnUpdate(double deltaTime) override;
+		virtual void OnEnd() override;
 		virtual void OnImGuiRender() override;
 		inline std::pair<glm::vec3, glm::vec3> GetBound() const { return m_meshInfo.Bound; }
 		inline void PlayAnimation() { b_animated = b_posing = true; }
 		inline void PauseAnimation() { b_animated = false; b_posing = true; }
 		inline void StopAnimation() { m_animationTime = 0.0; b_animated = b_posing = false; }
+		inline void SetTimeMultiplier(float m) { if (m < 0.f) m = 0.f; m_timeMultiplier = m; }
 		void CrossfadeAnimation(int animation, double fadeDuration);
 	private:
 		AnimationInfo LoadAnimation(const char* path);

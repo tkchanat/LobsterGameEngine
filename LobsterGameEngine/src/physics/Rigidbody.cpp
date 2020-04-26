@@ -161,6 +161,7 @@ namespace Lobster {
 			if (hasCollided) {
 				UndoTravel(dt);
 				//m_angularVelocity *= 0.8;
+
 			} else {
 				timestep += dt;
 			}

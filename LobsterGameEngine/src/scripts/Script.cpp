@@ -180,9 +180,31 @@ namespace Lobster {
 		if (t < 0 || t > distanceThreshold) return false;
 		return true;
 	}
+	GameObject* FunctionBinder::GetGameObjectById(Scene* scene, unsigned long long id) {
+		for (GameObject* obj : scene->m_gameObjects) {
+			if (obj->GetId() == id) return obj;
+		}
+		return nullptr;
+	}
+	GameObject* FunctionBinder::GetGameObjectByName(Scene* scene, std::string name) {
+		for (GameObject* obj : scene->m_gameObjects) {
+			if (obj->GetName() == name) return obj;
+		}
+		return nullptr;
+	}
 	void FunctionBinder::RemoveGameObject(Scene* scene, GameObject* gameObject) {
 		scene->RemoveGameObject(gameObject);
-		LOG("???");
+	}
+
+	void FunctionBinder::SetBlur(bool blur) {
+		Renderer::SetBlur(blur);
+	}
+	void FunctionBinder::SetSSR(bool ssr) {
+		Renderer::SetSSR(ssr);
+	}
+	void FunctionBinder::ApplyKernel(bool apply, glm::vec3 c1, glm::vec3 c2, glm::vec3 c3) {
+		glm::mat3 kernel(c1, c2, c3);
+		Renderer::SetApplyKernel(apply, kernel);
 	}
 
 	void Script::Bind() {
@@ -204,6 +226,9 @@ namespace Lobster {
 			.addFunction("DisableCursor", FunctionBinder::DisableCursor)
 			.addFunction("EnableCursor", FunctionBinder::EnableCursor)
 			.addFunction("RayIntersect", FunctionBinder::RayIntersect)
+			.addFunction("SetBlur", FunctionBinder::SetBlur)
+			.addFunction("SetSSR", FunctionBinder::SetSSR)
+			.addFunction("ApplyKernel", FunctionBinder::ApplyKernel)
 			// utilities
 			.addFunction("normalize", FunctionBinder::Normalize)
 			.addFunction("GetAudioSource", FunctionBinder::GetAudioSource)
@@ -235,6 +260,13 @@ namespace Lobster {
 			.addFunction("IsEnabled", &Component::IsEnabled)
 			.addFunction("GetOwner", &Component::GetOwner)
 			.addFunction("GetType", &Component::GetType) // LuaBridge does not support enum
+			.endClass()
+			// Mesh Component
+			.deriveClass<MeshComponent, Component>("MeshComponent")
+			.addFunction("PlayAnimation", &MeshComponent::PlayAnimation)
+			.addFunction("PauseAnimation", &MeshComponent::PauseAnimation)
+			.addFunction("StopAnimation", &MeshComponent::StopAnimation)
+			.addFunction("SetTimeMultiplier", &MeshComponent::SetTimeMultiplier)
 			.endClass()
 			// Physics Component
 			.deriveClass<PhysicsComponent, Component>("PhysicsComponent")
@@ -294,12 +326,12 @@ namespace Lobster {
 			.beginClass<Scene>("Scene")
 			.addFunction("AddGameObject", &Scene::AddGameObject)
 			.addFunction("GetGameCamera", &Scene::GetGameCamera)
-			//.addFunction("GetGameObjects", &Scene::GetGameObjects)
+			.addFunction("GetGameObjectById", &FunctionBinder::GetGameObjectById)
+			.addFunction("GetGameObjectByName", &FunctionBinder::GetGameObjectByName)
 			.endClass()
 			.endNamespace();
-		getGlobalNamespace(L).beginNamespace("Lobster").endNamespace();
 		// Object passing
-		push(L, transform); // pointer to 'Transform', C++ lifetime
+		push(L, transform); // shortcut pointer to 'Transform', C++ lifetime
 		lua_setglobal(L, "transform");
 		push(L, gameObject); // pointer to 'GameObject', C++ lifetime
 		lua_setglobal(L, "this");

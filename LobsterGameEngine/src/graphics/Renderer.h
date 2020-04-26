@@ -95,6 +95,8 @@ namespace Lobster
 		bool b_deferredRendering;
 		bool b_ppSSR;
 		bool b_ppBlur;
+		bool b_ppUseKernel = false;
+		glm::mat3 m_ppKernel;
 		// renderer resources
 		static Renderer* s_instance;
 		FrameBuffer* m_gBuffer;
@@ -112,13 +114,16 @@ namespace Lobster
 		static void SetFaceCulling(bool enabled, CullMode mode = CULL_BACK);
 		// RenderCommand & RenderQueue
 		static void BeginScene(TextureCube* skybox);
+		static void SetApplyKernel(bool apply, glm::mat3 kernel);
+		static void SetBlur(bool blur);
+		static void SetSSR(bool ssr);
 		static void Submit(RenderCommand command);
 		static void Submit(RenderOverlayCommand ocommand);
 		static void SubmitDebug(RenderCommand dcommand);
 		static void EndScene();
 		static void ClearOverlayQueue();
 		static void ClearAllQueues();
-		static void OnImGuiRender();
+		static void OnImGuiRender();		
 		inline static void SetDeferredPipeline(bool status) { s_instance->b_deferredRendering = status; }
 	private:
 		void DrawQueue(CameraComponent* camera, std::list<RenderCommand>& queue);

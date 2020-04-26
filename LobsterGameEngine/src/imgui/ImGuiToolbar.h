@@ -196,7 +196,7 @@ namespace Lobster
 						delete m_gameView;
 						m_gameView = nullptr;
 					}
-					// TODO load the original scene setup
+					// load the original scene setup
 					// Application::GetInstance()->OpenScene("scenes/test.lobster");
 				}
 			}			

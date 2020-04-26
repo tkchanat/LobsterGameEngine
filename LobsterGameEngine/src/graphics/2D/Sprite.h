@@ -13,6 +13,7 @@ namespace Lobster {
 	protected:
 		int z;	// z-index (smaller goes to the front, allow negative)
 		static int zLv;
+		bool m_clicked = false;
 		bool isButton = false;		
 		float colorOnHover[4] = { 0.f, 0.f, 0.f, 0.08f };
 		float colorOnClick[4] = { 0.f, 0.f, 0.f, 0.16f };
@@ -37,7 +38,7 @@ namespace Lobster {
 		virtual void Clip() {}
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) = 0;
 		virtual void OnBegin();
-		virtual void OnUpdate();
+		virtual void OnUpdate(double dt);
 		virtual void OnImGuiRender() = 0;
 		virtual bool IsMouseOver() { return false; }
 		// compare if s1 is in front of s2chec
@@ -63,7 +64,7 @@ namespace Lobster {
 
 		virtual void Clip() override;	// adjust x, y into reasonable range
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) override;
-		virtual void OnUpdate() override;
+		virtual void OnUpdate(double dt) override;
 		virtual void OnImGuiRender() override;
 		virtual bool IsMouseOver() override;
 	};
@@ -110,7 +111,7 @@ namespace Lobster {
 		virtual void Clip() override;		
 		virtual void ImGuiMenuHelper(); // let its descendent call helper directly on text formatting
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) override;		
-		virtual void OnUpdate() override;
+		virtual void OnUpdate(double dt) override;
 		virtual void OnImGuiRender() override;
 		virtual bool IsMouseOver() override;
 	};
@@ -133,7 +134,7 @@ namespace Lobster {
 		inline SupportedVarType GetVarType() { return type; }
 
 		virtual void OnBegin() override;
-		virtual void OnUpdate() override;
+		virtual void OnUpdate(double dt) override;
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) override;
 	};
 

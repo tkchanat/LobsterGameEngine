@@ -16,6 +16,7 @@ namespace Lobster
 		friend class ImGuiHierarchy;
 		friend class ImGuiScene;
 		friend class ImGuiToolbar;
+		friend struct FunctionBinder;
     private:
 		Skybox* m_skybox;
         std::vector<GameObject*> m_gameObjects;

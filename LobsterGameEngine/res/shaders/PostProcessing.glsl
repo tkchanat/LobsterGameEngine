@@ -45,6 +45,8 @@ uniform sampler2D screenTexture;
 uniform sampler2D sys_gNormalDepth;
 uniform bool sys_ppBlur;
 uniform bool sys_ppSSR;
+uniform bool sys_ppUseKernel;
+uniform mat3 sys_ppKernel;
 
 vec3 Blur() {
     vec3 color = vec3(0.0);
@@ -92,18 +94,32 @@ vec3 SSR() {
     return diffuseColor + 0.5 * specularColor;
 }
 
+// Apply a user-specified 3x3 kernel on the screen
+vec3 Kernel3x3() {
+    vec3 color = vec3(0.0);
+    vec3 samples[9];
+    for(int i = 0; i < 9; i++)
+        samples[i] = texture(screenTexture, frag_texcoord + offsets[i]).rgb;
+    for(int i = 0; i < 3; i++)
+        for(int j = 0; j < 3; j++)
+            color += samples[i*3+j] * sys_ppKernel[i][j];
+    return color;
+}
+
 void main()
 { 
     int effectCount = 0;
     vec3 color = vec3(0.0);
     vec3 blur = vec3(0.0);
     vec3 ssr = vec3(0.0);
+    vec3 kernelProcess = vec3(0.0);
     if(sys_ppSSR) { blur = SSR(); effectCount++; }
     if(sys_ppBlur) { ssr = Blur(); effectCount++; }
+    if(sys_ppUseKernel) { kernelProcess = Kernel3x3(); effectCount++; }
 
     // merge color
     if(effectCount > 0) {
-        color = (blur + ssr) / effectCount;
+        color = (kernelProcess + blur + ssr) / effectCount;
     }
     else {
         color = texture(screenTexture, frag_texcoord).rgb;

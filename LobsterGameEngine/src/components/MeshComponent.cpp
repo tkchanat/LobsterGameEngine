@@ -172,6 +172,11 @@ namespace Lobster
 		}
 	}
 
+	void MeshComponent::OnEnd() {
+		// stop all playing animations
+		StopAnimation();
+	}
+
 	void MeshComponent::OnImGuiRender()
 	{
 		if (ImGui::CollapsingHeader("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen))
