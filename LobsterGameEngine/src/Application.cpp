@@ -182,7 +182,7 @@ namespace Lobster
  		m_scene->AddGameObject(chicken);
 
 		GameObject* court = new GameObject("court");
-		court->AddComponent(new MeshComponent(FileSystem::Path("meshes/court.obj").c_str(), "materials/Material.mat"));
+		court->AddComponent(new MeshComponent(FileSystem::Path("meshes/court.obj").c_str(), nullptr));
 		court->transform.LocalScale = glm::vec3(0.975, 0.794, 1);
 
 		court->AddComponent(new Rigidbody());

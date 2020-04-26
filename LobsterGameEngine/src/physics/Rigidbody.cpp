@@ -38,7 +38,7 @@ namespace Lobster {
 	}
 
 	void Rigidbody::OnImGuiRender() {
-		bool statement;
+		bool statement = true;
 
 		if (statement) {
 			if (ImGui::CollapsingHeader("PhysicsComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
