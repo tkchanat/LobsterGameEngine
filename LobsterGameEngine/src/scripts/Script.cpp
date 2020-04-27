@@ -290,6 +290,7 @@ namespace Lobster {
 			// Physics Component
 			.deriveClass<PhysicsComponent, Component>("PhysicsComponent")
 			.addFunction("ApplyForce", &PhysicsComponent::ApplyForce)
+			.addFunction("AddVelocity", &PhysicsComponent::AddVelocity)
 			.endClass()
 			// Camera Component
 			.deriveClass<CameraComponent, Component>("CameraComponent")

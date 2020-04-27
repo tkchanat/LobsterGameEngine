@@ -79,7 +79,7 @@ namespace Lobster
 		// import mesh and load defined materials from model file
 		m_meshInfo = MeshLoader::Load(meshPath);
 		// load animation from file only if .anim file not found
-		if (m_animations.empty()) {
+		if (m_animations.empty() && !m_meshInfo.BoneMap.empty()) {
 			m_animations = MeshLoader::LoadAnimation(meshPath);
 		}
 		// if materialPath is valid and present, use material of our own instead

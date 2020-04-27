@@ -72,7 +72,7 @@ function OnUpdate(dt)
 	if Lobster.IsKeyUp(32) then jumped = false end
 	if (not jumped and Lobster.IsKeyDown(32)) then
 		if (rigidbody ~= nil) then
-			rigidbody:ApplyForce(Lobster.Vec3(0.0, 1, 0.0), Lobster.Vec3(0, 10, 0))
+			rigidbody:ApplyForce(Lobster.Vec3(0.0, 1, 0.0), Lobster.Vec3(0, -1, 0))
 			jumped = true
 		end
 	end

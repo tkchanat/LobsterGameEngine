@@ -26,6 +26,8 @@ namespace Lobster {
 		inline std::vector<Collider*> GetColliders() const { return m_colliders; }
 
 		bool Intersects(PhysicsComponent* other);
+		//	Return true if intersected and it is a OVERLAP type intersection.
+		bool OverlapTest(PhysicsComponent* other);
 		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 		virtual void OnPhysicsUpdate(double deltaTime) = 0;
