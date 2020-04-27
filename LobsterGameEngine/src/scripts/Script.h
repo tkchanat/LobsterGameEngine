@@ -19,6 +19,7 @@ namespace Lobster
 		static MeshComponent* GetMeshComponent(GameObject* gameObject);
 		static ParticleComponent* GetParticleComponent(GameObject* gameObject);
 		static PhysicsComponent* GetPhysicsComponent(GameObject* gameObject);
+		static Script* GetScript(GameObject* gameObject);
 		// ray casting & intersection
 		static bool RayIntersect(CameraComponent* camera, PhysicsComponent* collider, float distanceThreshold);
 		// control of game objects in scene
@@ -48,12 +49,16 @@ namespace Lobster
 		void Bind(); 
 		// these functions should ONLY be called as non-component (e.g. UI button call)
 		void Execute(std::string funcName);
-		luabridge::LuaRef GetVar(std::string varName);
+		luabridge::LuaRef GetVar(std::string varName);		
 		// =====================
 		virtual void OnBegin() override;
 		virtual void OnUpdate(double deltaTime) override;
 		virtual void OnImGuiRender() override;
-
+		// APIs for self :)))
+		int GetInt(std::string varName);
+		float GetFloat(std::string varName);
+		std::string GetString(std::string varName);
+		// =====================
 		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
 		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 	private:

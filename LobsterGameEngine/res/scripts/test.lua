@@ -1,10 +1,9 @@
 
 function OnBegin()
-	mesh = Lobster.GetMeshComponent(this)
-	mesh:SetTimeMultiplier(0.4)
-	mesh:PlayAnimation()
+	print('Test.lua')
+	var = 0
 end
 
 function OnUpdate(dt)
-
+	var = var + 1
 end
