@@ -139,13 +139,13 @@ namespace Lobster
 		PhysicsComponent* rigitParticle = particle->GetComponent<PhysicsComponent>();
 		rigitParticle->SetEnabled(true);
 		rigitParticle->SetEnabledCallback();
-		particle->transform.WorldPosition = glm::vec3(-0.28, 8.3, 19.35);
+		particle->transform.WorldPosition = glm::vec3(-0.28, 9.3, 19.35);
 
 
 		BoxCollider* goal = new BoxCollider(rigitParticle);
 		goal->SetOwner(particle);
 		goal->SetOwnerTransform(&particle->transform);
-		goal->m_transform.WorldPosition = glm::vec3(0, 0.7, 0);
+		goal->m_transform.WorldPosition = glm::vec3(0, -0.3, 0);
 		goal->m_transform.LocalScale = glm::vec3(0.3, 0.01, 0.3);
 		rigitParticle->AddCollider(goal);
 

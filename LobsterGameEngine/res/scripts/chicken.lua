@@ -1,29 +1,34 @@
 function OnBegin()
 	print("new game")
-	rigidbody = Lobster.GetPhysicsComponent(this)
+	
+	score = 123123
 	chicken = scene:GetGameObjectByName('chicken')
+	rigidbody = Lobster.GetPhysicsComponent(chicken)
 	floor = scene:GetGameObjectByName('floor')
 	hoop = scene:GetGameObjectByName('hoop')
 	court = scene:GetGameObjectByName('court')
-	audio = Lobster.GetAudioSource(this)
+	audio = Lobster.GetAudioSource(chicken)
 	particle = scene:GetGameObjectByName('particle')
 	particleSystem = Lobster.GetParticleComponent(particle)
-
 	-- mesh = Lobster.GetMeshComponent(this)
 	-- mesh:SetTimeMultiplier(0.4)
 	-- mesh:PlayAnimation()
 	
+	shot = false
 	shooting_force_y = 0
 	shooting_force_x = 0
 	initial_x = transform.WorldPosition.x
 	initial_y = transform.WorldPosition.y
 	initial_z = transform.WorldPosition.z
 	shooting_initial_y = 1
-	landing_y = 1
+	landing_y = 0.5
+	floor_count = 20
 end
 
 
 function resetGame()
+	shot = false
+	floor_count = 20
 	shooting_force_y = 0
 	shooting_force_x = 0  
 	transform.WorldPosition.x = initial_x
@@ -47,28 +52,36 @@ function OnUpdate(dt)
 		rigidbody:AddVelocity(Lobster.Vec3(0, 1.65, -0.75))
 		shooting_force_y = 0
 		shooting_force_x = 0
+		shot = true
 	end
 
 	if (chicken:Intersects(particle)) then
-		--print('goal')
+		--goal
         particleSystem:EmitOnce()
 	end
 
-	-- if (chicken:Intersects(floor) and transform.WorldPosition.y < landing_y) then
-	
-	if (chicken:Intersects(floor)) then
+	if (chicken:Intersects(floor) and shot) then
 		--landing
-		--resetGame()
+		floor_count = floor_count - 1
+		if floor_count == 0 then
+
+			audio:Play()
+			resetGame()
+		end
 	end
 
 	if (chicken:Intersects(hoop)) then
 		--stuck at the hoop
-		--resetGame()
+		floor_count = floor_count - 1
+		if floor_count == 0 then
+
+			audio:Play()
+			resetGame()
+		end
 	end
 
-	if (chicken:Intersects(court)) then
-		--audio:Play()
-		--print('board')
+	if (chicken:Intersects(court) and shot) then
+		audio:Play()
 	end
 end
 
