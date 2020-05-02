@@ -132,6 +132,21 @@ namespace Lobster {
 		}
 	}
 
+	int Script::GetInt(std::string varName) {
+		LuaRef v = GetVar(varName);
+		return v.cast<int>();
+	}
+
+	float Script::GetFloat(std::string varName) {
+		LuaRef v = GetVar(varName);
+		return v.cast<float>();
+	}
+
+	std::string Script::GetString(std::string varName) {
+		LuaRef v = GetVar(varName);
+		return v.cast<std::string>();
+	}
+
 	void Script::Serialize(cereal::JSONOutputArchive& oarchive) {
 		oarchive(*this);
 	}
@@ -169,6 +184,9 @@ namespace Lobster {
 	}
 	PhysicsComponent* FunctionBinder::GetPhysicsComponent(GameObject* gameObject) {
 		return gameObject->GetComponent<PhysicsComponent>();
+	}
+	Script* FunctionBinder::GetScript(GameObject* gameObject) {
+		return gameObject->GetComponent<Script>();
 	}
 	bool FunctionBinder::RayIntersect(CameraComponent* camera, PhysicsComponent* phys, float distanceThreshold = 10000.f) {
 		glm::vec3 origin, direction;
@@ -237,6 +255,7 @@ namespace Lobster {
 			.addFunction("GetMeshComponent", FunctionBinder::GetMeshComponent)
 			.addFunction("GetPhysicsComponent", FunctionBinder::GetPhysicsComponent)
 			.addFunction("GetParticleComponent", FunctionBinder::GetParticleComponent)
+			.addFunction("GetScript", FunctionBinder::GetScript)
 			.addFunction("RemoveGameObject", FunctionBinder::RemoveGameObject)
 			// glm::vec3			
 			.beginClass<glm::vec3>("Vec3")
@@ -313,6 +332,12 @@ namespace Lobster {
 			.addFunction("Unmute", &AudioSource::Unmute)
 			.addFunction("SetGain", &AudioSource::SetGain)
 			.addFunction("SetPitch", &AudioSource::SetPitch)
+			.endClass()
+			// Script Component
+			.beginClass<Script>("Script")
+			.addFunction("GetInt", &Script::GetInt)
+			.addFunction("GetFloat", &Script::GetFloat)
+			.addFunction("GetString", &Script::GetString)
 			.endClass()
 			// GameObject
 			.beginClass<GameObject>("GameObject")
