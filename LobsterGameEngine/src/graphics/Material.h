@@ -100,6 +100,7 @@ namespace Lobster
 		static MaterialLibrary* s_instance;
 	public:
 		static void Initialize();
+		static void Clear();
 		static Material* Use(const char* path);
 		static Material* UseShader(const char* shaderPath);
 		static Material* UseDefault();

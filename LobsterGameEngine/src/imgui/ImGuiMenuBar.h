@@ -243,6 +243,7 @@ namespace Lobster
 
 		void New() {
 			// Clear current resource cache
+			MaterialLibrary::Clear();
 			TextureLibrary::Clear();
 			// TODO new a scene in a more proper way
 			Application* app = Application::GetInstance();
@@ -261,6 +262,7 @@ namespace Lobster
 
 		void Open() {
 			// Clear current resource cache
+			MaterialLibrary::Clear();
 			TextureLibrary::Clear();
 			// Open scene
 			Application* app = Application::GetInstance();

@@ -50,7 +50,8 @@ namespace Lobster {
 		inline glm::vec3 GetAngularVelocity() { return m_angularVelocity; }
 		inline glm::vec3 GetAngularAcceleration() { return m_angularAcceleration; }
 
-		inline void StopObject() { m_velocity = glm::vec3(0, 0, 0); m_angularVelocity = glm::vec3(0, 0, 0); transform->LocalEulerAngles = glm::vec3(0, 0, 0); }
+		inline void StopObject() { m_velocity = glm::vec3(0, 0, 0); m_angularVelocity = glm::vec3(0, 0, 0);}
+		inline void SetRotation(glm::vec3 rotation) { transform->LocalEulerAngles = rotation; }
 
 	protected:
 		//	Mass of component.

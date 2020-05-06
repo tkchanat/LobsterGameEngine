@@ -145,8 +145,8 @@ namespace Lobster
 		BoxCollider* goal = new BoxCollider(rigitParticle);
 		goal->SetOwner(particle);
 		goal->SetOwnerTransform(&particle->transform);
-		goal->m_transform.WorldPosition = glm::vec3(0, -0.3, 0);
-		goal->m_transform.LocalScale = glm::vec3(0.3, 0.01, 0.3);
+		goal->m_transform.WorldPosition = glm::vec3(0, -0.15, -0.65);
+		goal->m_transform.LocalScale = glm::vec3(1, 0.01, 0.9);
 		rigitParticle->AddCollider(goal);
 
 		m_scene->AddGameObject(particle);
@@ -155,9 +155,9 @@ namespace Lobster
  		chicken->AddComponent(new MeshComponent(FileSystem::Path("meshes/anim_chicken.fbx").c_str(), "materials/chicken.mat"));
 
 		chicken->transform.LocalScale = glm::vec3(0.42, 0.47, 0.47);
-		chicken->transform.WorldPosition = glm::vec3(-0.298, 1, 0);
+		chicken->transform.WorldPosition = glm::vec3(-0.298, 0.507, 0);
 		chicken->transform.RotateEuler(180, glm::vec3(0, 1, 0));
-		chicken->transform.OverallScale = 0.3;
+		chicken->transform.OverallScale = 0.5;
 
 
 		chicken->AddComponent(new Rigidbody());
@@ -207,8 +207,11 @@ namespace Lobster
 		m_scene->AddGameObject(court);
 
 		GameObject* hoop = new GameObject("hoop");
-		hoop->AddComponent(new MeshComponent(FileSystem::Path("meshes/court.obj").c_str(), "materials/Material005.mat"));
-		hoop->transform.LocalScale = glm::vec3(0.975, 0.794, 1);
+		hoop->transform.LocalScale = glm::vec3(0.97, 0.794, 1);
+		hoop->transform.WorldPosition = glm::vec3(-0.298, 9.25, 18.7);
+		hoop->transform.OverallScale = 1.5;
+
+		hoop->AddComponent(new MeshComponent(FileSystem::Path("meshes/torus.obj").c_str(), "materials/Material004.mat"));
 
 		hoop->AddComponent(new Rigidbody());
 		PhysicsComponent* rigitHoop = hoop->GetComponent<PhysicsComponent>();
@@ -219,63 +222,60 @@ namespace Lobster
 		BoxCollider* hoopA = new BoxCollider(rigitHoop);
 		hoopA->SetOwner(hoop);
 		hoopA->SetOwnerTransform(&hoop->transform);
-		hoopA->m_transform.WorldPosition = glm::vec3(-0.4, 11.4, 18.7);
-		hoopA->m_transform.LocalScale = glm::vec3(0.005, 0.005, 0.002);
+		hoopA->m_transform.WorldPosition = glm::vec3(0.8, 0.0, 0.0);
+		hoopA->m_transform.LocalScale = glm::vec3(0.05, 0.3, 0.25);
 		rigitHoop->AddCollider(hoopA);
 
 		BoxCollider* hoopB = new BoxCollider(rigitHoop);
 		hoopB->SetOwner(hoop);
 		hoopB->SetOwnerTransform(&hoop->transform);
-		hoopB->m_transform.WorldPosition = glm::vec3(-0.8, 11.4, 18.85);
-		hoopB->m_transform.RotateEuler(40, glm::vec3(0, 1, 0));
-		hoopB->m_transform.LocalScale = glm::vec3(0.005, 0.005, 0.002);
+		hoopB->m_transform.WorldPosition = glm::vec3(-0.8, 0, 0);
+		hoopB->m_transform.LocalScale = glm::vec3(0.05, 0.3, 0.25);
 		rigitHoop->AddCollider(hoopB);
 
 		BoxCollider* hoopC = new BoxCollider(rigitHoop);
 		hoopC->SetOwner(hoop);
 		hoopC->SetOwnerTransform(&hoop->transform);
-		hoopC->m_transform.WorldPosition = glm::vec3(-1, 11.4, 19.24);
-		hoopC->m_transform.RotateEuler(80, glm::vec3(0, 1, 0));
-		hoopC->m_transform.LocalRotation = glm::vec3(0, 80, 0);
-		hoopC->m_transform.LocalScale = glm::vec3(0.005, 0.005, 0.002);
+		hoopC->m_transform.WorldPosition = glm::vec3(-0.5, 0, -0.6);
+		hoopC->m_transform.RotateEuler(134, glm::vec3(0, 1, 0));
+		hoopC->m_transform.LocalScale = glm::vec3(0.05, 0.3, 0.25);
 		rigitHoop->AddCollider(hoopC);
 
 		BoxCollider* hoopD = new BoxCollider(rigitHoop);
 		hoopD->SetOwner(hoop);
 		hoopD->SetOwnerTransform(&hoop->transform);
-		hoopD->m_transform.WorldPosition = glm::vec3(-0.92, 11.4, 19.66);
-		hoopD->m_transform.RotateEuler(115, glm::vec3(0, 1, 0));
-		hoopD->m_transform.LocalScale = glm::vec3(0.005, 0.005, 0.002);
+		hoopD->m_transform.WorldPosition = glm::vec3(0, 0, -0.8);
+		hoopD->m_transform.RotateEuler(90, glm::vec3(0, 1, 0));
+		hoopD->m_transform.LocalScale = glm::vec3(0.05, 0.3, 0.25);
 		rigitHoop->AddCollider(hoopD);
 
 		BoxCollider* hoopE = new BoxCollider(rigitHoop);
 		hoopE->SetOwner(hoop);
 		hoopE->SetOwnerTransform(&hoop->transform);
-		hoopE->m_transform.WorldPosition = glm::vec3(0.07, 11.4, 18.83);
-		hoopE->m_transform.RotateEuler(-37, glm::vec3(0, 1, 0));
-		hoopE->m_transform.LocalScale = glm::vec3(0.005, 0.005, 0.002);
+		hoopE->m_transform.WorldPosition = glm::vec3(0.55, 0, -0.6);
+		hoopE->m_transform.RotateEuler(47, glm::vec3(0, 1, 0));
+		hoopE->m_transform.LocalScale = glm::vec3(0.05, 0.3, 0.25);
 		rigitHoop->AddCollider(hoopE);
 
 		BoxCollider* hoopF = new BoxCollider(rigitHoop);
 		hoopF->SetOwner(hoop);
 		hoopF->SetOwnerTransform(&hoop->transform);
-		hoopF->m_transform.WorldPosition = glm::vec3(0.3, 11.4, 19.18);
-		hoopF->m_transform.RotateEuler(-73, glm::vec3(0, 1, 0));
-		hoopF->m_transform.LocalScale = glm::vec3(0.005, 0.005, 0.002);
+		hoopF->m_transform.WorldPosition = glm::vec3(-0.6, 0, 0.55);
+		hoopF->m_transform.RotateEuler(45, glm::vec3(0, 1, 0));
+		hoopF->m_transform.LocalScale = glm::vec3(0.05, 0.3, 0.25);
 		rigitHoop->AddCollider(hoopF);
 
 		BoxCollider* hoopG = new BoxCollider(rigitHoop);
 		hoopG->SetOwner(hoop);
 		hoopG->SetOwnerTransform(&hoop->transform);
-		hoopG->m_transform.WorldPosition = glm::vec3(0.24, 11.4, 19.7);
-		hoopG->m_transform.RotateEuler(-115, glm::vec3(0, 1, 0));
-		hoopG->m_transform.LocalScale = glm::vec3(0.005, 0.005, 0.002);
+		hoopG->m_transform.WorldPosition = glm::vec3(0.55, 0, 0.6);
+		hoopG->m_transform.RotateEuler(-42, glm::vec3(0, 1, 0));
+		hoopG->m_transform.LocalScale = glm::vec3(0.05, 0.3, 0.25);
 		rigitHoop->AddCollider(hoopG);
 
 		m_scene->AddGameObject(hoop);
 
 		GameObject* floor = new GameObject("floor");
-		floor->AddComponent(new MeshComponent(FileSystem::Path("meshes/court.obj").c_str(), "materials/Material.mat"));
 		floor->transform.LocalScale = glm::vec3(0.975, 0.794, 1);
 
 		floor->AddComponent(new Rigidbody());
@@ -286,16 +286,16 @@ namespace Lobster
 		BoxCollider* courtFloor = new BoxCollider(rigitFloor);
 		courtFloor->SetOwner(floor);
 		courtFloor->SetOwnerTransform(&floor->transform);
-		courtFloor->m_transform.WorldPosition = glm::vec3(-1.4, -0.7, -4.9);
-		courtFloor->m_transform.LocalScale = glm::vec3(0.725, 0.060, 0.885);
+		courtFloor->m_transform.WorldPosition = glm::vec3(-1.4, -0.98, -4.9);
+		courtFloor->m_transform.LocalScale = glm::vec3(80, 1.35, 80);
 		rigitFloor->AddCollider(courtFloor);
 
 
 		BoxCollider* hoopStandBase = new BoxCollider(rigitFloor);
 		hoopStandBase->SetOwner(floor);
 		hoopStandBase->SetOwnerTransform(&floor->transform);
-		hoopStandBase->m_transform.WorldPosition = glm::vec3(-0.6, 0.44, 22.6);
-		hoopStandBase->m_transform.LocalScale = glm::vec3(0.033, 0.016, 0.06);
+		hoopStandBase->m_transform.WorldPosition = glm::vec3(-0.43, 0.59, 22.6);
+		hoopStandBase->m_transform.LocalScale = glm::vec3(1.185, 0.166, 2.66);
 		rigitFloor->AddCollider(hoopStandBase);
 
 		m_scene->AddGameObject(floor);
