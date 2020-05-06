@@ -22,6 +22,7 @@ namespace Lobster {
 	}
 
 	void GameUI::RemoveSprite(Sprite2D* sprite) {
+		if (!sprite) return;
 		spriteList.erase(std::find(spriteList.begin(), spriteList.end(), sprite));
 		delete sprite;
 	}
@@ -50,6 +51,15 @@ namespace Lobster {
 
 	std::vector<Sprite2D*>& GameUI::GetSpriteList() {
 		return spriteList;
+	}
+
+	Sprite2D* GameUI::GetSpriteByLabel(std::string label) {
+		for (Sprite2D* sprite : spriteList) {			
+			if (label == sprite->GetLabel()) {
+				return sprite;
+			}
+		}
+		return nullptr;
 	}
 
 	void GameUI::Serialize(cereal::JSONOutputArchive& oarchive) {

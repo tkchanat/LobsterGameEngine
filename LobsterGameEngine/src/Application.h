@@ -60,6 +60,7 @@ namespace Lobster
         void Run();
         void Shutdown();
 		void OpenScene(const char* scenePath);
+		Scene* OpenSceneIngame(const char* scenePath);
 		void SetScenePath(const char* scenePath);
 		void SetSaved(bool saved);
 		inline bool IsSaved() { return m_saved; }

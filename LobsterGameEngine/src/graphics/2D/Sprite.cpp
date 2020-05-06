@@ -35,10 +35,18 @@ namespace Lobster {
 		if (!scriptNameOnHover.empty() && !funcOnHover.empty()) {
 			scriptOnHover = new Script(scriptNameOnHover.c_str());
 			scriptOnHover->OnBegin();
+			std::string errmsg = scriptOnHover->GetErrmsg();
+			if (!errmsg.empty()) {
+				LOG(errmsg.c_str());
+			}
 		}
 		if (!scriptNameOnClick.empty() && !funcOnClick.empty()) {
 			scriptOnClick = new Script(scriptNameOnClick.c_str());
 			scriptOnClick->OnBegin();
+			std::string errmsg = scriptOnClick->GetErrmsg();
+			if (!errmsg.empty()) {
+				LOG(errmsg.c_str());
+			}
 		}
 	}
 
@@ -57,6 +65,12 @@ namespace Lobster {
 	}
 
 	void Sprite2D::BasicMenuItem(GameUI* ui, ImVec2 winSize) {
+		// Label Property ======
+		static char label_[32];
+		if (ImGui::InputText("Label", label_, 32)) {
+			m_label = label_;
+		}
+		ImGui::Separator();
 		// Button Property ======
 		if (ImGui::Checkbox("Button", &isButton));
 		if (!isButton) {
@@ -483,8 +497,8 @@ namespace Lobster {
 		if (!scriptName.empty() && !var.empty()) {
 			script = new Script(scriptName.c_str());
 		}
-		script->OnBegin();
 		TextSprite2D::OnBegin();
+		script->OnBegin();		
 	}
 
 	void DynamicTextSprite2D::OnUpdate(double dt) {

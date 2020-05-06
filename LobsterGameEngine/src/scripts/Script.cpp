@@ -86,9 +86,13 @@ namespace Lobster {
 			static char lastWarn[256] = "";
 			if (strcmp(lastWarn, e.what())) {
 				strcpy(lastWarn, e.what());
-				LOG(lastWarn);
+				errmsg = lastWarn;
 			}
 		}
+	}
+
+	std::string Script::GetErrmsg() {
+		return errmsg;
 	}
 
 	LuaRef Script::GetVar(std::string varName) {
@@ -225,6 +229,10 @@ namespace Lobster {
 		Renderer::SetApplyKernel(apply, kernel);
 	}
 
+	Scene* FunctionBinder::SetScene(const char* scene) {
+		return Application::GetInstance()->OpenSceneIngame(scene);
+	}
+
 	void Script::Bind() {
 		// Class/function binding
 		getGlobalNamespace(L)
@@ -244,6 +252,7 @@ namespace Lobster {
 			.addFunction("DisableCursor", FunctionBinder::DisableCursor)
 			.addFunction("EnableCursor", FunctionBinder::EnableCursor)
 			.addFunction("RayIntersect", FunctionBinder::RayIntersect)
+			.addFunction("SetScene", FunctionBinder::SetScene)
 			.addFunction("SetBlur", FunctionBinder::SetBlur)
 			.addFunction("SetSSR", FunctionBinder::SetSSR)
 			.addFunction("ApplyKernel", FunctionBinder::ApplyKernel)
@@ -305,8 +314,10 @@ namespace Lobster {
 			.addFunction("EmitOnce", &ParticleComponent::EmitOnce)
 			.endClass()
 			// UI
-			.beginClass<GameUI>("GameUI")
+			.beginClass<GameUI>("GameUI")			
 			.addFunction("GetSpriteList", &GameUI::GetSpriteList)
+			.addFunction("GetSpriteByLabel", &GameUI::GetSpriteByLabel)
+			.addFunction("RemoveSprite", &GameUI::RemoveSprite)
 			.endClass()
 			// Sprite
 			.beginClass<Sprite2D>("Sprite2D")

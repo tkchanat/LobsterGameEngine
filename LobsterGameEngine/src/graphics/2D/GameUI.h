@@ -12,6 +12,7 @@ namespace Lobster {
 		float x, y;		
 		int z;
 		float alpha;
+		std::string label;
 		bool isButton = false;
 		float colorOnHover[4] = { 0.f, 0.f, 0.f, 0.08f };
 		float colorOnClick[4] = { 0.f, 0.f, 0.f, 0.16f };
@@ -38,6 +39,7 @@ namespace Lobster {
 			ar(type);
 			ar(x, y);
 			ar(z);
+			ar(label);
 			ar(alpha);
 			ar(isButton);
 			if (isButton) {
@@ -64,6 +66,7 @@ namespace Lobster {
 			ar(type);
 			ar(x, y);
 			ar(z);
+			ar(label);
 			ar(alpha);
 			ar(isButton);
 			if (isButton) {
@@ -100,6 +103,7 @@ namespace Lobster {
 		void GoFront(Sprite2D* sprite); // move the item to the front by one layer
 		void GoBack(Sprite2D* sprite);	// move the item to the back by one layer
 		std::vector<Sprite2D*>& GetSpriteList();
+		Sprite2D* GetSpriteByLabel(std::string label);
 
 		void Serialize(cereal::JSONOutputArchive& oarchive);
 		void Deserialize(cereal::JSONInputArchive& iarchive);
@@ -112,6 +116,7 @@ namespace Lobster {
 			for (Sprite2D* sprite : spriteList) {
 				SpriteInfo info(sprite->spriteType, sprite->x, sprite->y);
 				info.alpha = sprite->alpha;
+				info.label = sprite->m_label;
 				switch (sprite->spriteType) {
 				case Sprite2D::SpriteType::ImageSprite:
 				{
@@ -172,9 +177,10 @@ namespace Lobster {
 				case Sprite2D::SpriteType::ImageSprite:
 				{
 					ImageSprite2D* sprite = new ImageSprite2D(info.imgPath.c_str(), config.width, config.height, info.x, info.y);
+					sprite->m_label = info.label;
 					sprite->alpha = info.alpha;
 					sprite->z = info.z;
-					sprite->w = info.w; sprite->h = info.h;
+					sprite->w = info.w; sprite->h = info.h;					
 					sprite->isButton = info.isButton;
 					if (info.isButton) {
 						std::copy(info.colorOnHover, info.colorOnHover + 4, sprite->colorOnHover);
@@ -188,6 +194,7 @@ namespace Lobster {
 				case Sprite2D::SpriteType::TextSprite:
 				{
 					TextSprite2D* sprite = new TextSprite2D(info.text.c_str(), info.fontName.c_str(), info.fontSize, config.width, config.height, info.x, info.y);
+					sprite->m_label = info.label;
 					sprite->alpha = info.alpha;
 					sprite->alignType = info.alignType;
 					std::copy(info.color, info.color + 4, sprite->color);
@@ -199,6 +206,7 @@ namespace Lobster {
 				{
 					DynamicTextSprite2D* sprite = new DynamicTextSprite2D(info.sname.c_str(), info.vname.c_str(), info.vtype, info.fontName.c_str(), info.fontSize,
 						config.width, config.height, info.x, info.y);
+					sprite->m_label = info.label;
 					sprite->alpha = info.alpha;
 					sprite->alignType = info.alignType;
 					std::copy(info.color, info.color + 4, sprite->color);

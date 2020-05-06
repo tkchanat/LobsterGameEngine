@@ -494,6 +494,22 @@ namespace Lobster
 		SetSaved(true);
 	}
 
+	Scene* Application::OpenSceneIngame(const char* scenePath) {
+		Scene* temptr = nullptr;
+		temptr = m_scene;
+		if (scenePath && scenePath[0] != '\0') {
+			std::string path(scenePath);
+			StringOps::ReplaceAll(path, "\\", "/");
+			this->scenePath = scenePath;
+			m_scene = new Scene(this->scenePath.c_str());
+		}
+		else {
+			throw std::exception("Empty scenepath cannot be opened.");
+		}
+		Application::GetInstance()->SetScenePath(scenePath);
+		if (temptr) delete temptr;
+	}
+
 	void Application::SetScenePath(const char* scenePath) {
 		this->scenePath = scenePath;
 	}

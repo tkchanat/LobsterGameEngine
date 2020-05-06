@@ -13,6 +13,7 @@ namespace Lobster {
 	protected:
 		int z;	// z-index (smaller goes to the front, allow negative)
 		static int zLv;
+		std::string m_label; // used for get sprite directly in script
 		bool m_clicked = false;
 		bool isButton = false;		
 		float colorOnHover[4] = { 0.f, 0.f, 0.f, 0.08f };
@@ -34,13 +35,14 @@ namespace Lobster {
 		Sprite2D(float mouseX, float mouseY);
 		inline int GetZIndex() const { return z; }
 
-		void SetZIndex(uint z);
+		void SetZIndex(uint z);		
 		virtual void Clip() {}
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) = 0;
 		virtual void OnBegin();
 		virtual void OnUpdate(double dt);
 		virtual void OnImGuiRender() = 0;
 		virtual bool IsMouseOver() { return false; }
+		virtual std::string GetLabel() { return m_label; }
 		// compare if s1 is in front of s2chec
 		static bool Compare(Sprite2D* s1, Sprite2D* s2);
 	};

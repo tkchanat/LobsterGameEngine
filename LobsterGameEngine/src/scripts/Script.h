@@ -30,6 +30,8 @@ namespace Lobster
 		static void SetBlur(bool blur);
 		static void SetSSR(bool ssr);
 		static void ApplyKernel(bool apply, glm::vec3 c1, glm::vec3 c2, glm::vec3 c3);
+		// scene related
+		static Scene* SetScene(const char* path);
 	};
     
 	//	This class is a component for user to define custom scripts with Lua.
@@ -49,6 +51,7 @@ namespace Lobster
 		void Bind(); 
 		// these functions should ONLY be called as non-component (e.g. UI button call)
 		void Execute(std::string funcName);
+		std::string GetErrmsg();
 		luabridge::LuaRef GetVar(std::string varName);		
 		// =====================
 		virtual void OnBegin() override;
