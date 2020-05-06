@@ -342,6 +342,19 @@ namespace Lobster
 		s_instance = new MaterialLibrary();
 	}
 
+	void MaterialLibrary::Clear()
+	{
+		for (Material* material : s_instance->m_materials)
+		{
+			if (material)
+			{
+				delete material;
+			}
+			material = nullptr;
+		}
+		s_instance->m_materials.clear();
+	}
+
 	Material * MaterialLibrary::Use(const char * path)
 	{
 		for (Material* material : s_instance->m_materials)
