@@ -260,7 +260,7 @@ namespace Lobster
 				ImVec2 previewSize(24, 24);
 				Texture2D* notFound = TextureLibrary::Placeholder();
 				if (ImGui::ImageButton(m_particleTexture ? m_particleTexture->Get() : notFound->Get(), previewSize)) {
-					std::string path = FileSystem::OpenFileDialog();
+					std::string path = FileSystem::Path(FileSystem::OpenFileDialog());
 					if (!path.empty()) {
 						Texture2D* texture = TextureLibrary::Use(path.c_str());
 						if (m_particleTexture != texture) {
