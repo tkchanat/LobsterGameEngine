@@ -145,8 +145,8 @@ namespace Lobster
 		BoxCollider* goal = new BoxCollider(rigitParticle);
 		goal->SetOwner(particle);
 		goal->SetOwnerTransform(&particle->transform);
-		goal->m_transform.WorldPosition = glm::vec3(0, -0.3, 0);
-		goal->m_transform.LocalScale = glm::vec3(0.3, 0.01, 0.3);
+		goal->m_transform.WorldPosition = glm::vec3(0, -0.15, -0.65);
+		goal->m_transform.LocalScale = glm::vec3(1, 0.01, 0.9);
 		rigitParticle->AddCollider(goal);
 
 		m_scene->AddGameObject(particle);
@@ -155,9 +155,9 @@ namespace Lobster
  		chicken->AddComponent(new MeshComponent(FileSystem::Path("meshes/anim_chicken.fbx").c_str(), "materials/chicken.mat"));
 
 		chicken->transform.LocalScale = glm::vec3(0.42, 0.47, 0.47);
-		chicken->transform.WorldPosition = glm::vec3(-0.298, 0.465, 0);
+		chicken->transform.WorldPosition = glm::vec3(-0.298, 0.507, 0);
 		chicken->transform.RotateEuler(180, glm::vec3(0, 1, 0));
-		chicken->transform.OverallScale = 0.3;
+		chicken->transform.OverallScale = 0.5;
 
 
 		chicken->AddComponent(new Rigidbody());
