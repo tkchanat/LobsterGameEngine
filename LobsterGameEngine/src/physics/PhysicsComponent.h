@@ -28,8 +28,8 @@ namespace Lobster {
 		bool Intersects(PhysicsComponent* other);
 		//	Return true if intersected and it is a OVERLAP type intersection.
 		bool OverlapTest(PhysicsComponent* other);
-		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
-		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive);
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive);
 		virtual void OnPhysicsUpdate(double deltaTime) = 0;
 		virtual void OnEnd() override { m_velocity = m_acceleration = m_angularVelocity = m_angularAcceleration = glm::vec3(0); }
 
@@ -81,16 +81,5 @@ namespace Lobster {
 
 		//	Keeping track of colliding objects in the previous frame.
 		std::vector<PhysicsComponent*> m_prevCollidingList;
-
-	private:
-		friend class cereal::access;
-		template <class Archive>
-		void save(Archive & ar) const
-		{
-		}
-		template <class Archive>
-		void load(Archive & ar)
-		{
-		}
 	};
 }

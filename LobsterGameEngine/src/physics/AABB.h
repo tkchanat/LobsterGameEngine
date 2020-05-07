@@ -27,12 +27,23 @@ namespace Lobster
 		virtual void Draw() override;
 		bool Intersects(glm::vec3 pos, glm::vec3 dir, float& t) override;
 
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
+
 	protected:
 		virtual std::vector<glm::vec3> GetVertices() const override;
 
     private:
         void SetVertices(bool initialize);
         void UpdateRotation();
+
+	private:
+		friend class cereal::access;
+		template <class Archive>
+		void serialize(Archive & ar)
+		{
+			ar(m_transform);
+		}
     };
 
 }

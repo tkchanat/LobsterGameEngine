@@ -424,7 +424,7 @@ namespace Lobster
 				LoadFromPrimitive(primitive);
 			}
 			else {
-				LoadFromFile(m_meshPath.c_str(), nullptr);
+				LoadFromFile(m_meshPath.c_str(), m_meshInfo.Materials.size() == 1 ? FileSystem::Path(m_meshInfo.Materials[0]->GetPath()).c_str() : nullptr);
 			}
 		}
 		catch (std::exception e) {

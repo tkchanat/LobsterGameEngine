@@ -146,7 +146,12 @@ namespace Lobster
 			std::vector<ComponentType> componentTypes;
 			std::vector<Component*> uninitializedComponents;
 			ar(componentTypes);
-			for (ComponentType type : componentTypes) uninitializedComponents.push_back(CreateComponentFromType(type));
+			for (ComponentType type : componentTypes) {
+				Component* c = CreateComponentFromType(type);
+				c->SetOwner(this);
+				c->SetOwnerTransform(&this->transform);
+				uninitializedComponents.push_back(c);
+			}
 			// initialize subsequence components and append to game object
 			for (Component* component : uninitializedComponents) {
 				if (!component) continue;

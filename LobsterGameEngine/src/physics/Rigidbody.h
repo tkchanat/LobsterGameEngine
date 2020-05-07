@@ -2,6 +2,7 @@
 #include <glm/vec3.hpp>
 #include "objects/Transform.h"
 #include "physics/PhysicsComponent.h"
+#include "physics/ColliderCollection.h"
 
 namespace Lobster {
 	class Rigidbody : public PhysicsComponent {
@@ -16,6 +17,9 @@ namespace Lobster {
 		void OnUpdate(double deltaTime) override;
 		void OnImGuiRender() override;
 		void OnPhysicsUpdate(double deltaTime) override;
+
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) override;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) override;
 
 	private:
 		int m_isChanging = -1;		//	Used for undo system. 0 = mass, 1 = linear damping, 2 = angular damping, 3 = elasticity.
@@ -48,5 +52,41 @@ namespace Lobster {
 
 		//	Undo the object's motion.
 		void UndoTravel(float time);
+
+	private:
+		friend class cereal::access;
+		template <class Archive>
+		void save(Archive & ar) const
+		{
+			ar(Component::m_enabled);
+			ar(m_simulate);
+			ar(m_mass);
+			ar(m_linearDamping);
+			ar(m_angularDamping);
+			ar(m_restitution);
+			ar(m_colliders.size());
+			for (Collider* c : m_colliders) {
+				c->Serialize(ar);
+			}
+		}
+		template <class Archive>
+		void load(Archive & ar)
+		{
+			ar(Component::m_enabled);
+			ar(m_simulate);
+			ar(m_mass);
+			ar(m_linearDamping);
+			ar(m_angularDamping);
+			ar(m_restitution);
+			int count;
+			ar(count);
+			for (int i = 0; i < count; ++i) {
+				Collider* c = new BoxCollider(this);
+				c->Deserialize(ar);
+				AddCollider(c);
+				c->SetOwner(gameObject);
+				c->SetOwnerTransform(&gameObject->transform);
+			}
+		}
 	};
 }

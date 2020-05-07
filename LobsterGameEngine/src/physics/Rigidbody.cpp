@@ -367,6 +367,21 @@ namespace Lobster {
 		}
 	}
 
+	void Rigidbody::Serialize(cereal::JSONOutputArchive & oarchive)
+	{
+		oarchive(*this);
+	}
+
+	void Rigidbody::Deserialize(cereal::JSONInputArchive & iarchive)
+	{
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing Rigidbody failed. Reason: {}", e.what());
+		}
+	}
+
 	glm::vec3 Rigidbody::GetNormal(Rigidbody* other) const {
 		glm::vec3 normal;
 

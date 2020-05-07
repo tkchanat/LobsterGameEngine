@@ -31,7 +31,7 @@ namespace Lobster
 		case ComponentType::MESH_COMPONENT:
 			return new MeshComponent();
 		case ComponentType::PHYSICS_COMPONENT:
-			return nullptr; //new Rigidbody();
+			return new Rigidbody();
 		case ComponentType::CAMERA_COMPONENT:
 			return new CameraComponent();
 		case ComponentType::LIGHT_COMPONENT:
