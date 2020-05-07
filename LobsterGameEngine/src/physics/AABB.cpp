@@ -125,6 +125,21 @@ namespace Lobster
 		return false;
 	}
 
+	void AABB::Serialize(cereal::JSONOutputArchive & oarchive)
+	{
+		oarchive(*this);
+	}
+
+	void AABB::Deserialize(cereal::JSONInputArchive & iarchive)
+	{
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing AABB failed. Reason: {}", e.what());
+		}
+	}
+
 	std::vector<glm::vec3> AABB::GetVertices() const {
 		std::vector<glm::vec3> vertices;
 

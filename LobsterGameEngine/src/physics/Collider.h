@@ -74,6 +74,8 @@ namespace Lobster {
 		virtual void SetOwner(GameObject* owner) = 0;
 		virtual void OnUpdate(double deltaTime) = 0;
 		virtual void OnImGuiRender();
+		virtual void Serialize(cereal::JSONOutputArchive& oarchive) = 0;
+		virtual void Deserialize(cereal::JSONInputArchive& iarchive) = 0;
 		inline virtual void SetOwnerTransform(Transform* t) { transform = t; }
 		inline PhysicsComponent* GetPhysics() const { return physics; }
 		inline bool IsEnabled() { return m_enabled && !b_isVirtuallyDeleted; }
@@ -81,7 +83,6 @@ namespace Lobster {
 	protected:
 		inline void SetColliderType(int colliderType) { m_colliderType = colliderType; }
 		virtual std::vector<glm::vec3> GetVertices() const = 0;
-
 	private:
 		//	Update collider component after collider type update.
 		Collider* UpdateColliderType(int colliderType);

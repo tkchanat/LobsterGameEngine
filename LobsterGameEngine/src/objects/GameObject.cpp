@@ -227,8 +227,8 @@ namespace Lobster
 		// MeshComponent, PhysicsComponent
 		if (dynamic_cast<MeshComponent*>(component) && GetComponent<MeshComponent>())
 			return this;
-		if (dynamic_cast<PhysicsComponent*>(component) && GetComponent<PhysicsComponent>())
-			return this;
+		//if (dynamic_cast<PhysicsComponent*>(component) && GetComponent<PhysicsComponent>())
+			//return this;
 
 		component->SetOwner(this);
 		component->SetOwnerTransform(&transform);

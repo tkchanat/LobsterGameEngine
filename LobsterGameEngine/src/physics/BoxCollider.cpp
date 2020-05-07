@@ -65,6 +65,21 @@ namespace Lobster {
 		return false;
 	}
 
+	void BoxCollider::Serialize(cereal::JSONOutputArchive & oarchive)
+	{
+		oarchive(*this);
+	}
+
+	void BoxCollider::Deserialize(cereal::JSONInputArchive & iarchive)
+	{
+		try {
+			iarchive(*this);
+		}
+		catch (std::exception e) {
+			LOG("Deserializing BoxCollider failed. Reason: {}", e.what());
+		}
+	}
+
 	void BoxCollider::Draw() {
 #ifdef LOBSTER_BUILD_EDITOR
 		// validate data, and return if we haven't define game object yet
