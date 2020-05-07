@@ -1,7 +1,7 @@
 function OnBegin()
 	print("new game")
 
-	score = 0
+	score = 0	
 	chicken = scene:GetGameObjectByName('chicken')
 	rigidbody = Lobster.GetPhysicsComponent(chicken)
 	floor = scene:GetGameObjectByName('floor')
@@ -23,6 +23,11 @@ function OnBegin()
 	shooting_initial_y = 1
 	landing_y = 0.5
 	floor_count = 10
+
+	-- not letting user throw chicken in title
+	cameraObj = scene:GetGameObjectByName('Main Camera')
+	camera = Lobster.GetCameraComponent(cameraObj)	
+	ui = camera:GetUI()	
 end
 
 
@@ -47,8 +52,10 @@ function float_eq(a, b)
 	return diff < epsilon
 end
 
-function OnUpdate(dt)
+function OnUpdate(dt)	
 	ds = dt / 50
+	ingameChecker = ui:GetSpriteByLabel('startBtn') -- nil if ingame
+	if ingameChecker ~= nil then return end
 	--if (Lobster.RayIntersect(scene:GetGameCamera(), Lobster.GetPhysicsComponent(this), 10000)) then
 	if (Lobster.IsMouseDown(0)) then
 		dx = Lobster.GetMouseDeltaX() * ds

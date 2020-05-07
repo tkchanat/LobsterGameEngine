@@ -115,6 +115,11 @@ namespace Lobster {
 	void Script::OnBegin() {		
 		if (Application::GetMode() != GAME) return;
 		if (filename.size() == 0 || errmsg.size() > 0) return;
+		// "deferred" script loading
+		if (b_defer) {
+			loadScript(filename.c_str());
+			b_defer = false;
+		}		
 		LuaRef lua_OnBegin = getGlobal(L, "OnBegin");
 		try {
 			lua_OnBegin();

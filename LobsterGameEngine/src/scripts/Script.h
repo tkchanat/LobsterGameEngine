@@ -41,6 +41,7 @@ namespace Lobster
 		lua_State* L;
 		std::string filename;
 		std::string errmsg;	// error message of the script (if any)
+		bool b_defer = false; // whether to load the script on begin
 
 		// Load or reload a Lua script in relative path into the object.
 		void loadScript(const char* file);
@@ -72,6 +73,7 @@ namespace Lobster
 		}
 		template <class Archive> void load(Archive & ar) {
 			ar(filename);
+			b_defer = true;
 		}
     };
     

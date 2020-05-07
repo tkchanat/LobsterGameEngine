@@ -230,11 +230,18 @@ namespace Lobster
 		//if (dynamic_cast<PhysicsComponent*>(component) && GetComponent<PhysicsComponent>())
 			//return this;
 
+		// added temporarily by AG
+		if (component->GetType() == ComponentType::PHYSICS_COMPONENT) {
+			if (auto c = GetComponent<PhysicsComponent>())
+				RemoveComponent(c);
+		}
+
 		component->SetOwner(this);
 		component->SetOwnerTransform(&transform);
 
 		m_components.push_back(component);		
 		component->OnAttach();
+
 		return this;
 	}
 

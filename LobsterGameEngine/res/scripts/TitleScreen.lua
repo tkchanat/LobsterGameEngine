@@ -3,6 +3,7 @@
 
 function OnBegin()	
 	cameraObj = scene:GetGameObjectByName('Main Camera')
+	bg = scene:GetGameObjectByName('court')
 	camera = Lobster.GetCameraComponent(cameraObj)	
 	ui = camera:GetUI()
 	startBtn = ui:GetSpriteByLabel('startBtn')
@@ -11,7 +12,9 @@ function OnBegin()
 end
 
 function OnClick()
-	ui:RemoveSprite(startBtn)	
+	ui:RemoveSprite(startBtn)
+	bgm = Lobster.GetAudioSource(bg)
+	bgm:Play()
 	Lobster.SetBlur(false)
 	Lobster.SetBlend(false, Lobster.Vec3(0, 0, 0), 0)
 end
