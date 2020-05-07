@@ -228,6 +228,9 @@ namespace Lobster {
 		glm::mat3 kernel(c1, c2, c3);
 		Renderer::SetApplyKernel(apply, kernel);
 	}
+	void FunctionBinder::SetBlend(bool blend, glm::vec3 color, float alpha) {
+		Renderer::SetBlend(blend, color, alpha);
+	}
 
 	Scene* FunctionBinder::SetScene(const char* scene) {
 		return Application::GetInstance()->OpenSceneIngame(scene);
@@ -255,7 +258,9 @@ namespace Lobster {
 			.addFunction("SetScene", FunctionBinder::SetScene)
 			.addFunction("SetBlur", FunctionBinder::SetBlur)
 			.addFunction("SetSSR", FunctionBinder::SetSSR)
+			.addFunction("ApplySobel", Renderer::SetApplySobel)
 			.addFunction("ApplyKernel", FunctionBinder::ApplyKernel)
+			.addFunction("SetBlend", FunctionBinder::SetBlend)
 			// utilities
 			.addFunction("normalize", FunctionBinder::Normalize)
 			.addFunction("GetAudioSource", FunctionBinder::GetAudioSource)

@@ -15,6 +15,7 @@ namespace Lobster {
 		static int zLv;
 		std::string m_label; // used for get sprite directly in script
 		bool m_clicked = false;
+		bool m_hovered = false;
 		bool isButton = false;		
 		float colorOnHover[4] = { 0.f, 0.f, 0.f, 0.08f };
 		float colorOnClick[4] = { 0.f, 0.f, 0.f, 0.16f };

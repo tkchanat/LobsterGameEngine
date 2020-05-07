@@ -30,6 +30,7 @@ namespace Lobster
 		static void SetBlur(bool blur);
 		static void SetSSR(bool ssr);
 		static void ApplyKernel(bool apply, glm::vec3 c1, glm::vec3 c2, glm::vec3 c3);
+		static void SetBlend(bool blend, glm::vec3 color, float alpha);
 		// scene related
 		static Scene* SetScene(const char* path);
 	};

@@ -57,6 +57,7 @@ namespace Lobster {
 
 	void PhysicsComponent::Serialize(cereal::JSONOutputArchive & oarchive)
 	{
+		return;
 		oarchive(*this);
 	}
 

@@ -95,8 +95,12 @@ namespace Lobster
 		bool b_deferredRendering;
 		bool b_ppSSR;
 		bool b_ppBlur;
+		bool b_ppSobel = false;
 		bool b_ppUseKernel = false;
+		bool b_ppBlend = false;
+		float m_ppSobelThreshold = -1.f;
 		glm::mat3 m_ppKernel;
+		glm::vec4 m_ppBlendColor;
 		// renderer resources
 		static Renderer* s_instance;
 		FrameBuffer* m_gBuffer;
@@ -114,9 +118,11 @@ namespace Lobster
 		static void SetFaceCulling(bool enabled, CullMode mode = CULL_BACK);
 		// RenderCommand & RenderQueue
 		static void BeginScene(TextureCube* skybox);
+		static void SetApplySobel(bool apply, float threshold);
 		static void SetApplyKernel(bool apply, glm::mat3 kernel);
 		static void SetBlur(bool blur);
 		static void SetSSR(bool ssr);
+		static void SetBlend(bool blend, glm::vec3 color, float alpha);
 		static void Submit(RenderCommand command);
 		static void Submit(RenderOverlayCommand ocommand);
 		static void SubmitDebug(RenderCommand dcommand);

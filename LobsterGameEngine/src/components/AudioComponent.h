@@ -18,9 +18,10 @@ namespace Lobster {
 		// normally this is not set until OnBegin(), to specify a file to load,
 		// set the name of the audio clip in m_clipName
 		AudioClip* m_clip = nullptr;
-		std::string m_clipName = "None";// to record the audio name for further loading
+		std::string m_clipName = "None"; // to record the audio name for further loading
 		bool done = false;
 		// basic setting
+		bool m_autoPlay = false;
 		bool m_loop = true;		
 		bool m_muted = false;
 		float m_gain = 1.0;
@@ -35,8 +36,9 @@ namespace Lobster {
 	public:
 		AudioSource();
 		virtual ~AudioSource();		
+		inline bool IsAutoPlay() { return m_autoPlay; }
 		void SetSource(AudioClip* ac);
-		glm::vec3 GetPosition();		
+		glm::vec3 GetPosition();				
 		virtual void OnUpdate(double deltaTime);
 		virtual void OnImGuiRender();
 		virtual void OnBegin();
@@ -55,6 +57,7 @@ namespace Lobster {
 		template <class Archive>
 		void save(Archive & ar) const
 		{
+			ar(m_autoPlay);
 			ar(m_clipName);
 			ar(m_muted);
 			ar(m_gain);
@@ -66,6 +69,7 @@ namespace Lobster {
 		template <class Archive>
 		void load(Archive & ar)
 		{
+			ar(m_autoPlay);
 			ar(m_clipName);
 			ar(m_muted);
 			ar(m_gain);

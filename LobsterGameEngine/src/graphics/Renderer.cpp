@@ -249,26 +249,9 @@ namespace Lobster
 		glDepthMask(GL_FALSE);
 		Renderer::DrawQueue(camera, m_transparentQueue);
 		glDepthMask(GL_TRUE);
-		Renderer::SetAlphaBlend(false);				
-		// from front to back order
-		// Overlay
-		m_spriteShader->Bind();
-		for (auto it = m_overlayQueue.rbegin(); it != m_overlayQueue.rend(); ++it)
-		{
-			RenderOverlayCommand& command = *it;
-			glm::mat4 world = glm::mat4(1.0);
-			world = glm::translate(world, glm::vec3(command.x, command.y, command.z));
-			world = glm::scale(world, glm::vec3(command.w, command.h, 1.0f));
-			m_spriteShader->SetTexture2D(0, renderTarget->Get(0));
-			m_spriteShader->SetTexture2D(1, command.UseTexture->Get());			
-			m_spriteShader->SetUniform("sys_world", world);
-			m_spriteShader->SetUniform("sys_projection", camera->GetOrthoMatrix());
-			m_spriteShader->SetUniform("alpha", command.alpha);
-			m_spriteShader->SetUniform("sys_background", 0);
-			m_spriteShader->SetUniform("sys_spriteTexture", 1);	
-			m_spriteShader->SetUniform("blend", glm::vec4(command.blendR, command.blendG, command.blendB, command.blendA));
-			m_spriteMesh->Draw();
-		}
+		Renderer::SetAlphaBlend(false);
+		
+		// Overlay-original
 		// Debug
 #ifdef LOBSTER_BUILD_EDITOR
 		if (debug) {
@@ -294,10 +277,34 @@ namespace Lobster
 		m_postProcessShader->SetUniform("sys_gNormalDepth", 1);
 		m_postProcessShader->SetUniform("sys_ppBlur", b_ppBlur);
 		m_postProcessShader->SetUniform("sys_ppSSR", b_ppSSR);
-		m_postProcessShader->SetUniform("sys_ppUseKernel", b_ppUseKernel);
+		m_postProcessShader->SetUniform("sys_ppUseKernel", b_ppUseKernel);			
 		m_postProcessShader->SetUniform("sys_ppKernel", m_ppKernel);
+		m_postProcessShader->SetUniform("sys_ppBlend", b_ppBlend);
+		m_postProcessShader->SetUniform("sys_ppBlendColor", m_ppBlendColor);
+		m_postProcessShader->SetUniform("sys_ppSobel", b_ppSobel);
+		m_postProcessShader->SetUniform("sys_ppSobelThreshold", m_ppSobelThreshold);
 		m_postProcessMesh->Draw();
 		Renderer::SetDepthTest(true);
+
+		// from front to back order
+		// Overlay
+		m_spriteShader->Bind();
+		for (auto it = m_overlayQueue.rbegin(); it != m_overlayQueue.rend(); ++it)
+		{
+			RenderOverlayCommand& command = *it;
+			glm::mat4 world = glm::mat4(1.0);
+			world = glm::translate(world, glm::vec3(command.x, command.y, command.z));
+			world = glm::scale(world, glm::vec3(command.w, command.h, 1.0f));
+			m_spriteShader->SetTexture2D(0, renderTarget->Get(0));
+			m_spriteShader->SetTexture2D(1, command.UseTexture->Get());
+			m_spriteShader->SetUniform("sys_world", world);
+			m_spriteShader->SetUniform("sys_projection", camera->GetOrthoMatrix());
+			m_spriteShader->SetUniform("alpha", command.alpha);
+			m_spriteShader->SetUniform("sys_background", 0);
+			m_spriteShader->SetUniform("sys_spriteTexture", 1);
+			m_spriteShader->SetUniform("blend", glm::vec4(command.blendR, command.blendG, command.blendB, command.blendA));
+			m_spriteMesh->Draw();
+		}
 
 		glm::ivec2 buf_size = renderTarget->GetSize();
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
@@ -312,6 +319,11 @@ namespace Lobster
 		s_instance->m_activeSceneEnvironment.Skybox = skybox;
 	}
 
+	void Renderer::SetApplySobel(bool apply, float threshold) {
+		s_instance->b_ppSobel = apply;
+		s_instance->m_ppSobelThreshold = threshold;
+	}
+
 	void Renderer::SetApplyKernel(bool apply, glm::mat3 kernel) {
 		s_instance->b_ppUseKernel = apply;
 		s_instance->m_ppKernel = kernel;
@@ -323,6 +335,12 @@ namespace Lobster
 
 	void Renderer::SetSSR(bool ssr) {
 		s_instance->b_ppSSR = ssr;
+	}
+
+	void Renderer::SetBlend(bool blend, glm::vec3 color, float alpha) {
+		s_instance->b_ppBlend = blend;
+		if (blend)
+			s_instance->m_ppBlendColor = glm::vec4(color, alpha);
 	}
 
 	void Renderer::Submit(RenderCommand command)
@@ -376,6 +394,8 @@ namespace Lobster
 		ImGui::Text("Post Processing");
 		ImGui::Checkbox("Blur", &s_instance->b_ppBlur);
 		ImGui::Checkbox("Screen Space Reflection", &s_instance->b_ppSSR);
+		ImGui::Checkbox("Sobel Edge Detection", &s_instance->b_ppSobel);
+		ImGui::Checkbox("Color Blend", &s_instance->b_ppBlend);
 		if (ImGui::Button("Clear Applied Filters")) {
 			s_instance->b_ppUseKernel = false;
 		}

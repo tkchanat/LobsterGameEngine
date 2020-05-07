@@ -46,6 +46,9 @@ namespace Lobster {
 	void AudioSource::OnImGuiRender() {
 		if (ImGui::CollapsingHeader("Audio Source", &m_show, ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			if (ImGui::Checkbox("Auto Play", &m_autoPlay)) {
+				UndoSystem::GetInstance()->Push(new PropertyAssignmentCommand(this, &m_autoPlay, !m_autoPlay, m_autoPlay, "Toggle AutoPlay for " + GetOwner()->GetName()));
+			}
 			std::string prevClipName = m_clipName;
 			if (ImGui::BeginCombo("Audio Clip", m_clipName.c_str())) {
 				if (ImGui::Selectable("None", m_clipName == "None")) {
@@ -230,7 +233,7 @@ namespace Lobster {
 		// update the positional information and play audio (automatically)
 		if (Application::GetMode() == ApplicationMode::GAME) {			
 			for (AudioSource* src : AudioSource::sourceList) {								
-				if (!src->m_clip) continue;
+				if (!src->m_clip || !src->IsAutoPlay()) continue;
 				if (src->m_enable3d) {
 					// Note: AudioClip::position will not update itself
 					// so we update it here according to the object's actual position

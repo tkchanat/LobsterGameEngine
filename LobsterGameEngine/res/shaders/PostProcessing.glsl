@@ -46,7 +46,11 @@ uniform sampler2D sys_gNormalDepth;
 uniform bool sys_ppBlur;
 uniform bool sys_ppSSR;
 uniform bool sys_ppUseKernel;
+uniform bool sys_ppBlend;
+uniform bool sys_ppSobel;
+uniform float sys_ppSobelThreshold;
 uniform mat3 sys_ppKernel;
+uniform vec4 sys_ppBlendColor;
 
 vec3 Blur() {
     vec3 color = vec3(0.0);
@@ -106,6 +110,35 @@ vec3 Kernel3x3() {
     return color;
 }
 
+vec3 SobelEdgeDetector(float threshold) {
+    const float sobel_x[9] = float[9](
+    1, 0, -1,
+    2, 0, -2,
+    1, 0, -1
+    );
+    const float sobel_y[9] = float[9](
+    1, 2, 1,
+    0, 0, 0,
+    -1, -2, -1
+    );
+    vec3 color_x = vec3(0.0);
+    vec3 color_y = vec3(0.0);
+    vec3 samples[9];
+    for(int i = 0; i < 9; i++) {
+        samples[i] = texture(screenTexture, frag_texcoord + offsets[i]).rgb;
+        color_x += samples[i] * sobel_x[i];
+        color_y += samples[i] * sobel_y[i];
+    }
+    vec3 c = sqrt(color_x * color_x + color_y * color_y);
+    if (threshold > 0.0) {
+        // set to completely white if larger than the non-negative threshold
+        if (c.r > threshold) c = vec3(1.0, 1.0, 1.0);        
+        else c = vec3(0, 0, 0);
+    }
+    return c;
+}
+
+
 void main()
 { 
     int effectCount = 0;
@@ -113,16 +146,21 @@ void main()
     vec3 blur = vec3(0.0);
     vec3 ssr = vec3(0.0);
     vec3 kernelProcess = vec3(0.0);
+    vec3 sobel = vec3(0.0);
     if(sys_ppSSR) { blur = SSR(); effectCount++; }
     if(sys_ppBlur) { ssr = Blur(); effectCount++; }
     if(sys_ppUseKernel) { kernelProcess = Kernel3x3(); effectCount++; }
+    if(sys_ppSobel) { sobel = SobelEdgeDetector(sys_ppSobelThreshold); effectCount++; }
 
     // merge color
     if(effectCount > 0) {
-        color = (kernelProcess + blur + ssr) / effectCount;
+        color = (kernelProcess + blur + ssr + sobel) / effectCount;        
     }
     else {
         color = texture(screenTexture, frag_texcoord).rgb;
+    }
+    if (sys_ppBlend) {
+        color += sys_ppBlendColor.rgb * sys_ppBlendColor.a;
     }
     out_color = vec4(color, 1.0);
 }
