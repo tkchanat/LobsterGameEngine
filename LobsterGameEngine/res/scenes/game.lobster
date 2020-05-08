@@ -109,15 +109,15 @@
                     "value2": 0.0
                 },
                 "value1": {
-                    "value0": -180.0,
+                    "value0": 180.0,
                     "value1": -0.000005008956122765085,
-                    "value2": -180.0
+                    "value2": 180.0
                 },
                 "value2": {
                     "value0": -4.371138473402425e-8,
-                    "value1": 4.371139183945161e-8,
+                    "value1": -4.371139183945161e-8,
                     "value2": 1.0,
-                    "value3": 4.371139183945161e-8
+                    "value3": -4.371139183945161e-8
                 },
                 "value3": {
                     "value0": 0.41999998688697817,
@@ -133,9 +133,9 @@
                 5
             ],
             "value3": {
-                "value0": "../../LobsterGameEngine/res/meshes/anim_chicken.fbx",
+                "value0": "meshes/anim_chicken.fbx",
                 "value1": [
-                    "../../LobsterGameEngine/res/materials/chicken.mat"
+                    "materials/chicken.mat"
                 ],
                 "value2": [
                     "animations/chickenanim.anim"
@@ -224,7 +224,7 @@
                 6
             ],
             "value3": {
-                "value0": "../../LobsterGameEngine/res/meshes/court.obj",
+                "value0": "meshes/court.obj",
                 "value1": [
                     "materials/Material001.mat",
                     "materials/Material002.mat",
@@ -340,9 +340,9 @@
                 4
             ],
             "value3": {
-                "value0": "../../LobsterGameEngine/res/meshes/torus.obj",
+                "value0": "meshes/torus.obj",
                 "value1": [
-                    "../../LobsterGameEngine/res/materials/Material004.mat"
+                    "materials/Material004.mat"
                 ],
                 "value2": []
             },
@@ -671,27 +671,6 @@
                 "value4": {
                     "value0": [
                         {
-                            "value0": 1,
-                            "value1": 0.01015624962747097,
-                            "value2": 0.0026315790601074697,
-                            "value3": 32758,
-                            "value4": "",
-                            "value5": 1.0,
-                            "value6": false,
-                            "value7": "Score:",
-                            "value8": 30.0,
-                            "value9": {
-                                "value0": 1.0,
-                                "value1": 0.0,
-                                "value2": 0.0,
-                                "value3": 1.0
-                            },
-                            "value10": "TimesNewRoman.ttf",
-                            "value11": "",
-                            "value12": "",
-                            "value13": 1
-                        },
-                        {
                             "value0": 2,
                             "value1": 0.08437500149011612,
                             "value2": 0.003947368357330561,
@@ -710,6 +689,27 @@
                             "value10": "ui.lua",
                             "value11": "score",
                             "value12": 0
+                        },
+                        {
+                            "value0": 1,
+                            "value1": 0.01015624962747097,
+                            "value2": 0.0026315790601074697,
+                            "value3": 32758,
+                            "value4": "",
+                            "value5": 1.0,
+                            "value6": false,
+                            "value7": "Score:",
+                            "value8": 30.0,
+                            "value9": {
+                                "value0": 1.0,
+                                "value1": 0.0,
+                                "value2": 0.0,
+                                "value3": 1.0
+                            },
+                            "value10": "TimesNewRoman.ttf",
+                            "value11": "",
+                            "value12": "",
+                            "value13": 0
                         },
                         {
                             "value0": 0,
@@ -817,12 +817,12 @@
         },
         "value8": {
             "value0": [
-                "../../LobsterGameEngine/res/textures/skybox/px.png",
-                "../../LobsterGameEngine/res/textures/skybox/nx.png",
-                "../../LobsterGameEngine/res/textures/skybox/py.png",
-                "../../LobsterGameEngine/res/textures/skybox/ny.png",
-                "../../LobsterGameEngine/res/textures/skybox/pz.png",
-                "../../LobsterGameEngine/res/textures/skybox/nz.png"
+                "textures/skybox/px.png",
+                "textures/skybox/nx.png",
+                "textures/skybox/py.png",
+                "textures/skybox/ny.png",
+                "textures/skybox/pz.png",
+                "textures/skybox/nz.png"
             ]
         }
     }
