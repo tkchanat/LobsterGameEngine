@@ -67,7 +67,7 @@ function OnUpdate(dt)
 
 		audio:Play()
 		transform.WorldPosition.y = transform.WorldPosition.y + shooting_initial_y
-		rigidbody:AddVelocity(Lobster.Vec3(-shooting_force_x/50, 1.65, -0.75))
+		rigidbody:AddVelocity(Lobster.Vec3(shooting_force_x/50, 1.4, -1.15))
 		shooting_force_y = 0
 		shooting_force_x = 0
 		shot = true
