@@ -125,7 +125,7 @@ namespace Lobster
 
 				// ========================================================
 				// Actions
-				if (path_invalid) {
+				if (path_invalid || std::string(scene_buf).empty()) {
 					ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 					ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 				}
@@ -138,7 +138,7 @@ namespace Lobster
 							m_exportStatusFlag = Export(path_buf, name_buf, template_buf, scene_buf);
 					}
 				}
-				if (path_invalid) {
+				if (path_invalid || std::string(scene_buf).empty()) {
 					ImGui::PopItemFlag();
 					ImGui::PopStyleVar();
 				}

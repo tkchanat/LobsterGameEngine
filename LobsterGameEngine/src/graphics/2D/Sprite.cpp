@@ -52,25 +52,29 @@ namespace Lobster {
 
 	// do button related work
 	void Sprite2D::OnUpdate(double dt) {
+		bool isMouseOver = IsMouseOver();
 		if (!isButton) return;
-		if (scriptOnHover && IsMouseOver() && !m_hovered) {
+		if (isMouseOver && !m_hovered) {
 			m_hovered = true;
 		}
-		if (scriptOnClick && IsMouseOver() && Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !m_clicked) {
+		if (isMouseOver && Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !m_clicked) {
 			m_clicked = true;
 		}
 		if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
 			m_clicked = false;
 		}
-		if (!IsMouseOver()) {
+		if (!isMouseOver) {
 			m_hovered = false;
 		}
 	}
 
 	void Sprite2D::OnLateUpdate(double dt)
 	{
-		if (scriptOnHover && m_hovered) {
+		if (scriptOnHover && m_hovered != m_lastHovered && m_hovered) {
 			scriptOnHover->Execute(funcOnHover.c_str());
+		}
+		if (m_hovered != m_lastHovered) {
+			m_lastHovered = m_hovered;
 		}
 		if (scriptOnClick && m_clicked) {
 			scriptOnClick->Execute(funcOnClick.c_str());

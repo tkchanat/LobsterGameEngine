@@ -14,19 +14,19 @@
             "value1": {
                 "value0": {
                     "value0": -0.2800000011920929,
-                    "value1": 9.300000190734864,
-                    "value2": 19.350000381469728
+                    "value1": 2.580942153930664,
+                    "value2": -3.374267101287842
                 },
                 "value1": {
                     "value0": 0.0,
-                    "value1": 0.0,
-                    "value2": 0.0
+                    "value1": -0.0,
+                    "value2": 180.0
                 },
                 "value2": {
-                    "value0": 1.0,
+                    "value0": -4.371138828673793e-8,
                     "value1": 0.0,
                     "value2": 0.0,
-                    "value3": 0.0
+                    "value3": 1.0
                 },
                 "value3": {
                     "value0": 1.0,
@@ -40,14 +40,14 @@
                 4
             ],
             "value3": {
-                "value0": 2,
+                "value0": 0,
                 "value1": false,
                 "value2": 0.5235987901687622,
                 "value3": 1.0,
                 "value4": 0.10000000149011612,
                 "value5": 0,
-                "value6": 512,
-                "value7": 0.125,
+                "value6": 78,
+                "value7": 1.0,
                 "value8": {
                     "value0": 1.0,
                     "value1": 1.0,
@@ -76,8 +76,8 @@
                     "value0": {
                         "value0": {
                             "value0": 0.0,
-                            "value1": -0.15000000596046449,
-                            "value2": -0.6499999761581421
+                            "value1": -1.649999976158142,
+                            "value2": 5.5
                         },
                         "value1": {
                             "value0": 0.0,
@@ -91,9 +91,9 @@
                             "value3": 0.0
                         },
                         "value3": {
-                            "value0": 1.0,
+                            "value0": 0.2199999988079071,
                             "value1": 0.009999999776482582,
-                            "value2": 0.8999999761581421
+                            "value2": 0.2199999988079071
                         },
                         "value4": 1.0
                     }
@@ -104,9 +104,9 @@
             "value0": [],
             "value1": {
                 "value0": {
-                    "value0": -0.2980000078678131,
+                    "value0": -0.1199679970741272,
                     "value1": 0.5070000290870667,
-                    "value2": 0.0
+                    "value2": -1.2586735209652034e-8
                 },
                 "value1": {
                     "value0": 180.0,
@@ -671,26 +671,6 @@
                 "value4": {
                     "value0": [
                         {
-                            "value0": 2,
-                            "value1": 0.08437500149011612,
-                            "value2": 0.003947368357330561,
-                            "value3": 32758,
-                            "value4": "",
-                            "value5": 1.0,
-                            "value6": false,
-                            "value7": 30.0,
-                            "value8": {
-                                "value0": 0.9615384340286255,
-                                "value1": 0.0,
-                                "value2": 0.0,
-                                "value3": 1.0
-                            },
-                            "value9": "TimesNewRoman.ttf",
-                            "value10": "ui.lua",
-                            "value11": "score",
-                            "value12": 0
-                        },
-                        {
                             "value0": 1,
                             "value1": 0.01015624962747097,
                             "value2": 0.0026315790601074697,
@@ -709,7 +689,27 @@
                             "value10": "TimesNewRoman.ttf",
                             "value11": "",
                             "value12": "",
-                            "value13": 0
+                            "value13": 1
+                        },
+                        {
+                            "value0": 2,
+                            "value1": 0.08437500149011612,
+                            "value2": 0.003947368357330561,
+                            "value3": 32758,
+                            "value4": "",
+                            "value5": 1.0,
+                            "value6": false,
+                            "value7": 30.0,
+                            "value8": {
+                                "value0": 0.9615384340286255,
+                                "value1": 0.0,
+                                "value2": 0.0,
+                                "value3": 1.0
+                            },
+                            "value9": "TimesNewRoman.ttf",
+                            "value10": "ui.lua",
+                            "value11": "score",
+                            "value12": 0
                         },
                         {
                             "value0": 0,
