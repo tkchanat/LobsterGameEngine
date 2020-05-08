@@ -64,6 +64,7 @@ namespace Lobster {
 			ar(m_linearDamping);
 			ar(m_angularDamping);
 			ar(m_restitution);
+			ar(m_physicsType);
 			ar(m_colliders.size());
 			for (Collider* c : m_colliders) {
 				c->Serialize(ar);
@@ -78,6 +79,7 @@ namespace Lobster {
 			ar(m_linearDamping);
 			ar(m_angularDamping);
 			ar(m_restitution);
+			ar(m_physicsType);
 			int count;
 			ar(count);
 			for (int i = 0; i < count; ++i) {
