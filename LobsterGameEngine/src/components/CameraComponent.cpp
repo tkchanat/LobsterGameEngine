@@ -124,6 +124,7 @@ namespace Lobster
 		if (!gameUI) return;
 		for (Sprite2D* sprite : gameUI->GetSpriteList()) {
 			sprite->OnUpdate(0); // trivial input
+			sprite->OnLateUpdate(0); // for callbacks
 		}
 	}
 

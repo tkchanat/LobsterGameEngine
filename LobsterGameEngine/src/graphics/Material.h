@@ -41,7 +41,7 @@ namespace Lobster
 		void SaveConfiguration();
 		std::stringstream Serialize();
 		void Deserialize(std::stringstream ss);
-		inline std::string GetName() const { return m_name; }
+		inline std::string GetName() const { return FileSystem::PathUnderRes(m_name); }
 		inline std::string GetPath() const { return FileSystem::Path(m_name); }
 		inline Shader* GetShader() const { return m_shader; }
 		inline Texture2D* GetTexture(int index) const { return m_textures[index]; }

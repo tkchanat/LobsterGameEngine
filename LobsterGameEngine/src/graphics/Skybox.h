@@ -23,7 +23,7 @@ namespace Lobster
 		void save(Archive & ar) const
 		{
 			std::vector<std::string> faces;
-			for (int i = 0; i < 6; ++i) faces.push_back(m_faces[i]);
+			for (int i = 0; i < 6; ++i) faces.push_back(FileSystem::PathUnderRes(m_faces[i]));
 			ar(faces);
 		}
 		template <class Archive>
@@ -31,7 +31,7 @@ namespace Lobster
 		{
 			std::vector<std::string> faces;
 			ar(faces);
-			for (int i = 0; i < 6; ++i) m_faces[i] = faces[i];
+			for (int i = 0; i < 6; ++i) m_faces[i] = FileSystem::Path(faces[i]);
 		}
 	};
 

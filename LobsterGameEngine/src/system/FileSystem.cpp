@@ -65,6 +65,15 @@ namespace Lobster {
 		}
 	}
 
+	std::string FileSystem::PathUnderRes(std::string path)
+	{
+		size_t pos = path.find(m_instance->m_workingDir);
+		if (pos != std::string::npos) {
+			return path.substr(pos + m_instance->m_workingDir.size() + 1);
+		}
+		return path;
+	}
+
 	std::string FileSystem::RelativeToAbsolute(std::string path)
 	{
 		return fs::canonical(fs::path(path)).string();

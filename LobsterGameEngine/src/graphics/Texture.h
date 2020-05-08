@@ -73,7 +73,7 @@ namespace Lobster
 		void SetRaw(byte* data, uint size);
 		inline virtual void* Get() const override { return (void*)(intptr_t)m_id; }
 		inline std::string GetPath() const { return FileSystem::Path(m_name); }
-		inline std::string GetName() const { return m_name; }
+		inline std::string GetName() const { return FileSystem::PathUnderRes(m_name); }
 	private:
 		explicit Texture2D(const char* path);
 		// This constructor should only be used to create text sprite

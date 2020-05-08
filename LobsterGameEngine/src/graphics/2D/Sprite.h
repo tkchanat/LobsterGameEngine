@@ -41,6 +41,7 @@ namespace Lobster {
 		virtual void ImGuiMenu(GameUI* ui, ImVec2 winSize) = 0;
 		virtual void OnBegin();
 		virtual void OnUpdate(double dt);
+		virtual void OnLateUpdate(double dt);
 		virtual void OnImGuiRender() = 0;
 		virtual bool IsMouseOver() { return false; }
 		virtual std::string GetLabel() { return m_label; }
