@@ -17,6 +17,7 @@ namespace Lobster {
 	}
 
 	void GameUI::AddSprite(Sprite2D* sprite) {
+		assert(sprite != nullptr);
 		spriteList.push_back(sprite);
 		SortSprites();
 	}

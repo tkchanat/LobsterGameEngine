@@ -12,9 +12,13 @@ function OnBegin()
 end
 
 function OnClick()
-	ui:RemoveSprite(startBtn)
-	bgm = Lobster.GetAudioSource(bg)
-	bgm:Play()
-	Lobster.SetBlur(false)
-	Lobster.SetBlend(false, Lobster.Vec3(0, 0, 0), 0)
+    if startBtn == nil then
+        Lobster.SetBlend(true, Lobster.Vec3(1, 0, 0), 0.7)
+        return
+    end
+    ui:RemoveSprite(startBtn)
+    bgm = Lobster.GetAudioSource(bg)
+    bgm:Play()
+    Lobster.SetBlur(false)
+    Lobster.SetBlend(false, Lobster.Vec3(0, 0, 0), 0)
 end

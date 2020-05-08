@@ -36,6 +36,7 @@ namespace Lobster
 		static std::string Absolute(const std::string& path) { return std::filesystem::absolute(fs::path(path)).string(); }
 		static std::string Join(const std::string& path, const std::string& path2);
 		static std::string Path(std::string path, int flags = PathFlags::Flag_None);
+		static std::string PathUnderRes(std::string path);
 		static std::string RelativeToAbsolute(std::string path);
 		static std::string ReadText(const char* path);
 		static std::string OpenFileDialog();

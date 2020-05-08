@@ -92,6 +92,7 @@ namespace Lobster
 
         //  Initialize GameObjects
 		Timer loadTimer;
+#ifdef LOBSTER_BUILD_EDITOR
 		OpenScene("");	
 
 //		ThreadPool::Enqueue([]() {
@@ -319,6 +320,13 @@ namespace Lobster
 
         //GameObject* sibenik = (new GameObject("sibenik"))->AddComponent<MeshComponent>(m_fileSystem->Path("meshes/sibenik.obj").c_str(), "materials/sibenik.mat");
 		LOG("Model loading spent {} ms", loadTimer.GetElapsedTime());
+
+#else
+		std::string sceneName = FileSystem::ReadText(FileSystem::Path("output.txt").c_str());
+		LOG(FileSystem::RelativeToAbsolute(FileSystem::Path(sceneName)));
+		OpenScene(FileSystem::RelativeToAbsolute(FileSystem::Path(sceneName)).c_str());
+		m_scene->OnBegin();
+#endif
 
 		// Push layers to layer stack
 #ifdef LOBSTER_BUILD_EDITOR

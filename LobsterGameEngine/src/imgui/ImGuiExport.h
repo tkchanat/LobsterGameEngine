@@ -131,10 +131,11 @@ namespace Lobster
 				}
 				if (ImGui::Button("Export", ImVec2(190, 0))) {
 					if (FileSystem::ExistDirectory(path_buf)) {
+						// copy and move relative files
 						if (template_buf[0] == '\0')
-							m_exportStatusFlag = Export(path_buf, name_buf, "./templates/windows_template.exe");
+							m_exportStatusFlag = Export(path_buf, name_buf, "./templates/windows_template.exe", scene_buf);
 						else
-							m_exportStatusFlag = Export(path_buf, name_buf, template_buf);
+							m_exportStatusFlag = Export(path_buf, name_buf, template_buf, scene_buf);
 					}
 				}
 				if (path_invalid) {
@@ -151,7 +152,7 @@ namespace Lobster
 			}
 		}
 
-		int Export(const std::string& outDir, const std::string& appName, const char* templatePath) {
+		int Export(const std::string& outDir, const std::string& appName, const char* templatePath, const char* scenePath) {
 #ifdef LOBSTER_PLATFORM_WIN
 			// Try to find template file
 			if (!FileSystem::Exist(templatePath)) 
@@ -175,8 +176,17 @@ namespace Lobster
 #elif LOBSTER_PLATFORM_MAC
 #else
 #endif
+
+			std::string iniPath = game_folder + "\\resources\\output.txt";
+			std::ofstream out(iniPath);
+			if (out.is_open()) {
+				out << FileSystem::Path(scenePath);
+			}
+			out.close();
+
 			return OK;
 		}
+
 	};
 
 }

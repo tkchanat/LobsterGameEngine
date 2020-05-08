@@ -86,9 +86,10 @@ namespace Lobster
 			// Mesh & Materials
 			std::vector<std::string> materialNames;
 			for (auto material : m_meshInfo.Materials) {
+				material->SaveConfiguration();
 				materialNames.push_back(material->GetName());
 			}
-			ar(m_meshPath);
+			ar(FileSystem::PathUnderRes(m_meshPath));
 			ar(materialNames);
 
 			// Animations
@@ -103,6 +104,7 @@ namespace Lobster
 		{
 			// Mesh & Materials
 			ar(m_meshPath);
+			m_meshPath = FileSystem::Path(m_meshPath);
 			std::vector<std::string> materialNames;
 			ar(materialNames);
 			for (auto name : materialNames) {

@@ -55,17 +55,25 @@ namespace Lobster {
 		if (!isButton) return;
 		if (scriptOnHover && IsMouseOver() && !m_hovered) {
 			m_hovered = true;
-			scriptOnHover->Execute(funcOnHover.c_str());
 		}
 		if (scriptOnClick && IsMouseOver() && Input::IsMouseDown(GLFW_MOUSE_BUTTON_LEFT) && !m_clicked) {
 			m_clicked = true;
-			scriptOnClick->Execute(funcOnClick.c_str());
 		}
 		if (Input::IsMouseUp(GLFW_MOUSE_BUTTON_LEFT)) {
 			m_clicked = false;
 		}
 		if (!IsMouseOver()) {
 			m_hovered = false;
+		}
+	}
+
+	void Sprite2D::OnLateUpdate(double dt)
+	{
+		if (scriptOnHover && m_hovered) {
+			scriptOnHover->Execute(funcOnHover.c_str());
+		}
+		if (scriptOnClick && m_clicked) {
+			scriptOnClick->Execute(funcOnClick.c_str());
 		}
 	}
 
