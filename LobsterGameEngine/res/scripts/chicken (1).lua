@@ -15,6 +15,7 @@ function OnBegin()
 	mesh:PlayAnimation()
 
 	shot = false
+	resetKeyDown = false
 	shooting_force_y = 0
 	shooting_force_x = 0
 	initial_x = transform.WorldPosition.x
@@ -27,17 +28,9 @@ function OnBegin()
 	-- not letting user throw chicken in title
 	cameraObj = scene:GetGameObjectByName('Main Camera')
 	camera = Lobster.GetCameraComponent(cameraObj)	
-	ui = camera:GetUI()	
+	ui = camera:GetUI()		
 end
 
-function float_eq(a, b)
-    if (a == nil or b == nil) then
-        return false
-    end
-    epsilon = 0.001
-    diff = math.abs(a - b)
-    return diff < epsilon
-end
 
 function resetGame()
 	shot = false
@@ -64,7 +57,6 @@ function OnUpdate(dt)
 	ds = dt / 50
 	ingameChecker = ui:GetSpriteByLabel('startBtn') -- nil if ingame
 	if ingameChecker ~= nil then return end
-
 	--if (Lobster.RayIntersect(scene:GetGameCamera(), Lobster.GetPhysicsComponent(this), 10000)) then
 	if (Lobster.IsMouseDown(0)) then
 		dx = Lobster.GetMouseDeltaX() * ds
@@ -75,24 +67,10 @@ function OnUpdate(dt)
 
 		audio:Play()
 		transform.WorldPosition.y = transform.WorldPosition.y + shooting_initial_y
-		rigidbody:AddVelocity(Lobster.Vec3(shooting_force_x/70, 0.8, -1.3))
+		rigidbody:AddVelocity(Lobster.Vec3(shooting_force_x/50, 1.4, -1.15))
 		shooting_force_y = 0
 		shooting_force_x = 0
 		shot = true
-	end
-
-	if (shot) then
-		if (float_eq(prev_y, transform.WorldPosition.y)) then
-			-- stoped
-			floor_count = floor_count - 1
-			if floor_count == 0 then
-				print("reset")
-				resetGame()
-			end
-		end
-		prev_x = transform.WorldPosition.x
-		prev_y = transform.WorldPosition.y
-		prev_z = transform.WorldPosition.z
 	end
 
 	if (chicken:Intersects(particle) and shot) then
@@ -142,5 +120,12 @@ function OnUpdate(dt)
 		if floor_count == 0 then
 			resetGame()
 		end
+	end
+
+	if (Lobster.IsKeyDown(string.byte("R")) and resetKeyDown) then
+		resetGame()
+	end
+	if (Lobster.IsKeyUp(string.byte("R"))) then
+		resetKeyDown = true
 	end
 end
