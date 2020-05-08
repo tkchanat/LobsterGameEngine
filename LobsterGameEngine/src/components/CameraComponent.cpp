@@ -67,9 +67,8 @@ namespace Lobster
 		command.position = transform->WorldPosition;
 		command.source = gameObject;
 		ImGuiScene::SubmitGizmos(command);
-
-		DrawUI();
 #endif
+		DrawUI();
     }
 
 	void CameraComponent::OnAttach()

@@ -15,6 +15,7 @@ function OnBegin()
 	mesh:PlayAnimation()
 
 	shot = false
+	resetKeyDown = false
 	shooting_force_y = 0
 	shooting_force_x = 0
 	initial_x = transform.WorldPosition.x
@@ -27,7 +28,7 @@ function OnBegin()
 	-- not letting user throw chicken in title
 	cameraObj = scene:GetGameObjectByName('Main Camera')
 	camera = Lobster.GetCameraComponent(cameraObj)	
-	ui = camera:GetUI()	
+	ui = camera:GetUI()		
 end
 
 
@@ -119,5 +120,12 @@ function OnUpdate(dt)
 		if floor_count == 0 then
 			resetGame()
 		end
+	end
+
+	if (Lobster.IsKeyDown(string.byte("R")) and resetKeyDown) then
+		resetGame()
+	end
+	if (Lobster.IsKeyUp(string.byte("R"))) then
+		resetKeyDown = true
 	end
 end
