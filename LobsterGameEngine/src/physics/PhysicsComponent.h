@@ -39,9 +39,11 @@ namespace Lobster {
 
 		//	ApplyForce: Force in Newton (N).
 		inline void AddVelocity(glm::vec3 velocity) { m_velocity += glm::conjugate(transform->LocalRotation) * velocity; }
+		inline void SetVelocity(glm::vec3 velocity) { m_velocity = glm::conjugate(transform->LocalRotation) * velocity; }
 		inline void ApplyForce(glm::vec3 force) { m_acceleration += glm::conjugate(transform->LocalRotation) * force / m_mass; }
 
 		inline void AddAngularVelocity(glm::vec3 velocity) { m_angularVelocity += velocity; }
+		inline void SetAngularVelocity(glm::vec3 velocity) { m_angularVelocity = velocity; }
 		inline void ApplyAngularForce(glm::vec3 force) { m_angularVelocity += force / m_mass; }
 
 		inline glm::vec3 GetVelocity() { return transform->LocalRotation * m_velocity; }
